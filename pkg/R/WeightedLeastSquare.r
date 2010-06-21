@@ -7,7 +7,7 @@
 ### This file contains a set of procedures
 ### for maximum likelihood fitting of
 ### random fields.
-### Last change: 30/04/2010.
+### Last change: 18/06/2010.
 ####################################################
 
 
@@ -72,14 +72,14 @@ Wls <- function(bins, corrmodel, fixed, lenbins, moments, numbins, param, weight
   }
 
 WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                    model, parscale, paramrange, start, time, type)
+                    lonlat, model, parscale, paramrange, start, time, type)
   {
     
     ### Initialization parameters:
     
     initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid,
-                           likelihood, model, parscale, paramrange, start,
-                           time, 'WLeastSquare')
+                           likelihood, lonlat, model, parscale, paramrange,
+                           start, time, 'WLeastSquare')
 
     if(!is.null(initparam$error))
       stop(initparam$error)
@@ -95,13 +95,14 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     moments <- double(numbins - 1)
     lenbins <- double(numbins - 1)
 
-    .C('Empiric_Variogram', as.double(bins), as.double(initparam$coord[,1]),
-       as.double(initparam$coord[,2]), as.double(initparam$data), as.double(lenbins),
-       as.double(maxdist), as.double(moments), as.integer(initparam$numcoord),
-       as.integer(numbins), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('Empiric_Variogram', as.double(bins), as.double(initparam$coord[,1]), as.double(initparam$coord[,2]),
+       as.double(initparam$data), as.double(initparam$lags), as.double(lenbins), as.double(maxdist),
+       as.double(moments), as.integer(initparam$numpairs), as.integer(initparam$numcoord), as.integer(numbins),
+       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+
 
     ### Model fitting:
-    fitted <- optim(initparam$param, Wls, bins=bins, corrmodel=initparam$codecorrmodel,
+    fitted <- optim(initparam$param, Wls, bins=bins, corrmodel=initparam$corrmodel,
                     fixed=initparam$fixed, lenbins=lenbins, moments=moments, numbins=numbins,
                     weighted=FALSE, control=list(fnscale=-1, reltol=1e-14, maxit=1e8),
                     hessian=FALSE)
@@ -121,16 +122,8 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
                 initparam$fixed <- NULL
               }
             else
-            if(!any(names(fixed)=='mean'))
-              {
-                initparam$param <- c(initparam$fixed['mean'], initparam$param)
-                initparam$namesparam <- sort(names(initparam$param))
-                initparam$param <- initparam$param[initparam$namesparam]
-                initparam$fixed <- initparam$fixed[!names(initparam$fixed)=='mean']
-                initparam$numparam <- length(initparam$param)
-                initparam$flagnuis['mean'] <- 1
-                initparam$numfixed <- initparam$numfixed - 1
-              }
+              if(any(names(fixed)=='mean'))
+                initparam$fixed['mean'] <- fixed['mean']
           }
               
         initparam$param[names(fitted$par)] <- fitted$par
@@ -147,8 +140,9 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
   }
 
   
-WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE, maxdist=NULL,
-                         optimizer='Nelder-Mead', numbins=NULL, start=NULL, time=FALSE, weighted=FALSE)
+WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE,
+                         lonlat=FALSE, maxdist=NULL, optimizer='Nelder-Mead',
+                         numbins=NULL, start=NULL, time=FALSE, weighted=FALSE)
   {
     
     call <- match.call()
@@ -156,7 +150,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     ### Check the parameters given in input:
 
     checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid,
-                             'None', 'None', optimizer, start, FALSE,
+                             'None', lonlat, 'None', optimizer, start, FALSE,
                              time, 'WLeastSquare', weighted, NULL)
 
     if(!is.null(checkinput$error))
@@ -183,7 +177,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     ### Initialization parameters:
     parscale <- NULL
     initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid,
-                         'None', 'None', parscale, optimizer=='L-BFGS-B',
+                         'None', lonlat, 'None', parscale, optimizer=='L-BFGS-B',
                          start, time, 'WLeastSquare')
   
     if(!is.null(initparam$error))
@@ -195,10 +189,10 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     moments <- double(numbins - 1)
     lenbins <- double(numbins - 1)
 
-    .C('Empiric_Variogram', as.double(bins), as.double(initparam$coord[,1]),
-       as.double(initparam$coord[,2]), as.double(initparam$data), as.double(lenbins),
-       as.double(maxdist), as.double(moments), as.integer(initparam$numcoord),
-       as.integer(numbins), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('Empiric_Variogram', bins, as.double(initparam$coord[,1]), as.double(initparam$coord[,2]),
+       as.double(initparam$data), as.double(initparam$lags), lenbins, as.double(maxdist), moments,
+       as.integer(initparam$numpairs), as.integer(initparam$numcoord), as.integer(numbins),
+       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
     ### Model fitting:(bins, corrmodel, fixed, lenbins, moments, numbins, param, weighted)
     if(optimizer=='L-BFGS-B')
@@ -216,7 +210,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     WLeastSquare <- list(bins=bins,
                          coord = initparam$coord,
                          convergence = fitted$convergence,
-                         corrmodel = initparam$corrmodel,
+                         corrmodel = corrmodel,
                          data = initparam$data,
                          fixed = initparam$fixed,
                          grid = grid,

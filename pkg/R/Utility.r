@@ -28,7 +28,8 @@ CheckCorrModel <- function(corrmodel)
   }
 
 CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                       model, optimizer, start, varest, time, type, weighted, weights)
+                       lonlat, model, optimizer, start, varest, time, type, weighted,
+                       weights)
   {
     error <- NULL
 
@@ -88,10 +89,19 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         return(list(error=error))
       }
 
-    if(!is.null(start) & !is.list(start))
+    if(!is.null(start))
       {
-        error <- 'insert starting values as a list of parameters\n'
-        return(list(error=error))
+        if(!is.list(start))
+          {
+            error <- 'insert starting values as a list of parameters\n'
+            return(list(error=error))
+          }
+
+        if(any(names(start)=='mean') & (type=='Difference' || type=='Restricted'))
+          {
+            error <- 'the mean parameter is not allow with the difference composite likelihood\n'
+            return(list(error=error))
+          }
       }
 
     if(!is.null(varest) & !is.logical(varest))
@@ -112,6 +122,12 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         return(list(error=error))
       }
 
+    if(!is.null(lonlat) & !is.logical(lonlat))
+      {
+        error <- 'insert the type of coordinates'
+        return(list(error=error))
+      }
+    
     if(!is.null(weighted) & !is.logical(weighted))
       {
         error <- 'insert if the composite likelihood need to be weighted'
@@ -330,7 +346,8 @@ CheckParam <- function(corrmodel, namesparam, numparam)
                             nugget=3,
                             power1=4,
                             power2=5,
-                            scale=6)))
+                            scale=6,
+                            sill=7)))
             return(FALSE)
 
         if(corrmodel=='whittlematern')
@@ -392,8 +409,17 @@ CorrelationParam <- function(corrmodel)
     return(namesparam)
   }
 
+DetectParam <- function(corrmodel, fixed, param)
+  {
+    param <- c(fixed, param)
+    param <- param[CorrelationParam(corrmodel)]
+    corrmodel <- CheckCorrModel(corrmodel)
+
+    return(list(corrmodel=corrmodel, param=param))
+  }
+
 InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                      model, parscale, paramrange, start, time, type)
+                      lonlat, model, parscale, paramrange, start, time, type)
   {    
     ### Initialize the model parameters:
     error <- NULL
@@ -550,11 +576,17 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
           }
       }
 
-    return(list(corrmodel=codecorrmodel, coord=coord, data=data, error=error, flagcorr=flagcorr,
-                flagnuis=flagnuis, fixed=fixed, likelihood=likelihood, lower=paramrange$lower,
-                model=model, namescorr=namescorr, namesnuis=namesnuis, namesparam=namesparam,
-                namessim=namessim, numcoord=numcoord, numdata=numdata, numparam=numparam,
-                numparamcorr=numparamcorr, numfixed=numfixed, param=param,
+    ### Compute distances:
+    numpairs <- numcoord * (numcoord - 1) / 2
+    lags <- double(numpairs)
+    .C('Distances', as.double(coordx), as.double(coordy), lags, as.integer(numcoord),
+       as.integer(lonlat), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+
+
+    return(list(corrmodel=codecorrmodel, coord=coord, data=data, error=error, flagcorr=flagcorr, flagnuis=flagnuis,
+                fixed=fixed, lags=lags, likelihood=likelihood, lower=paramrange$lower, model=model, namescorr=namescorr,
+                namesnuis=namesnuis, namesparam=namesparam, namessim=namessim, numcoord=numcoord, numdata=numdata,
+                numpairs=numpairs, numparam=numparam, numparamcorr=numparamcorr, numfixed=numfixed, param=param,
                 upper=paramrange$upper, type=type))
   }
 

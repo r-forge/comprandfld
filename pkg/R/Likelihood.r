@@ -51,7 +51,7 @@ Likelihood <- function(corrmodel, data, fixed, grid, lags, model, namescorr, nam
         if(!is.matrix(cholvarcov))
           return(result)
     
-        ivarcov <- try(chol2inv(cholvarcov), silent = TRUE)
+        ivarcov <- chol2inv(cholvarcov)
         if(!is.matrix(ivarcov))
           return(result)
 
@@ -75,16 +75,17 @@ Likelihood <- function(corrmodel, data, fixed, grid, lags, model, namescorr, nam
 ### log of the normal density:
 
 LogNormDen <- function(stdata, detvarcov, ivarcov, numcoord, type)
-  {    
+  {
     if(type == 3)# Restricted log Gaussian density
       {
         sumvarcov <- sum(ivarcov)
         p <- ivarcov - array(rowSums(ivarcov), c(numcoord, 1)) %*% colSums(ivarcov) / sumvarcov
-        LogNormDen <- -detvarcov - .5 * log(sumvarcov) - .5 * crossprod(t(crossprod(stdata, p)), stdata)
+        LogNormDen <- -detvarcov - .5 * (log(sumvarcov) + crossprod(t(crossprod(stdata, p)), stdata) +
+                                         (numcoord - 1) * log(2 * pi))
       }
 
     if(type == 4) # Standard log Gaussian density
-      LogNormDen <- -detvarcov - .5 * crossprod(t(crossprod(stdata, ivarcov)),stdata)
+      LogNormDen <- -detvarcov - .5 * (crossprod(t(crossprod(stdata, ivarcov)),stdata) + numcoord * log(2 * pi))
     
     return(LogNormDen)
   }
@@ -118,7 +119,7 @@ OptimLik <- function(corrmodel, data, fixed, hessian, grid, lags, lower,
       else
         OptimLik$convergence <- "Optimization may have failed"
 
-    penalty <- length(OptimLik$param)
+    penalty <- length(OptimLik$par)
     OptimLik$clic <- -2 * (OptimLik$value - penalty)
 
     ### Computation of the variance covariance matrix:

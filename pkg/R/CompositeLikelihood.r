@@ -14,8 +14,9 @@
 ### Procedures are in alphabetical order.
 
 
-CompLikelihood <- function(coordx, coordy, corrmodel, data, fixed, model,
-                           namescorr, namesnuis, numcoord, numdata, param, type)
+CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
+                           model, namescorr, namesnuis, numcoord, numdata, param,
+                           type)
   {
     result <- -1.0e15
 
@@ -27,11 +28,10 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, fixed, model,
     paramcorr <- param[namescorr]
     nuisance <- param[namesnuis]
 
-    .C('CompLikelihood', as.double(coordx), as.double(coordy),
-       as.integer(corrmodel), as.double(data), as.integer(model),
-       as.double(nuisance), as.integer(numdata), as.integer(numcoord),
-       as.double(paramcorr), result, as.integer(type), PACKAGE='CompRandFld',
-       DUP = FALSE, NAOK=TRUE)
+    .C('CompLikelihood', as.double(coordx), as.double(coordy), as.integer(corrmodel),
+       as.double(data), as.double(dista), as.double(lags), as.integer(model),
+       as.double(nuisance), as.integer(numdata), as.integer(numcoord), as.double(paramcorr),
+       result, as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
     
     return(result)
   }
@@ -64,21 +64,26 @@ CompScore <- function(coordx, coordy, corrmodel, data, fixed, flag, flagcorr,
 ### Optim call for Composite log-likelihood maximization
 
 OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
-                         hessian, lower, model, namemodel, namescorr, namesnuis, namesparam,
+                         hessian, lags, lower, model, namemodel, namescorr, namesnuis, namesparam,
                          namessim, numcoord, numdata, numparam, numparamcorr, optimizer, param,
-                         varest, type, upper)
+                         varest, type, upper, weighted)
   {
+    # Temporary choice:
+    dista <- 1.0e15
+    if(weighted)
+      dista <- max(lags) / 2
+   
     if(optimizer=='L-BFGS-B')
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
                             control=list(fnscale=-1, factr=1, pgtol=1e-14, maxit = 1e8), data=data,
-                            fixed=fixed, hessian=hessian, lower=lower, method=optimizer, model=model,
-                            namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord, numdata=numdata,
-                            type=type, upper=upper)
+                            dista=dista, fixed=fixed, hessian=hessian, lags=lags, lower=lower,
+                            method=optimizer, model=model, namescorr=namescorr, namesnuis=namesnuis,
+                            numcoord=numcoord, numdata=numdata, type=type, upper=upper)
     else
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
-                            control=list(fnscale=-1, reltol=1e-14, maxit=1e8), data=data, flagcorr,
-                            fixed=fixed, hessian=hessian, method=optimizer, model=model,
-                            namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
+                            control=list(fnscale=-1, reltol=1e-14, maxit=1e8), data=data, dista=dista,
+                            flagcorr, fixed=fixed, hessian=hessian, lags=lags, method=optimizer,
+                            model=model, namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
                             numdata=numdata, type=type)
 
     if(OptimCompLik$convergence == 0)
@@ -98,56 +103,73 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
 
             dimmat <- numparam^2
             eps <- (.Machine$double.eps)^(1/3)
-            godambe <- double(2 * dimmat)
             param <- c(OptimCompLik$par, fixed)
                 
             paramcorr <- param[namescorr]
             nuisance <- param[namesnuis]
-                   
-            if((numdata / numcoord) > 1)
-              {                
+            
+            sensmat <- double(numparam * (numparam - 1) / 2 + numparam)
+            varimat <- double(numparam * (numparam - 1) / 2 + numparam)
+
+            .C('GodambeMat_teo', as.double(coordx), as.double(coordy), as.integer(corrmodel),
+               as.double(dista), as.double(eps), as.integer(flagcorr), as.integer(flagnuis),
+               as.double(lags), as.integer(model), as.integer(numparam), as.integer(numparamcorr),
+               as.integer(numcoord), as.double(paramcorr), as.double(nuisance), sensmat, varimat,
+               as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+                 
+            #if((numdata / numcoord) > 1)
+            #  {                
                 # Compute the sensitivity and variability matrices:
-                .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(data),
-                   as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.integer(model), as.integer(numdata),
-                   as.integer(numparam), as.integer(numparamcorr),as.integer(numcoord), as.double(paramcorr),
-                   as.double(nuisance), godambe, as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-              }
-            else
-              {
+            #    .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(data),
+            #       as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.integer(model), as.integer(numdata),
+            #       as.integer(numparam), as.integer(numparamcorr),as.integer(numcoord), as.double(paramcorr),
+            #       as.double(nuisance), godambe, as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+            #  }
+            #else
+            #  {
                 # The sensitivity (H) and the variability matrix (J)
                 # are estimated by Monte Carlo methods (bootstrap and Jackknife):
                 
-                numsim <- 500
-                param <- param[namessim]
-                mcgodambe <- double(2 * dimmat)
-                #mcsample <- matrix(numeric(numsim * numparam), ncol=numparam, nrow=numsim)
-                for(i in 1 : numsim)
-                  {
-                    # Simulate the random field:
-                    sim <- GaussRF(x=coordx, y=coordy, model=namemodel, grid=grid,
-                                   param=param, n=numdata, pch='')
-                     # Compute the sensitivity and variability matrices:
-                    .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(sim),
-                       as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.integer(model), as.integer(numdata),
-                       as.integer(numparam), as.integer(numparamcorr),as.integer(numcoord), as.double(paramcorr),
-                       as.double(nuisance), godambe, as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+            #    numsim <- 500
+            #    param <- param[namessim]
+            #    mcgodambe <- double(2 * dimmat)
+            #    #mcsample <- matrix(numeric(numsim * numparam), ncol=numparam, nrow=numsim)
+            #    for(i in 1 : numsim)
+             #     {
+              #      # Simulate the random field:
+               #     sim <- GaussRF(x=coordx, y=coordy, model=namemodel, grid=grid,
+               #                    param=param, n=numdata, pch='')
+               #      # Compute the sensitivity and variability matrices:
+               #     .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(sim),
+               #        as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.integer(model), as.integer(numdata),
+               #        as.integer(numparam), as.integer(numparamcorr),as.integer(numcoord), as.double(paramcorr),
+               #        as.double(nuisance), godambe, as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+                #    mcgodambe <- mcgodambe + godambe
+                #  }
+                #godambe <- mcgodambe / numsim
+              #}
 
-                    mcgodambe <- mcgodambe + godambe
-                  }
-                godambe <- mcgodambe / numsim
-              }
+          
             # Set sensitivity matrix:
-            OptimCompLik$sensmat <- matrix(godambe[1 : dimmat], ncol=numparam)
+            OptimCompLik$sensmat <- matrix(double(dimmat), ncol=numparam)
+            OptimCompLik$sensmat[lower.tri(OptimCompLik$sensmat, diag=TRUE)] <- sensmat
+            OptimCompLik$sensmat <- t(OptimCompLik$sensmat)
+            OptimCompLik$sensmat[lower.tri(OptimCompLik$sensmat, diag=TRUE)] <- sensmat
+            
             # Set variability matrix:
-            OptimCompLik$varmat <- matrix(godambe[(dimmat + 1) : (2 * dimmat)], ncol=numparam)
+            OptimCompLik$varimat <- matrix(double(dimmat), ncol=numparam)
+            OptimCompLik$varimat[lower.tri(OptimCompLik$varimat, diag=TRUE)] <- varimat
+            OptimCompLik$varimat <- t(OptimCompLik$varimat)
+            OptimCompLik$varimat[lower.tri(OptimCompLik$varimat, diag=TRUE)] <- varimat
+                  
             namesgod <- c(namesnuis[as.logical(flagnuis)], namescorr[as.logical(flagcorr)])
             dimnames(OptimCompLik$sensmat) <- list(namesgod, namesgod)
-            dimnames(OptimCompLik$varmat) <- list(namesgod, namesgod)
+            dimnames(OptimCompLik$varimat) <- list(namesgod, namesgod)
             OptimCompLik$sensmat <- OptimCompLik$sensmat[namesparam, namesparam]
-            OptimCompLik$varmat <- OptimCompLik$varmat[namesparam, namesparam]
+            OptimCompLik$varimat <- OptimCompLik$varimat[namesparam, namesparam]
             isensmat <- try(solve(OptimCompLik$sensmat), silent = TRUE)
     
-            if(!is.matrix(isensmat) || !is.matrix(OptimCompLik$varmat))
+            if(!is.matrix(isensmat) || !is.matrix(OptimCompLik$varimat))
               {
                 warning("observed information matrix is singular")
                 OptimCompLik$varcov <- 'none'
@@ -155,8 +177,9 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
               }
             else
               {
-                penalty <- OptimCompLik$varmat %*% isensmat
+                penalty <- OptimCompLik$varimat %*% isensmat
                 OptimCompLik$clic <- -2 * (OptimCompLik$value - sum(diag(penalty)))
+        
                 OptimCompLik$varcov <- isensmat %*% penalty
                 OptimCompLik$stderr <- diag(OptimCompLik$varcov)
                 if(any(OptimCompLik$stderr < 0))
@@ -167,5 +190,4 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
           }
     return(OptimCompLik)
   }
-
 

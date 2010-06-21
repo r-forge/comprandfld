@@ -17,16 +17,16 @@
 ### Fitting procedure: 
 
 FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=FALSE, hessian=FALSE,
-                         likelihood='Marginal', model='Gaussian', optimizer='Nelder-Mead', start=NULL,
-                         varest=FALSE, time=FALSE, type='Pairwise', weighted=FALSE, weights=NULL)
+                         likelihood='Marginal', lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead',
+                         start=NULL, varest=FALSE, time=FALSE, type='Pairwise', weighted=FALSE, weights=NULL)
 {
     call <- match.call()
     
     ### Check the parameters given in input:
     
     checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid,
-                             likelihood, model, optimizer, start, varest,
-                             time, type, weighted, weights)
+                             likelihood, lonlat, model, optimizer, start,
+                             varest, time, type, weighted, weights)
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
@@ -38,9 +38,8 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
   
     ### Initialization parameters:
 
-    initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid,
-                         likelihood, model, parscale, optimizer=='L-BFGS-B',
-                         start, time, type)
+    initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
+                         lonlat, model, parscale, optimizer=='L-BFGS-B', start, time, type)
     
     if(!is.null(initparam$error))
       stop(initparam$error)
@@ -51,14 +50,14 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     
     if(initparam$likelihood == 2)
       {
-        lags <- c(dist(initparam$coord))   # Pairwise Euclidean distances between points
-        numpairs <- length(lags)           # number of pairs
+        #lags <- c(dist(initparam$coord))   # Pairwise Euclidean distances between points
+        #numpairs <- length(lags)           # number of pairs
         # Fitting by log-likelihood maximization:
-        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, varest, grid, lags,
-                           initparam$lower, optimizer, initparam$model, initparam$namescorr,
-                           initparam$namesnuis, initparam$namesparam, initparam$numcoord,
-                           initparam$numdata, numpairs, initparam$param, varest, initparam$upper,
-                           initparam$type) 
+        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, varest, grid,
+                           initparam$lags, initparam$lower, optimizer, initparam$model,
+                           initparam$namescorr, initparam$namesnuis, initparam$namesparam,
+                           initparam$numcoord, initparam$numdata, initparam$numpairs,
+                           initparam$param, varest, initparam$upper, initparam$type) 
       }
     
     # Composite likelihood:
@@ -66,11 +65,11 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     if(initparam$likelihood == 3)
       {
         fitted <- OptimCompLik(initparam$coord[,1], initparam$coord[,2], initparam$corrmodel, initparam$data,
-                               initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, FALSE, initparam$lower,
-                               initparam$model, corrmodel, initparam$namescorr, initparam$namesnuis, initparam$namesparam,
-                               initparam$namessim, initparam$numcoord, initparam$numdata, initparam$numparam,
-                               initparam$numparamcorr, optimizer, initparam$param, varest, initparam$type,
-                               initparam$upper)
+                               initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, FALSE, initparam$lags,
+                               initparam$lower, initparam$model, corrmodel, initparam$namescorr, initparam$namesnuis,
+                               initparam$namesparam, initparam$namessim, initparam$numcoord, initparam$numdata,
+                               initparam$numparam, initparam$numparamcorr, optimizer, initparam$param, varest,
+                               initparam$type, initparam$upper, weighted)
       }
 
     ### Set the output object:
@@ -85,17 +84,20 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
                          iterations = fitted$counts,
                          likelihood = likelihood,
                          logCompLik = fitted$value,
+                         lonlat = lonlat,
                          message = fitted$message,
                          model = model,
                          param = fitted$par,
                          stderr = fitted$stderr,
+                         sensmat = fitted$sensmat,
                          varcov = fitted$varcov,
+                         varimat = fitted$varimat,
                          type = type)
 
     structure(c(FitComposite, call = call), class = c("FitComposite"))
   }
 
-print.FitComposite <- function(x, digits = max(3, getOption("digits") - 4), ...)
+print.FitComposite <- function(x, digits = max(3, getOption("digits") - 3), ...)
   {
     dimdata <- dim(x$data)
     
