@@ -579,7 +579,7 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     ### Compute distances:
     numpairs <- numcoord * (numcoord - 1) / 2
     lags <- double(numpairs)
-    .C('Distances', as.double(coordx), as.double(coordy), lags, as.integer(numcoord),
+    .C('Distances', as.double(coord[,1]), as.double(coord[,2]), lags, as.integer(numcoord),
        as.integer(lonlat), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
 

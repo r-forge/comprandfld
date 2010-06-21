@@ -50,10 +50,9 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     
     if(initparam$likelihood == 2)
       {
-        #lags <- c(dist(initparam$coord))   # Pairwise Euclidean distances between points
-        #numpairs <- length(lags)           # number of pairs
+        hessian <- varest
         # Fitting by log-likelihood maximization:
-        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, varest, grid,
+        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, hessian, grid,
                            initparam$lags, initparam$lower, optimizer, initparam$model,
                            initparam$namescorr, initparam$namesnuis, initparam$namesparam,
                            initparam$numcoord, initparam$numdata, initparam$numpairs,

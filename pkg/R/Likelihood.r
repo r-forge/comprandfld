@@ -127,6 +127,8 @@ OptimLik <- function(corrmodel, data, fixed, hessian, grid, lags, lower,
       {
         # Compute the variance-covariance matrix:
         OptimLik$varcov <- try(solve(-OptimLik$hessian), silent = TRUE)
+        OptimLik$sensmat <- NULL
+        OptimLik$varimat <- NULL
     
         if(!is.matrix(OptimLik$varcov))
           {

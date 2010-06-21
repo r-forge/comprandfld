@@ -111,7 +111,7 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
       {
         if(type == 'Standard' || type == 'Pairwise')
           {
-            if(is.null(fixed))
+            if(!any(names(fixed)=='mean'))
               {
                 initparam$param <- c(initparam$fixed['mean'], initparam$param)
                 initparam$namesparam <- sort(names(initparam$param))
@@ -119,16 +119,15 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
                 initparam$numparam <- length(initparam$param)
                 initparam$flagnuis['mean'] <- 1
                 initparam$numfixed <- initparam$numfixed - 1
-                initparam$fixed <- NULL
+                if(is.null(fixed))
+                  initparam$fixed <- NULL
+                else
+                  initparam$fixed <- initparam$fixed[!names(initparam$fixed)=='mean']
               }
-            else
-              if(any(names(fixed)=='mean'))
-                initparam$fixed['mean'] <- fixed['mean']
           }
-              
         initparam$param[names(fitted$par)] <- fitted$par
       }
-
+  
     if(is.list(start))
       {
         namesstart <- names(start)
