@@ -1,5 +1,6 @@
 \name{FitComposite}
 \alias{FitComposite}
+
 \title{Maximum Composite-likelihood Fitting of Random Fields}
 \description{
   Maximum composite-likelihood fitting for random fields.
@@ -10,9 +11,9 @@
 \usage{
 FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
              grid=FALSE, hessian=FALSE, likelihood='Marginal',
-             model='Gaussian', optimizer='Nelder-Mead', start=NULL,
-             varest=FALSE, time=FALSE, type='Pairwise', weighted=FALSE,
-             weights=NULL)
+             lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead',
+             start=NULL, varest=FALSE, time=FALSE, type='Pairwise',
+             weighted=FALSE, weights=NULL)
 } 
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -39,6 +40,9 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
   \item{likelihood}{String; the configuration of the composite
     likelihood. \code{Marginal} is the default, see the Section
     \bold{Details}.}
+  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
+    and \code{coordy} are interpreted as Cartesian coordinates
+    otherwise they are considered as longitude and latitude.}
   \item{model}{String; the density associated to the likelihood
     objects. \code{Gaussian} is the default, see the Section
     \bold{Details}.}
@@ -61,7 +65,6 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
     default) the composite likelihood is not weighted.}
   \item{weights}{A numeric vector of weights (see \bold{Details}).}
 }
-
 
 \details{
   The \code{corrmodel} parameter allows to select a specific correlation
@@ -121,7 +124,6 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
   composite-likelihood definition. The settings alternatives are:
   \enumerate{
     \item If the composite is formed by \code{Marginal} likelihoods:
-    
     \itemize{
       \item If each likelihood is obtained by the \code{Gaussian}
       density then with:
@@ -133,7 +135,6 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
     }
     
     \item If the \code{Full} likelihood is considered:
-
     \itemize{
       \item If the likelihood is obtained by the \code{Gaussian}
       density then with:
@@ -158,25 +159,24 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
 \value{
   The returned object is a list with:
   \itemize{
-    \item \code{clic}, the composite information criterion, if the full
-  likelihood is considered then it conicide with the Akaike information criterion;
+    \item \code{clic}, the composite information criterion, if the full likelihood is considered then it conicide with the Akaike information criterion;
     \item \code{coord}, the vector of coordinates;
-    \item \code{convergence}, a string that denotes if convergence is
-    reached;
+    \item \code{convergence}, a string that denotes if convergence is reached;
     \item \code{corrmodel}, the correlation model;
     \item \code{data}, the vector or matrix of data;
     \item \code{fixed}, the vector of fixed parameters;
-    \item \code{iterations}, the number of iteration used by the
-    numerical routine;
+    \item \code{iterations}, the number of iteration used by the numerical routine;
     \item \code{likelihood}, the configuration of the composite likelihood;
-    \item \code{logCompLik}, the value of the log composite-likelihood at the maximum;
-    \item \code{message}, extra message passed from the numerical
-    routines;
+    \item \code{logCompLik}, the value of the log composite-likelihood
+    at the maximum;
+    \item \code{lonlat}, the type of coordinates;
+    \item \code{message}, extra message passed from the numerical routines;
     \item \code{model}, the density associated to the likelihood objects;
     \item \code{param}, the vector of  parameters' estimates;
     \item \code{stderr}, the vector of standard errors;
-    \item \code{varcov} the matrix of the variance-covariance of
-    the estimates;
+    \item \code{sensmat}, the sensitivity matrix;
+    \item \code{varcov}, the matrix of the variance-covariance of the estimates;
+    \item \code{varimat}, the variability matrix;
     \item \code{type}, the type of the likelihood objects.
     }
 }
@@ -370,6 +370,5 @@ print(fit)
 
 
 }
-
 
 \keyword{Composite}

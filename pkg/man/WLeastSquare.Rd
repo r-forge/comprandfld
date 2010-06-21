@@ -7,8 +7,9 @@
 }
 \usage{
 WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL,
-             grid=FALSE, maxdist=NULL, optimizer='Nelder-Mead',
-             numbins=NULL, start=NULL, time=FALSE, weighted=FALSE)
+             grid=FALSE, lonlat=FALSE, maxdist=NULL,
+             optimizer='Nelder-Mead', numbins=NULL, start=NULL,
+             time=FALSE, weighted=FALSE)
 } 
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -29,6 +30,9 @@ WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL,
     are interpreted as a vector or a (\eqn{n \times d}{n x d})-matrix,
     instead if \code{TRUE} then (\eqn{d \times d
       \times n}{d x d x n})-matrix is considered.}
+  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
+    and \code{coordy} are interpreted as Cartesian coordinates
+    otherwise they are considered as longitude and latitude.}
   \item{maxdist}{A numeric value denoting the maximum distance, see the Section \bold{Details}.}
   \item{optimizer}{String; the optimization algorithm
     (see \code{\link{optim}} for details). 'Nelder-Mead' is the
