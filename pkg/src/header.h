@@ -22,6 +22,10 @@ void CorrelationMat(double *corr, int *corrmod, double *lags,
 void GradientCorrFct(double corr, int *corrmod, double *eps, int *flag, 
 		     double *grad,  double lag, double *par);
 
+double Variogram(int *corrmod, double lag, double *nuisance, double *par);
+
+void VectCorrelation(int *corrmod, double *corrfun, double *lags, int *npair, double *par);
+
 /*----------------------------------------------------------------
 File name: CorrelationFunction.c
 Description: procedures for computation of correlation functions
@@ -35,10 +39,9 @@ Description: functions for composite log-likelihood evaluation
 Start
  ---------------------------------------------------------------*/
 
-
 void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data, 
-		    int *model, double *nuisance, int *ndata, int *nsite, 
-		    double *par, double *res, int *type);
+		    double *dista, double *lags, int *model, double *nuisance, 
+                    int *ndata, int *nsite, double *par, double *res, int *type);
 
 double PairLikelihood(double corr, double *nuisance, double s1, double s1s, 
 		      double u, double v, int *type);
@@ -62,16 +65,26 @@ void CompScore(double *coordx, double *coordy, int *corrmod, double *data,
 	       int *ngrc, int *npar, int *nsite, double *par, double *parcorr, 
 	       double *res, int *type, int *weight);
 
-void GodambeMat(double *coordx, double *coordy, int *corrmod, double *data, 
-		double *eps, int *flagcorr, int *flagnuis, int *model, int *ndata, 
-		int *npar, int *nparc, int *nsite, double *parcorr, double *nuisance,
-		double *godambe, int *type);
+void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, 
+		    double *eps, int *flagcorr, int *flagnuis, double *lags, int *model, 
+		    int *ndata, int *npar, int *nparc, int *nsite, double *parcorr, 
+		    double *nuisance, double *godambe, int *type);
 
-void Score_Gauss_Diff(double corr, int *flag, double *gradcorr, double *gradient, int *npar,
-		      double *par, double u, double v);
+void GodambeMat_teo(double *coordx, double *coordy, int *corrmod, double *dista, double *eps, 
+		    int *flagcorr, int *flagnuis, double *lags, int *model, int *npar,
+                    int *nparc, int *nsite, double *parcorr, double *nuisance, double *sens, 
+		    double *vari, int *type);
+
+void Score_Gauss_Diff(double corr, int expval, int *flag, double *gradcorr, 
+		      double *gradient, int *npar, double *par, double u, double v);
 
 void Score_Gauss_Pair(double corr, int *flag, double *gradcorr, double *gradient, int *npar,
 		      double *par, double u, double v);
+
+void Sensitivity(double *coordx, double *coordy, int *corrmod, double *dista,
+                 double *eps, int *flagcorr, int *flagnuis, int *model, int *npar, 
+                 int *nparc, int *nsite, double *parcorr, double *nuisance, 
+                 double *sens, int *type);
 
 
 /*----------------------------------------------------------------
@@ -104,8 +117,9 @@ via the weighted least square method.
 Start
  ---------------------------------------------------------------*/
 
-void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, 
-		       double *lenbins, double *maxdist, double *moments, int *nsite, int *nbins);
+void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, double *lags, 
+		       double *lenbins, double *maxdist, double *moments, int *npairs, int *nsite, 
+		       int *nbins);
 
 void Wls(double *bins, int *corrmod, double *par, int *nbins, double *moments, 
 	 double *lenbins, double *nuisance, int *weighted, double *res);
@@ -124,11 +138,13 @@ Description: procedures for the computation of useful quantities.
 Start
  ---------------------------------------------------------------*/
 
-void Distances(double *coordx, double *coordy, int *nsite, double *distances);
+void Distances(double *coordx, double *coordy, double *lags, int *nsite, int *type);
 
-double Maxima(double *x, int size);
+double Dist_geodesic(double lonx, double latx, double lony, double laty);
 
-double Minima(double *x, int size);
+double Maxima(double *x, int *size);
+
+double Minima(double *x, int *size);
 
 /*----------------------------------------------------------------
 File name: Utility.c

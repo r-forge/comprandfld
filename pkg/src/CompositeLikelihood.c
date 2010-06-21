@@ -1,13 +1,13 @@
 #include "header.h"
 
-// Composite log-likelihood for extremal models:
+// Composite log-likelihood for Gaussian models:
 
 void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data, 
-		    int *model, double *nuisance, int *ndata, int *nsite, 
-		    double *par, double *res, int *type)
+		    double *dista, double *lags, int *model, double *nuisance, 
+                    int *ndata, int *nsite, double *par, double *res, int *type)
 {
-  int i=0, j=0, n=0; 
-  double corr=0.0, lag=0.0, s1=0.0, s12=0.0, s1s=0.0;
+  int i=0, h=0, j=0, n=0; 
+  double corr=0.0, s1=0.0, s12=0.0, s1s=0.0;
 
   s1 = nuisance[1] + nuisance[2];//set nugget + sill
   s1s = pow(s1, 2);
@@ -16,11 +16,14 @@ void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data,
     for(j = (i + 1); j < *nsite; j++)
       {
 	//pairwise Euclidean distance
-	lag = pythag(coordx[i] - coordx[j], coordy[i] - coordy[j]);
-	corr = CorrelationFct(corrmod, lag, par); // pairwise correlation
-	for(n = 0; n < *ndata; n++)
-	  *res += PairLikelihood(corr, nuisance, s1, s1s, data[(n + i * *ndata)], 
-				 data[(n + j * *ndata)], type);
+	if(lags[h] <= *dista)
+	  {
+	    corr = CorrelationFct(corrmod, lags[h], par); // pairwise correlation
+	    for(n = 0; n < *ndata; n++)
+	      *res += PairLikelihood(corr, nuisance, s1, s1s, 
+				     data[(n + i * *ndata)], data[(n + j * *ndata)], type);
+	  }
+	h++;
       }    
 
   if(!R_FINITE(*res))
@@ -29,7 +32,7 @@ void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data,
   return;
 }
 
-// Pairwise log-likelihood for extremal models on frechet scale:
+// Pairwise log-likelihood for Gaussian model:
 
 double PairLikelihood(double corr, double *nuisance, double s1, double s1s, 
 		      double u, double v, int *type)

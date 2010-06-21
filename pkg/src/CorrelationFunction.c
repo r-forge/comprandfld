@@ -157,3 +157,21 @@ void GradientCorrFct(double corr, int *corrmod, double *eps, int *flag, double *
   return;
 }
 
+double Variogram(int *corrmod, double lag, double *nuisance, double *par)
+{
+  double vario=0.0;
+
+  vario = nuisance[1] + nuisance[2] * (1 - CorrelationFct(corrmod, lag, par));
+
+  return vario;
+}
+
+void VectCorrelation(int *corrmod, double *corrfun, double *lags, int *npair, double *par)
+{
+  int i=0;
+
+  for(i = 0; i < *npair; i++)
+    corrfun[i] = CorrelationFct(corrmod, lags[i], par);
+
+  return;
+}

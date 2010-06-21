@@ -2,15 +2,12 @@
 
 // empirical variogram
 
-void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, 
-		       double *lenbins, double *maxdist, double *moments, int *nsite, int *nbins)
+void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, double *lags, 
+		       double *lenbins, double *maxdist, double *moments, int *npairs, int *nsite, 
+		       int *nbins)
 {
   int h=0, i=0, j=0, p=0;
-  double *lags, npairs=*nsite * (*nsite - 1) / 2, step=0.0;
-  double lower=0.0;
-
-  lags = (double *) R_alloc(npairs, sizeof(double));
-  Distances(coordx, coordy, nsite, lags);
+  double lower=0.0, step=0.0;
 
   lower = Minima(lags, npairs);
 
