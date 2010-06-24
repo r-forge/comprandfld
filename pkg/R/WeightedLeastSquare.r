@@ -13,7 +13,7 @@
 
 ### Procedures are in alphabetical order.
 
-print.WLS <- function(x, digits = max(3, getOption("digits") - 4), ...)
+print.WLS <- function(x, digits = max(3, getOption("digits") - 3), ...)
   {
     dimdata <- dim(x$data)
     

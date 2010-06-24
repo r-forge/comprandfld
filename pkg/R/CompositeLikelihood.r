@@ -36,36 +36,11 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
     return(result)
   }
 
-CompScore <- function(coordx, coordy, corrmodel, data, fixed, flag, flagcorr,
-                      numcoord, numdata, numparam, numparamcorr, param, type, weight)
-  {
-    result <- rep(1.0e15, numparam)
-
-    if(!CheckParamRange(param))
-      return(result)
-
-    eps <- (.Machine$double.eps)^(1/3)
-    result <- double(numparam)
-    param <- c(param, fixed)
-    namesparam <- sort(names(param))
-    param <- param[namesparam]
-    par <- param[c('mean','nugget','sill')]
-    param <- param[-match(c('mean','nugget','sill'), namesparam)]
- 
-    .C('CompScore', as.double(coordx), as.double(coordy), as.integer(corrmodel),
-       as.double(data), as.double(eps), as.integer(flag), as.integer(flagcorr),
-       as.integer(numdata), as.integer(numparamcorr), as.integer(numparam),
-       as.integer(numcoord), as.double(par), as.double(param), result, as.integer(type),
-       as.integer(weight), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-    
-    return(result)
-  }
-
 ### Optim call for Composite log-likelihood maximization
 
 OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
-                         hessian, lags, lower, model, namemodel, namescorr, namesnuis, namesparam,
-                         namessim, numcoord, numdata, numparam, numparamcorr, optimizer, param,
+                         hessian, lags, lower, model, namescorr, namesnuis, namesparam,
+                         numcoord, numdata, numparam, numparamcorr, optimizer, param,
                          varest, type, upper, weighted)
   {
     # Temporary choice:
@@ -82,10 +57,10 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
     else
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
                             control=list(fnscale=-1, reltol=1e-14, maxit=1e8), data=data, dista=dista,
-                            flagcorr, fixed=fixed, hessian=hessian, lags=lags, method=optimizer,
+                            fixed=fixed, hessian=hessian, lags=lags, method=optimizer,
                             model=model, namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
                             numdata=numdata, type=type)
-
+    
     if(OptimCompLik$convergence == 0)
       OptimCompLik$convergence <- 'Successful'
     else
@@ -116,39 +91,6 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
                as.double(lags), as.integer(model), as.integer(numparam), as.integer(numparamcorr),
                as.integer(numcoord), as.double(paramcorr), as.double(nuisance), sensmat, varimat,
                as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-                 
-            #if((numdata / numcoord) > 1)
-            #  {                
-                # Compute the sensitivity and variability matrices:
-            #    .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(data),
-            #       as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.integer(model), as.integer(numdata),
-            #       as.integer(numparam), as.integer(numparamcorr),as.integer(numcoord), as.double(paramcorr),
-            #       as.double(nuisance), godambe, as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-            #  }
-            #else
-            #  {
-                # The sensitivity (H) and the variability matrix (J)
-                # are estimated by Monte Carlo methods (bootstrap and Jackknife):
-                
-            #    numsim <- 500
-            #    param <- param[namessim]
-            #    mcgodambe <- double(2 * dimmat)
-            #    #mcsample <- matrix(numeric(numsim * numparam), ncol=numparam, nrow=numsim)
-            #    for(i in 1 : numsim)
-             #     {
-              #      # Simulate the random field:
-               #     sim <- GaussRF(x=coordx, y=coordy, model=namemodel, grid=grid,
-               #                    param=param, n=numdata, pch='')
-               #      # Compute the sensitivity and variability matrices:
-               #     .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(sim),
-               #        as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.integer(model), as.integer(numdata),
-               #        as.integer(numparam), as.integer(numparamcorr),as.integer(numcoord), as.double(paramcorr),
-               #        as.double(nuisance), godambe, as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-                #    mcgodambe <- mcgodambe + godambe
-                #  }
-                #godambe <- mcgodambe / numsim
-              #}
-
           
             # Set sensitivity matrix:
             OptimCompLik$sensmat <- matrix(double(dimmat), ncol=numparam)

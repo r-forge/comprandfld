@@ -649,10 +649,3 @@ SetRangeParam <- function(namesparam, numparam)
       }
     return(list(lower=lower, upper=upper))
   }
-
-SetComp <- function(type)
-  {
-    SetComp <- switch(type, pair=1, diff=2, ML=3, REML=4, wls=5)
-
-    return(SetComp)
-  }

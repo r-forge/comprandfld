@@ -92,9 +92,9 @@ LogNormDen <- function(stdata, detvarcov, ivarcov, numcoord, type)
 
 ### Optim call for log-likelihood maximization
 
-OptimLik <- function(corrmodel, data, fixed, hessian, grid, lags, lower,
-                     optimizer, model, namescorr, namesnuis, namesparam,
-                     numcoord, numdata, numpairs, param, varest, upper, type)
+OptimLik <- function(corrmodel, data, fixed, grid, hessian, lags, lower,
+                     model, namescorr, namesnuis, namesparam, numcoord,
+                     numdata, numpairs, optimizer, param, varest, type, upper)
   {
     if(optimizer=='L-BFGS-B')
       OptimLik <- optim(param, Likelihood, corrmodel=corrmodel, control=list(fnscale=-1,
@@ -153,55 +153,3 @@ OptimLik <- function(corrmodel, data, fixed, hessian, grid, lags, lower,
   }
 
 
-ScoreLikelihood <- function(corrmodel, data, flag, fixed, grid, lags, numcoord, numpairs, param, type)
-  {
-    result <- -1.0e8
-
-    if(!CheckParamRange(param))
-      return(result)
-
-    param <- c(param, fixed)
-    namesparam <- sort(names(param))
-    param <- param[namesparam]
-    nugget <- param['nugget']
-    mean <- param['mean']
-    sill <- param['sill']
-    param <- param[-match(c('mean','nugget','sill'), namesparam)]
-   
-    stdata <- data - mean
-    corr <- double(numpairs)
-
-    .C('CorrelationMat', corr, as.integer(corrmodel), as.double(lags),
-       as.integer(numpairs), as.double(param), PACKAGE='CompRandFld',
-       DUP = FALSE, NAOK=TRUE)
-
-    corr <- corr * sill
-
-    varcov <- (nugget + sill) * diag(numcoord)
-    varcov[lower.tri(varcov)] <- corr
-    varcov <- t(varcov)
-    varcov[lower.tri(varcov)] <- corr
-
-    cholvarcov <- try(chol(varcov), silent = TRUE)
-    if(!is.matrix(cholvarcov))
-      return(result)
-    
-    ivarcov <- try(chol2inv(cholvarcov), silent = TRUE)
-    if(!is.matrix(ivarcov))
-      return(result)
-
-    detvarcov <- sum(log(diag(cholvarcov)))
-
-    if(!grid)
-      result <- apply(stdata, 1, LogNormDen, detvarcov=detvarcov,
-                      ivarcov=ivarcov, numcoord=numcoord, type=type)
-
-    if(grid)
-      {
-        result <- NULL
-        for(i in 1:dim(stdata)[3])
-          result <- c(result, LogNormDen(c(stdata[,,i]), detvarcov, ivarcov, numcoord, type))
-      }
-    
-    return(sum(result))
-  }

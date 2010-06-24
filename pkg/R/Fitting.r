@@ -52,11 +52,11 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
       {
         hessian <- varest
         # Fitting by log-likelihood maximization:
-        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, hessian, grid,
-                           initparam$lags, initparam$lower, optimizer, initparam$model,
-                           initparam$namescorr, initparam$namesnuis, initparam$namesparam,
-                           initparam$numcoord, initparam$numdata, initparam$numpairs,
-                           initparam$param, varest, initparam$upper, initparam$type) 
+        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, grid, hessian,
+                           initparam$lags, initparam$lower, initparam$model, initparam$namescorr,
+                           initparam$namesnuis, initparam$namesparam, initparam$numcoord,
+                           initparam$numdata, initparam$numpairs, optimizer, initparam$param,
+                           varest, initparam$type, initparam$upper) 
       }
     
     # Composite likelihood:
@@ -65,10 +65,10 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
       {
         fitted <- OptimCompLik(initparam$coord[,1], initparam$coord[,2], initparam$corrmodel, initparam$data,
                                initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, FALSE, initparam$lags,
-                               initparam$lower, initparam$model, corrmodel, initparam$namescorr, initparam$namesnuis,
-                               initparam$namesparam, initparam$namessim, initparam$numcoord, initparam$numdata,
-                               initparam$numparam, initparam$numparamcorr, optimizer, initparam$param, varest,
-                               initparam$type, initparam$upper, weighted)
+                               initparam$lower, initparam$model, initparam$namescorr, initparam$namesnuis,
+                               initparam$namesparam, initparam$numcoord, initparam$numdata, initparam$numparam,
+                               initparam$numparamcorr, optimizer, initparam$param, varest, initparam$type,
+                               initparam$upper, weighted)
       }
 
     ### Set the output object:
