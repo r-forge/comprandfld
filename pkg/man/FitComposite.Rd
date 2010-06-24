@@ -1,5 +1,6 @@
 \name{FitComposite}
 \alias{FitComposite}
+\alias{print.FitComposite}
 
 \title{Maximum Composite-likelihood Fitting of Random Fields}
 \description{

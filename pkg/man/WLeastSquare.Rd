@@ -1,9 +1,11 @@
 \name{WLeastSquare}
 \alias{WLeastSquare}
+\alias{print.WLS}
+
 \title{Weighted Least Square Estimation of Random Fields}
 \description{
   the function returns the parameters' estimates and the estimates' variances
-  of a random field obtained by the weigthed least square estimator.
+  of a random field obtained by the weigthed least squares estimator.
 }
 \usage{
 WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL,
@@ -56,7 +58,7 @@ WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL,
 \value{
   The returned object is a list with:
   \itemize{
-    \item \code{bins}, adjacent intervals of grouped distances ;
+    \item \code{bins}, adjacent intervals of grouped distances;
     \item \code{coord}, the vector of coordinates;
     \item \code{convergence}, a string that denotes if convergence is
     reached;
