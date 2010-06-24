@@ -47,13 +47,16 @@ Covariogram(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
 
 \value{
   The returned object is a list with:
-  \itemize{
-    \item \code{covariance}, the vector of the estimated covariance function;
-    \item \code{variogram}, the vector of the estimated variogram function;
-    \item \code{pratical.range}, the estimated practial range;
-  }
+  
+    \item{covariance}{The vector of the estimated covariance function;}
+    \item{variogram}{The vector of the estimated variogram function;}
+    \item{pratical.range}{The estimated practial range.}
 }
 
+\references{
+  Gaetan, C. and Guyon, X. (2009) Spatial Statistics and Modelling.
+  \emph{Spring Verlang, New York}.
+}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
   \url{http://eflum.epfl.ch/people/padoan.en.php}.}

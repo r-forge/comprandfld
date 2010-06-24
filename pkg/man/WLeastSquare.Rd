@@ -56,29 +56,33 @@ WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL,
 }
 
 \value{
-  The returned object is a list with:
-  \itemize{
-    \item \code{bins}, adjacent intervals of grouped distances;
-    \item \code{coord}, the vector of coordinates;
-    \item \code{convergence}, a string that denotes if convergence is
-    reached;
-    \item \code{corrmodel}, the correlation model;
-    \item \code{data}, the vector or matrix of data;
-    \item \code{fixed}, the vector of fixed parameters;
-    \item \code{iterations}, the number of iteration used by the
-    numerical routine;
-    \item \code{message}, extra message passed from the numerical
-    routines;
-    \item \code{param}, the vector of  parameters' estimates;
-    \item \code{variogram} the empirical variogram;
-    }
+   Returns an object of class \code{WLS}.
+  An object of class \code{WLS} is a list containing
+  at most the following components:
+
+    \item{bins}{Adjacent intervals of grouped distances;}
+    \item{coord}{The vector of coordinates;}
+    \item{convergence}{A string that denotes if convergence is reached;}
+    \item{corrmodel}{The correlation model;}
+    \item{data}{The vector or matrix of data;}
+    \item{fixed}{The vector of fixed parameters;}
+    \item{iterations}{The number of iteration used by the numerical routine;}
+    \item{message}{Extra message passed from the numerical routines;}
+    \item{param}{The vector of  parameters' estimates;}
+    \item{variogram}{The empirical variogram.}
+  
 }
 
 \references{
+  
   Cressie, N. A. C. (1993) Statistics for Spatial Data. New York: Wiley.
 
   Barry, J. T., Crowder, M. J. and Diggle, P. J. (1997)
-  Parametric estimation of the variogram. Tech. Report, Dept Maths & Stats, Lancaster University.
+  Parametric estimation of the variogram. Tech. Report, Dept Maths &
+  Stats, Lancaster University.
+
+  Gaetan, C. and Guyon, X. (2009) Spatial Statistics and Modelling.
+  \emph{Spring Verlang, New York}.
 }
 
 \seealso{\code{\link{FitComposite}}, \code{\link{optim}}}

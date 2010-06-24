@@ -158,29 +158,32 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
 }
 
 \value{
-  The returned object is a list with:
-  \itemize{
-    \item \code{clic}, the composite information criterion, if the full likelihood is considered then it conicide with the Akaike information criterion;
-    \item \code{coord}, the vector of coordinates;
-    \item \code{convergence}, a string that denotes if convergence is reached;
-    \item \code{corrmodel}, the correlation model;
-    \item \code{data}, the vector or matrix of data;
-    \item \code{fixed}, the vector of fixed parameters;
-    \item \code{iterations}, the number of iteration used by the numerical routine;
-    \item \code{likelihood}, the configuration of the composite likelihood;
-    \item \code{logCompLik}, the value of the log composite-likelihood
-    at the maximum;
-    \item \code{lonlat}, the type of coordinates;
-    \item \code{message}, extra message passed from the numerical routines;
-    \item \code{model}, the density associated to the likelihood objects;
-    \item \code{param}, the vector of  parameters' estimates;
-    \item \code{stderr}, the vector of standard errors;
-    \item \code{sensmat}, the sensitivity matrix;
-    \item \code{varcov}, the matrix of the variance-covariance of the estimates;
-    \item \code{varimat}, the variability matrix;
-    \item \code{type}, the type of the likelihood objects.
-    }
+  Returns an object of class \code{FitComposite}.
+  An object of class \code{FitComposite} is a list containing
+  at most the following components:
+  
+  \item{clic}{The composite information criterion, if the full
+  likelihood is considered then it conicide with the Akaike information
+  criterion;}
+  \item{coord}{The vector of coordinates;}
+  \item{convergence}{A string that denotes if convergence is reached;}
+  \item{corrmodel}{The correlation model;}
+  \item{data}{The vector or matrix of data;}
+  \item{fixed}{The vector of fixed parameters;}
+  \item{iterations}{The number of iteration used by the numerical routine;}
+  \item{likelihood}{The configuration of the composite likelihood;}
+  \item{logCompLik}{The value of the log composite-likelihood at the maximum;}
+  \item{lonlat}{The type of coordinates;}
+  \item{message}{Extra message passed from the numerical routines;}
+  \item{model}{The density associated to the likelihood objects;}
+  \item{param}{The vector of  parameters' estimates;}
+  \item{stderr}{The vector of standard errors;}
+  \item{sensmat}{The sensitivity matrix;}
+  \item{varcov}{The matrix of the variance-covariance of the estimates;}
+  \item{varimat}{The variability matrix;}
+  \item{type}{The type of the likelihood objects.}
 }
+
 
 \references{
   Harville, D. A. (1977)
@@ -194,6 +197,9 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
   Varin, C. (2008)
   On Composite Marginal Likelihoods.
   \emph{Advances in Statistical Analysis}, \bold{92}, 1--28.
+
+  Gaetan, C. and Guyon, X. (2009) Spatial Statistics and Modelling.
+  \emph{Spring Verlang, New York}.
 
   Padoan, S. A. Ribatet, M and Sisson, S. A. (2010)
   Likelihood-Based Inference for Max-Stable Processes.
