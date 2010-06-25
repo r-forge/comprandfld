@@ -17,7 +17,7 @@ Wls(bins, corrmodel, fixed, lenbins, moments, numbins, param, weighted)
     will be considered as known values.}
   \item{lenbins}{A numeric vector with the number of observations that
     fall in each bin.}
-  \item{moments}{}
+  \item{moments}{A vector with the estimated means.}
   \item{numbins}{Numeric; the number of bins.}
   \item{param}{A numeric vector of parameters' values.}
   \item{weighted}{{Logical; if \code{TRUE} the least squares are
