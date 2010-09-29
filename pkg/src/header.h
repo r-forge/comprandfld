@@ -40,10 +40,10 @@ Start
  ---------------------------------------------------------------*/
 
 void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data, 
-		    double *dista, double *lags, int *model, double *nuisance, 
+		    double *dista, double *lags, int *like, int *model, double *nuisance, 
                     int *ndata, int *nsite, double *par, double *res, int *type);
 
-double PairLikelihood(double corr, double *nuisance, double s1, double s1s, 
+double PairLikelihood(double corr, int *like, double *nuisance, double s1, double s1s, 
 		      double u, double v, int *type);
 
 
