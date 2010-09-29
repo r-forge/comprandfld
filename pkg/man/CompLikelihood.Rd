@@ -9,8 +9,8 @@
 }
 \usage{
 CompLikelihood(coordx, coordy, corrmodel, data, dista, fixed, lags,
-               model, namescorr, namesnuis, numcoord, numdata, param,
-               type)
+               likelihood, model, namescorr, namesnuis, numcoord,
+               numdata, param, type)
 } 
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -26,6 +26,7 @@ CompLikelihood(coordx, coordy, corrmodel, data, dista, fixed, lags,
   \item{fixed}{A numeric vector with the parameters that
     will be considered as known values.}
   \item{lags}{A numeric vector of distances between points.}
+  \item{likelihood}{Numeric; the type of the likelihood objects.}
   \item{model}{Numeric; the id of the random field.}
   \item{namescorr}{String; the names of the correlation parameters.}
   \item{namesnuis}{String; the names of the nuisance parameters.}
