@@ -9,8 +9,8 @@
 }
 \usage{
 OptimCompLik(coordx, coordy, corrmodel, data, flagcorr,
-             flagnuis, fixed, grid, hessian, lags, lower,
-             model, namescorr, namesnuis, namesparam,
+             flagnuis, fixed, grid, hessian, lags, likelihood,
+             lower, model, namescorr, namesnuis, namesparam,
              numcoord, numdata, numparam, numparamcorr,
              optimizer, param, varest, type, upper, weighted)
 } 
@@ -37,6 +37,7 @@ OptimCompLik(coordx, coordy, corrmodel, data, flagcorr,
   \item{hessian}{Logical; if \code{FALSE} (the default) the hessian
     matrix is not computed from the optimizer routine.}
   \item{lags}{A numeric vector of distances between points.}
+  \item{likelihood}{Numeric; the type of the likelihood objects.}
   \item{lower}{A numeric vector with the lower bounds of the parameters' ranges.}
   \item{model}{Numeric; the id value of the density associated to the likelihood
     objects.}
