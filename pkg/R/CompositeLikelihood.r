@@ -14,9 +14,8 @@
 ### Procedures are in alphabetical order.
 
 
-CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
-                           model, namescorr, namesnuis, numcoord, numdata, param,
-                           type)
+CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags, likelihood,
+                           model, namescorr, namesnuis, numcoord, numdata, param, type)
   {
     result <- -1.0e15
 
@@ -29,9 +28,10 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
     nuisance <- param[namesnuis]
 
     .C('CompLikelihood', as.double(coordx), as.double(coordy), as.integer(corrmodel),
-       as.double(data), as.double(dista), as.double(lags), as.integer(model),
-       as.double(nuisance), as.integer(numdata), as.integer(numcoord), as.double(paramcorr),
-       result, as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+       as.double(data), as.double(dista), as.double(lags), as.integer(likelihood),
+       as.integer(model), as.double(nuisance), as.integer(numdata), as.integer(numcoord),
+       as.double(paramcorr), result, as.integer(type), PACKAGE='CompRandFld',
+       DUP = FALSE, NAOK=TRUE)
     
     return(result)
   }
@@ -39,7 +39,7 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
 ### Optim call for Composite log-likelihood maximization
 
 OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
-                         hessian, lags, lower, model, namescorr, namesnuis, namesparam,
+                         hessian, lags, likelihood, lower, model, namescorr, namesnuis, namesparam,
                          numcoord, numdata, numparam, numparamcorr, optimizer, param,
                          varest, type, upper, weighted)
   {
@@ -51,15 +51,16 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
     if(optimizer=='L-BFGS-B')
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
                             control=list(fnscale=-1, factr=1, pgtol=1e-14, maxit = 1e8), data=data,
-                            dista=dista, fixed=fixed, hessian=hessian, lags=lags, lower=lower,
-                            method=optimizer, model=model, namescorr=namescorr, namesnuis=namesnuis,
-                            numcoord=numcoord, numdata=numdata, type=type, upper=upper)
+                            dista=dista, fixed=fixed, hessian=hessian, lags=lags, likelihood=likelihood,
+                            lower=lower, method=optimizer, model=model, namescorr=namescorr,
+                            namesnuis=namesnuis, numcoord=numcoord, numdata=numdata, type=type,
+                            upper=upper)
     else
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
                             control=list(fnscale=-1, reltol=1e-14, maxit=1e8), data=data, dista=dista,
-                            fixed=fixed, hessian=hessian, lags=lags, method=optimizer,
-                            model=model, namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
-                            numdata=numdata, type=type)
+                            fixed=fixed, hessian=hessian, lags=lags, likelihood=likelihood,
+                            method=optimizer, model=model, namescorr=namescorr, namesnuis=namesnuis,
+                            numcoord=numcoord, numdata=numdata, type=type)
     
     if(OptimCompLik$convergence == 0)
       OptimCompLik$convergence <- 'Successful'
