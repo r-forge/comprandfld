@@ -65,10 +65,10 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
       {
         fitted <- OptimCompLik(initparam$coord[,1], initparam$coord[,2], initparam$corrmodel, initparam$data,
                                initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, FALSE, initparam$lags,
-                               initparam$lower, initparam$model, initparam$namescorr, initparam$namesnuis,
-                               initparam$namesparam, initparam$numcoord, initparam$numdata, initparam$numparam,
-                               initparam$numparamcorr, optimizer, initparam$param, varest, initparam$type,
-                               initparam$upper, weighted)
+                               initparam$likelihood, initparam$lower, initparam$model, initparam$namescorr,
+                               initparam$namesnuis, initparam$namesparam, initparam$numcoord, initparam$numdata,
+                               initparam$numparam, initparam$numparamcorr, optimizer, initparam$param, varest,
+                               initparam$type, initparam$upper, weighted)
       }
 
     ### Set the output object:
