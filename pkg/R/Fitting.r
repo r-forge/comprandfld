@@ -61,7 +61,7 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     
     # Composite likelihood:
 
-    if(initparam$likelihood == 3)
+    if(initparam$likelihood == 3 || initparam$likelihood == 1)
       {
         fitted <- OptimCompLik(initparam$coord[,1], initparam$coord[,2], initparam$corrmodel, initparam$data,
                                initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, FALSE, initparam$lags,
