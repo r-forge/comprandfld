@@ -52,10 +52,8 @@ double PairLikelihood(double corr, int *like, double *nuisance,
 	  v = v - nuisance[0]; //v-mean
 	  u2 = R_pow(u, 2);
 	  v2 = R_pow(v, 2);
-	  li = -.5 * (log(2 * M_PI)+ log(nuisance[2]) + u2 / nuisance[2]);
-	  lj = -.5 * (log(2 * M_PI)+ log(nuisance[2]) + v2 / nuisance[2]);
-	  lij= - (2 * log(2 * M_PI) + log(det) + (s1 * (u2 + v2) - 2 * s12 * u * v) / det);
-	  res = lij - (li + lj);
+	  res =  - log(2 * M_PI) - log(det) + log(s1) + 
+	    (u2 + v2) * (0.5 / s1 - s1 / det) + 2 * s12 * u * v / det;
 	  break;
 	}
       break;
