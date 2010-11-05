@@ -1,6 +1,6 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@eofl.ch.
+### Email: simone.padoan@epfl.ch.
 ### Institute: EPFL.
 ### File name: Likelihood.r
 ### Description:
@@ -92,21 +92,21 @@ LogNormDen <- function(stdata, detvarcov, ivarcov, numcoord, type)
 
 ### Optim call for log-likelihood maximization
 
-OptimLik <- function(corrmodel, data, fixed, grid, hessian, lags, lower,
-                     model, namescorr, namesnuis, namesparam, numcoord,
-                     numdata, numpairs, optimizer, param, varest, type, upper)
+OptimLik <- function(corrmodel, data, fixed, grid, lags, lower, model,
+                     namescorr, namesnuis, namesparam, numcoord, numdata,
+                     numpairs, optimizer, param, varest, type, upper)
   {
     if(optimizer=='L-BFGS-B')
       OptimLik <- optim(param, Likelihood, corrmodel=corrmodel, control=list(fnscale=-1,
                         factr=1, pgtol=1e-14, maxit = 1e8), data=data, fixed=fixed,
-                        grid=grid, hessian=hessian, lags=lags, lower=lower,
+                        grid=grid, hessian=varest, lags=lags, lower=lower,
                         method=optimizer, model=model, namescorr=namescorr,
                         namesnuis=namesnuis, numcoord=numcoord, numdata=numdata,
                         numpairs=numpairs, upper=upper, type=type)
     else
       OptimLik <- optim(param, Likelihood, corrmodel=corrmodel, control=list(fnscale=-1,
                         reltol=1e-14, maxit=1e8), data=data, fixed=fixed, grid=grid,
-                        hessian=hessian, lags=lags, method=optimizer, model=model,
+                        hessian=varest, lags=lags, method=optimizer, model=model,
                         namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
                         numdata=numdata, numpairs=numpairs, type=type)
 

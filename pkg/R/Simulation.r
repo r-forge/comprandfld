@@ -1,6 +1,6 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua
-### Email: simone.padoan@eofl.ch.
+### Email: simone.padoan@epfl.ch.
 ### Institute: EPFL.
 ### File name: Simulation.r
 ### Description:

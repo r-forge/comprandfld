@@ -1,13 +1,13 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@eofl.ch.
+### Email: simone.padoan@epfl.ch.
 ### Institute: EPFL.
 ### File name: Fitting.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 04/06/2010.
+### Last change: 20/10/2010.
 ####################################################
 
 
@@ -16,9 +16,10 @@
 
 ### Fitting procedure: 
 
-FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=FALSE, hessian=FALSE,
-                         likelihood='Marginal', lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead',
-                         start=NULL, varest=FALSE, time=FALSE, type='Pairwise', weighted=FALSE, weights=NULL)
+FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=FALSE, likelihood='Marginal',
+                         lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead', start=NULL, time=FALSE,
+                         type='Pairwise', varest=FALSE, vartype='SubSamp', weighted=FALSE, weights=NULL,
+                         winconst=NULL)
 {
     call <- match.call()
     
@@ -26,10 +27,15 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     
     checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid,
                              likelihood, lonlat, model, optimizer, start,
-                             varest, time, type, weighted, weights)
+                             time, type, varest, vartype, weighted, weights,
+                             winconst)
+
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
+    ### If the case set the sub-sampling parameter to the default value
+    if(varest & (vartype == 'SubSamp') & (missing(winconst) || !is.numeric(winconst)))
+      winconst <- 1
 
     ### Initialization global variables:
      
@@ -39,7 +45,8 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     ### Initialization parameters:
 
     initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                         lonlat, model, parscale, optimizer=='L-BFGS-B', start, time, type)
+                         lonlat, model, parscale, optimizer=='L-BFGS-B', start,
+                         time, type, vartype)
     
     if(!is.null(initparam$error))
       stop(initparam$error)
@@ -50,25 +57,24 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     
     if(initparam$likelihood == 2)
       {
-        hessian <- varest
         # Fitting by log-likelihood maximization:
-        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, grid, hessian,
-                           initparam$lags, initparam$lower, initparam$model, initparam$namescorr,
-                           initparam$namesnuis, initparam$namesparam, initparam$numcoord,
-                           initparam$numdata, initparam$numpairs, optimizer, initparam$param,
-                           varest, initparam$type, initparam$upper) 
+        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, grid, initparam$lags,
+                           initparam$lower, initparam$model, initparam$namescorr, initparam$namesnuis,
+                           initparam$namesparam, initparam$numcoord, initparam$numdata, initparam$numpairs,
+                           optimizer, initparam$param, varest, initparam$type, initparam$upper) 
       }
     
     # Composite likelihood:
 
     if(initparam$likelihood == 3 || initparam$likelihood == 1)
       {
+        vartype <- CheckVarType(vartype)
         fitted <- OptimCompLik(initparam$coord[,1], initparam$coord[,2], initparam$corrmodel, initparam$data,
-                               initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, FALSE, initparam$lags,
-                               initparam$likelihood, initparam$lower, initparam$model, initparam$namescorr,
+                               initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, initparam$lags,
+                               initparam$likelihood, lonlat, initparam$lower, initparam$model, initparam$namescorr,
                                initparam$namesnuis, initparam$namesparam, initparam$numcoord, initparam$numdata,
-                               initparam$numparam, initparam$numparamcorr, optimizer, initparam$param, varest,
-                               initparam$type, initparam$upper, weighted)
+                               initparam$numparam, initparam$numparamcorr, optimizer, initparam$param, initparam$type,
+                               initparam$upper, varest, vartype, weighted, winconst)
       }
 
     ### Set the output object:

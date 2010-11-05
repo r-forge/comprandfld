@@ -1,6 +1,6 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@eofl.ch.
+### Email: simone.padoan@epfl.ch.
 ### Institute: EPFL.
 ### File name: Likelihood.r
 ### Description:
@@ -72,19 +72,50 @@ Wls <- function(bins, corrmodel, fixed, lenbins, moments, numbins, param, weight
   }
 
 WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                    lonlat, model, parscale, paramrange, start, time, type)
+                    lonlat, model, parscale, paramrange, start, time, type, vartype)
   {
     
     ### Initialization parameters:
     
     initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid,
                            likelihood, lonlat, model, parscale, paramrange,
-                           start, time, 'WLeastSquare')
+                           start, time, 'WLeastSquare', vartype)
 
     if(!is.null(initparam$error))
       stop(initparam$error)
 
     initparam$type <- CheckType(type)
+
+    if(initparam$numstart == initparam$numparam)
+      {
+        if(type == 'Standard' || type == 'Pairwise')
+          {
+            if(!any(names(fixed)=='mean'))
+              {
+                initparam$param <- c(initparam$fixed['mean'], initparam$param)
+                initparam$namesparam <- sort(names(initparam$param))
+                initparam$param <- initparam$param[initparam$namesparam]
+                initparam$numparam <- length(initparam$param)
+                initparam$flagnuis['mean'] <- 1
+                initparam$numfixed <- initparam$numfixed - 1
+                if(is.null(fixed))
+                  initparam$fixed <- NULL
+                else
+                  initparam$fixed <- initparam$fixed[!names(initparam$fixed)=='mean']
+              }
+          }
+
+        return(initparam)
+      }
+
+    if(initparam$numstart > 0)
+      {
+        for(i in 1 : initparam$numstart)
+          {
+            initparam$param <- initparam$param[!names(initparam$param)==initparam$namesstart[i]]
+            initparam$fixed <- c(initparam$fixed, initparam$start[initparam$namesstart[i]])
+          }
+      }
 
     ### Estimation of empirical variogram:
 
@@ -107,6 +138,16 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
                     weighted=FALSE, control=list(fnscale=-1, reltol=1e-14, maxit=1e8),
                     hessian=FALSE)
 
+    if(initparam$numstart > 0)
+      {
+        for(i in 1 : initparam$numstart)
+          {
+            initparam$param <- c(initparam$param, initparam$start[initparam$namesstart[i]])
+            initparam$fixed <- initparam$fixed[!initparam$namesfixed==initparam$namesstart[i]]
+          }
+        initparam$param <- initparam$param[initparam$namesparam]
+      }
+
     if(fitted$convergence == 0)
       {
         if(type == 'Standard' || type == 'Pairwise')
@@ -128,12 +169,12 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         initparam$param[names(fitted$par)] <- fitted$par
       }
   
-    if(is.list(start))
-      {
-        namesstart <- names(start)
-        for(i in 1 : length(start))
-          initparam$param[namesstart[i]] <- as.numeric(start[namesstart[i]])
-      }
+#    if(is.list(start))
+#      {
+#        namesstart <- names(start)
+#        for(i in 1 : length(start))
+#          initparam$param[namesstart[i]] <- as.numeric(start[namesstart[i]])
+#      }
 
    return(initparam)
   }
@@ -148,9 +189,9 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     
     ### Check the parameters given in input:
 
-    checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid,
-                             'None', lonlat, 'None', optimizer, start, FALSE,
-                             time, 'WLeastSquare', weighted, NULL)
+    checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid, 'None',
+                             lonlat, 'None', optimizer, start, time, 'WLeastSquare',
+                             FALSE, 'SubSamp', weighted, NULL, NULL)
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
@@ -175,9 +216,9 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
 
     ### Initialization parameters:
     parscale <- NULL
-    initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid,
-                         'None', lonlat, 'None', parscale, optimizer=='L-BFGS-B',
-                         start, time, 'WLeastSquare')
+    initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid, 'None',
+                         lonlat, 'None', parscale, optimizer=='L-BFGS-B',
+                         start, time, 'WLeastSquare', 'SubSamp')
   
     if(!is.null(initparam$error))
       stop(initparam$error)

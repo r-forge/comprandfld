@@ -1,21 +1,22 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@eofl.ch.
+### Email: simone.padoan@epfl.ch.
 ### Institute: EPFL.
 ### File name: CompositeLikelihood.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 04/06/2010.
+### Last change: 30/06/2010.
 ####################################################
 
 
 ### Procedures are in alphabetical order.
 
 
-CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags, likelihood,
-                           model, namescorr, namesnuis, numcoord, numdata, param, type)
+CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
+                           likelihood, model, namescorr, namesnuis, numcoord,
+                           numdata, param, type)
   {
     result <- -1.0e15
 
@@ -30,8 +31,8 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags, 
     .C('CompLikelihood', as.double(coordx), as.double(coordy), as.integer(corrmodel),
        as.double(data), as.double(dista), as.double(lags), as.integer(likelihood),
        as.integer(model), as.double(nuisance), as.integer(numdata), as.integer(numcoord),
-       as.double(paramcorr), result, as.integer(type), PACKAGE='CompRandFld',
-       DUP = FALSE, NAOK=TRUE)
+       as.double(paramcorr), result, as.integer(type),
+       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
     
     return(result)
   }
@@ -39,9 +40,9 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags, 
 ### Optim call for Composite log-likelihood maximization
 
 OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
-                         hessian, lags, likelihood, lower, model, namescorr, namesnuis, namesparam,
-                         numcoord, numdata, numparam, numparamcorr, optimizer, param,
-                         varest, type, upper, weighted)
+                         lags, likelihood, lonlat, lower, model, namescorr, namesnuis,
+                         namesparam, numcoord, numdata, numparam, numparamcorr, optimizer,
+                         param, type, upper, varest, vartype, weighted, winconst)
   {
     # Temporary choice:
     dista <- 1.0e15
@@ -51,16 +52,15 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
     if(optimizer=='L-BFGS-B')
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
                             control=list(fnscale=-1, factr=1, pgtol=1e-14, maxit = 1e8), data=data,
-                            dista=dista, fixed=fixed, hessian=hessian, lags=lags, likelihood=likelihood,
+                            dista=dista, fixed=fixed, hessian=FALSE, lags=lags, likelihood=likelihood,
                             lower=lower, method=optimizer, model=model, namescorr=namescorr,
-                            namesnuis=namesnuis, numcoord=numcoord, numdata=numdata, type=type,
-                            upper=upper)
+                            namesnuis=namesnuis, numcoord=numcoord, numdata=numdata, type=type, upper=upper)
     else
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
                             control=list(fnscale=-1, reltol=1e-14, maxit=1e8), data=data, dista=dista,
-                            fixed=fixed, hessian=hessian, lags=lags, likelihood=likelihood,
-                            method=optimizer, model=model, namescorr=namescorr, namesnuis=namesnuis,
-                            numcoord=numcoord, numdata=numdata, type=type)
+                            fixed=fixed, hessian=FALSE, lags=lags, likelihood=likelihood, method=optimizer,
+                            model=model, namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
+                            numdata=numdata, type=type)
     
     if(OptimCompLik$convergence == 0)
       OptimCompLik$convergence <- 'Successful'
@@ -78,20 +78,24 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
             # are estimated by the sample estimators contro-parts:
 
             dimmat <- numparam^2
+            dmat <- numparam * (numparam + 1) / 2
             eps <- (.Machine$double.eps)^(1/3)
             param <- c(OptimCompLik$par, fixed)
                 
             paramcorr <- param[namescorr]
             nuisance <- param[namesnuis]
             
-            sensmat <- double(numparam * (numparam - 1) / 2 + numparam)
-            varimat <- double(numparam * (numparam - 1) / 2 + numparam)
+            sensmat <- double(dmat)
+            varimat <- double(dmat)
+ 
+            # Set the window parameter:
 
-            .C('GodambeMat_teo', as.double(coordx), as.double(coordy), as.integer(corrmodel),
-               as.double(dista), as.double(eps), as.integer(flagcorr), as.integer(flagnuis),
-               as.double(lags), as.integer(model), as.integer(numparam), as.integer(numparamcorr),
-               as.integer(numcoord), as.double(paramcorr), as.double(nuisance), sensmat, varimat,
-               as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+            .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(data),
+               as.double(dista), as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.double(lags),
+               as.integer(likelihood), as.integer(lonlat), as.integer(model), as.integer(numparam),
+               as.integer(numparamcorr), as.integer(numcoord), as.double(paramcorr), as.double(nuisance),
+               sensmat, as.integer(type), varimat, as.integer(vartype), as.double(winconst),
+               PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
           
             # Set sensitivity matrix:
             OptimCompLik$sensmat <- matrix(double(dimmat), ncol=numparam)
@@ -104,7 +108,7 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
             OptimCompLik$varimat[lower.tri(OptimCompLik$varimat, diag=TRUE)] <- varimat
             OptimCompLik$varimat <- t(OptimCompLik$varimat)
             OptimCompLik$varimat[lower.tri(OptimCompLik$varimat, diag=TRUE)] <- varimat
-                  
+                 
             namesgod <- c(namesnuis[as.logical(flagnuis)], namescorr[as.logical(flagcorr)])
             dimnames(OptimCompLik$sensmat) <- list(namesgod, namesgod)
             dimnames(OptimCompLik$varimat) <- list(namesgod, namesgod)

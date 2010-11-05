@@ -1,6 +1,6 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@eofl.ch.
+### Email: simone.padoan@epfl.ch.
 ### Institute: EPFL.
 ### File name: Utility.r
 ### Description:
@@ -28,8 +28,8 @@ CheckCorrModel <- function(corrmodel)
   }
 
 CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                       lonlat, model, optimizer, start, varest, time, type, weighted,
-                       weights)
+                       lonlat, model, optimizer, start, time, type, varest, vartype,
+                       weighted, weights, winconst)
   {
     error <- NULL
 
@@ -218,6 +218,20 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
           }
       }
 
+    if(varest & (checklik == 1 || checklik == 3)  & (!is.null(vartype) & !is.character(vartype)))
+      {
+        error <- 'insert the type of estimation method for the variances\n'
+        return(list(error=error))
+      }
+
+    vartp <- CheckVarType(vartype)
+
+    if(varest & is.null(vartp) & (checklik == 1 || checklik == 3))
+      {
+        error <- 'the name of the estimation type for the variances is not correct\n'
+        return(list(error=error))
+      }
+
     dimdata <- dim(data)
     if(is.null(dimdata) & time)
       {
@@ -288,6 +302,28 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
               }
           }
       }
+    if(varest & (vartp == 2) & is.numeric(winconst))
+      {
+         # control of the range of validity of the sub-sampling parameter:
+        if(is.null(coordy))
+          {
+            rcoordx <- range(coordx[, 1])
+            rcoordy <- range(coordx[, 2])
+          }
+        else
+          {
+            rcoordx <- range(coordx)
+            rcoordy <- range(coordy)
+          }
+         delta <- min(rcoordx[2] - rcoordx[1], rcoordy[2] - rcoordy[1])
+         wincup <- delta / sqrt(delta)
+
+         if(winconst < 0 || winconst > wincup)
+           {
+             error <- paste('for the bus-sampling constant insert a positive real value less or equal than:', wincup,'\n')
+             return(list(error=error))
+           }
+       }
   }
 
 CheckLikelihood <- function(likelihood)
@@ -376,6 +412,15 @@ CheckParamRange <- function(param)
     return(TRUE)
   }
 
+CheckVarType <- function(type)
+  {
+    CheckVarType <- switch(type,
+                           Sampling=1,
+                           SubSamp=2,
+                           Theoretical=3)
+    return(CheckVarType)
+  }
+
 CheckType <- function(type)
   {
     CheckType <- switch(type,
@@ -419,7 +464,8 @@ DetectParam <- function(corrmodel, fixed, param)
   }
 
 InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                      lonlat, model, parscale, paramrange, start, time, type)
+                      lonlat, model, parscale, paramrange, start, time, type,
+                      vartype)
   {    
     ### Initialize the model parameters:
     error <- NULL
@@ -435,6 +481,7 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     codecorrmodel <- CheckCorrModel(corrmodel)
     likelihood <- CheckLikelihood(likelihood)
     model <- CheckModel(model)
+    vartype <- CheckVarType(vartype)
     type <- CheckType(type)
     
     ### Set the names of the parameters
@@ -587,7 +634,7 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
                 fixed=fixed, lags=lags, likelihood=likelihood, lower=paramrange$lower, model=model, namescorr=namescorr,
                 namesnuis=namesnuis, namesparam=namesparam, namessim=namessim, numcoord=numcoord, numdata=numdata,
                 numpairs=numpairs, numparam=numparam, numparamcorr=numparamcorr, numfixed=numfixed, param=param,
-                upper=paramrange$upper, type=type))
+                numstart=numstart, upper=paramrange$upper, type=type, vartype=vartype))
   }
 
 SetRangeParam <- function(namesparam, numparam)
