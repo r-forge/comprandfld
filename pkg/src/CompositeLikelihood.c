@@ -38,7 +38,7 @@ double PairLikelihood(double corr, int *like, double *nuisance,
 		      double s1, double s1s, double u, double v, int *type)
 {
   double det=0.0, res=0.0, s12=0.0, vario=0.0;
-  double u2=0.0, v2=0.0, lij=0.0, li=0.0, lj=0.0;
+  double u2=0.0, v2=0.0;
  
   switch(*like)
     {

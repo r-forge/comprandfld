@@ -12,7 +12,7 @@ void Distances(double *coordx, double *coordy, double *lags, int *nsite, int *ty
       for(i = 0; i < (*nsite - 1); i++)
 	for(j = (i + 1); j < *nsite; j++)
 	  {
-	    lags[h] = Dist_geodesic(coordx[i],coordy[i], coordx[j],coordy[j]);
+	    lags[h] = Dist_geodesic(coordx[i], coordy[i], coordx[j], coordy[j]);
 	    h++;
 	  }
     }
@@ -64,6 +64,25 @@ Output:
   return val;
 }
 
+void SetSampling(double *coordx, double *coordy, double *data, int *npts, 
+		 double *scoordx, double *scoordy, double *sdata, int *size, 
+		 double xmax, double xmin, double ymax, double ymin)
+{
+  int i=0, j=0;
+
+  for(i = 0; i < *size; i++)
+    if((xmin <= coordx[i]) && (coordx[i] <= xmax) && 
+       (ymin <= coordy[i]) && (coordy[i] <= ymax))
+      {
+	scoordx[j] = coordx[i];
+	scoordy[j] = coordy[i];
+	sdata[j] = data[i];
+	j++;
+      }
+  *npts = j;
+
+  return;
+}
 
 double Maxima(double *x, int *size)
 {
@@ -89,4 +108,34 @@ double Minima(double *x, int *size)
     res = fmin(res, x[i]);
 
   return res;
+}
+
+void Range(double *x, double *ran, int *size)
+{
+  int i=0;
+
+  ran[0] = x[0];
+  ran[1] = x[0];
+
+  for(i = 1; i < *size; i++)
+    {
+      ran[0] = fmin(ran[0], x[i]);
+      ran[1] = fmax(ran[1], x[i]);
+    }
+
+  return;
+}
+
+void Seq(double *x, int len, double *res)
+{
+  double delta=0.0;
+  int i=0;
+
+  res[0] = x[0];
+  delta = (x[1] - x[0]) / (len - 1);
+
+  for(i = 1; i < len; i++)
+    res[i] = res[i - 1] + delta;
+
+  return;
 }
