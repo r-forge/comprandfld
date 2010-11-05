@@ -8,10 +8,9 @@
   log-likelihood.
 }
 \usage{
-OptimLik(corrmodel, data, fixed, grid, hessian, lags, lower,
-         model, namescorr, namesnuis, namesparam, numcoord,
-         numdata, numpairs, optimizer, param, varest, type,
-         upper)
+OptimLik(corrmodel, data, fixed, grid, lags, lower, model,
+         namescorr, namesnuis, namesparam, numcoord, numdata,
+         numpairs, optimizer, param, varest, type, upper)
 } 
 \arguments{
   \item{corrmodel}{Numeric; the id of the correlation model.}
@@ -23,8 +22,6 @@ OptimLik(corrmodel, data, fixed, grid, hessian, lags, lower,
     are interpreted as a vector or a (\eqn{n \times d}{n x d})-matrix,
     instead if \code{TRUE} then (\eqn{d \times d
       \times n}{d x d x n})-matrix is considered.}
-  \item{hessian}{Logical; if \code{FALSE} (the default) the hessian
-    matrix is not computed from the optimizer routine.}
   \item{lags}{A numeric vector of distances between points.}
   \item{lower}{A numeric vector with the lower bounds of the parameters' ranges.}
   \item{model}{Numeric; the id value of the density associated to the likelihood

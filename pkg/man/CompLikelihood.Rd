@@ -26,16 +26,15 @@ CompLikelihood(coordx, coordy, corrmodel, data, dista, fixed, lags,
   \item{fixed}{A numeric vector with the parameters that
     will be considered as known values.}
   \item{lags}{A numeric vector of distances between points.}
-  \item{likelihood}{Numeric; the type of the likelihood objects.}
+  \item{likelihood}{Numeric; the configuration of the composite
+    likelihood, see \code{\link{FitComposite}}.}
   \item{model}{Numeric; the id of the random field.}
   \item{namescorr}{String; the names of the correlation parameters.}
   \item{namesnuis}{String; the names of the nuisance parameters.}
   \item{numcoord}{Numeric; the number of coordinates.}
   \item{numdata}{Numeric; the number of the data in time.}
   \item{param}{A numeric vector with the parameter values.}
-  \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
-    default) then the marginal composite likelihood is formed by
-    pairwise marginal likelihoods.}
+  \item{type}{Numeric; the type of the likelihood objects, see \code{\link{FitComposite}}.}
 }
 
 \seealso{\code{\link{FitComposite}}}

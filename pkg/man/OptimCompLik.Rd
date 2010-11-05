@@ -9,10 +9,11 @@
 }
 \usage{
 OptimCompLik(coordx, coordy, corrmodel, data, flagcorr,
-             flagnuis, fixed, grid, hessian, lags, likelihood,
-             lower, model, namescorr, namesnuis, namesparam,
-             numcoord, numdata, numparam, numparamcorr,
-             optimizer, param, varest, type, upper, weighted)
+             flagnuis, fixed, grid, lags, likelihood,
+             lonlat, lower, model, namescorr, namesnuis,
+             namesparam, numcoord, numdata, numparam,
+             numparamcorr, optimizer, param, type, upper,
+             varest, vartype, weighted, winconst)
 } 
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -34,10 +35,12 @@ OptimCompLik(coordx, coordy, corrmodel, data, flagcorr,
     are interpreted as a vector or a (\eqn{n \times d}{n x d})-matrix,
     instead if \code{TRUE} then (\eqn{d \times d
       \times n}{d x d x n})-matrix is considered.}
-  \item{hessian}{Logical; if \code{FALSE} (the default) the hessian
-    matrix is not computed from the optimizer routine.}
   \item{lags}{A numeric vector of distances between points.}
-  \item{likelihood}{Numeric; the type of the likelihood objects.}
+  \item{likelihood}{String; the configuration of the
+    compositelikelihood, see \code{\link{FitComposite}}.}
+  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
+    and \code{coordy} are interpreted as Cartesian coordinates
+    otherwise they are considered as longitude and latitude.}
   \item{lower}{A numeric vector with the lower bounds of the parameters' ranges.}
   \item{model}{Numeric; the id value of the density associated to the likelihood
     objects.}
@@ -52,16 +55,22 @@ OptimCompLik(coordx, coordy, corrmodel, data, flagcorr,
     (see \code{\link{optim}} for details). 'Nelder-Mead' is the
     default.}
   \item{param}{A numeric vector of parameters' values.}
-  \item{varest}{Logical; if \code{TRUE} the estimate' variances and
-    standard errors are returned. 
-    \code{FALSE} is the default.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods.}
-  \item{upper}{A numeric vector with the upper bounds of the parameters' ranges.}
+  \item{upper}{A numeric vector with the upper bounds of the parameters'
+    ranges.}
+  \item{varest}{Logical; if \code{TRUE} the estimate' variances and
+    standard errors are returned. 
+    \code{FALSE} is the default.}
+  \item{vartype}{String; the type of estimation method for computing
+  the estimate variances, see \code{\link{FitComposite}}.}
   \item{weighted}{Logical; if \code{TRUE} the likelihood objects are
     weighted, see the Section \bold{Details}. If \code{FALSE} (the
     default) the composite likelihood is not weighted.}
+  \item{winconst}{Numeric; a positive real value -- if
+    \code{vartype=Sub-Samp} -- that determines the window size in the sub-sampling
+    estimates of the variances, see \code{\link{FitComposite}}.}
 }
 
 \seealso{\code{\link{FitComposite}}}

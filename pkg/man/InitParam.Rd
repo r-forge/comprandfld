@@ -9,7 +9,7 @@
 \usage{
 InitParam(coordx, coordy, corrmodel, data, fixed, grid,
           likelihood, lonlat, model, parscale, paramrange,
-          start, time, type)
+          start, time, type, vartype)
 } 
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -46,6 +46,8 @@ InitParam(coordx, coordy, corrmodel, data, fixed, grid,
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods.}
+  \item{vartype}{String; the type of estimation method for computing
+  the estimate variances, see the Section \bold{Details}.}
 }
 
 \seealso{\code{\link{FitComposite}}}

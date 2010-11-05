@@ -11,10 +11,11 @@
 }
 \usage{
 FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
-             grid=FALSE, hessian=FALSE, likelihood='Marginal',
-             lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead',
-             start=NULL, varest=FALSE, time=FALSE, type='Pairwise',
-             weighted=FALSE, weights=NULL)
+             grid=FALSE, likelihood='Marginal', lonlat=FALSE,
+             model='Gaussian', optimizer='Nelder-Mead', start=NULL,
+             time=FALSE, type='Pairwise', varest=FALSE,
+             vartype='SubSamp', weighted=FALSE, weights=NULL,
+             winconst=NULL)
 } 
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -36,8 +37,6 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
     are interpreted as a vector or a (\eqn{n \times d}{n x d})-matrix,
     instead if \code{TRUE} then (\eqn{d \times d
       \times n}{d x d x n})-matrix is considered.}
-  \item{hessian}{Logical; if \code{FALSE} (the default) the hessian
-  matrix is not computed from the optimizer routine.}
   \item{likelihood}{String; the configuration of the composite
     likelihood. \code{Marginal} is the default, see the Section
     \bold{Details}.}
@@ -52,19 +51,25 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
   \item{start}{A named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure. \code{NULL} is the default (see \bold{Details}).}
-  \item{varest}{Logical; if \code{TRUE} the estimate' variances and
-    standard errors are returned. 
-    \code{FALSE} is the default.}
   \item{time}{Logical; if \code{FALSE} (the default) a spatial random field is
     considered (one temporal realisation), if \code{TRUE} a
     spatial-temporal random field is considered, see the Section \bold{Details}.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods (see \bold{Details}).}
+  \item{varest}{Logical; if \code{TRUE} the estimate' variances and
+    standard errors are returned.
+    \code{FALSE} is the default.}
+  \item{vartype}{String; (\code{Sub-Samp} the default) the type of
+    method used for computing
+  the estimates' variances, see the Section \bold{Details}.}
   \item{weighted}{Logical; if \code{TRUE} the likelihood objects are
     weighted, see the Section \bold{Details}. If \code{FALSE} (the
     default) the composite likelihood is not weighted.}
   \item{weights}{A numeric vector of weights (see \bold{Details}).}
+  \item{winconst}{Numeric; a positive real value -- if
+    \code{vartype=Sub-Samp} -- that determines the window size in the sub-sampling
+    estimates of the variances (see \bold{Details}).}
 }
 
 \details{
@@ -145,6 +150,16 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
     }
   }
 
+  The \code{vartype} parameter -- if the \code{varest} is
+  \code{TRUE} -- specifies the method used to compute the estimates' variances. The
+  default \code{Sub-Samp} uses the Sub-Sampling method to estimate the
+  variability matrix in the Godambe matrix. Other options are:
+  \code{Theoretical} where for the variability matrix it is used the exact
+  expression (for the moment it has been implemented only for the 
+  \code{Difference} likelihood, see the \code{type} field) and \code{Sampling} where the variability matrix
+  in this case is estimated by the sample contro-part (available only for i.i.d.
+  replicates on time, see the \code{time} field).
+
   The \code{weighted} parameter specifies if the likelihoods forming the
   composite-likelihood must be weighted. If \code{TRUE} the weights are
   selected by opportune procedures that improve the efficient of the
@@ -154,7 +169,7 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
   The \code{weights} parameter allows to weight the composite-likelihood
   by weights insert by the users. These do not imply any gain in
   efficiency of the maximum composite-likelihood estimator but still be
-  a reasonable setting.
+  a reasonable setting (not implemented yet!).
 }
 
 \value{

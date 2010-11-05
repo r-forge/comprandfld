@@ -10,7 +10,7 @@
 \usage{
 WlsInit(coordx, coordy, corrmodel, data, fixed, grid,
         likelihood, lonlat, model, parscale, paramrange,
-        start, time, type)
+        start, time, type, vartype)
 } 
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -44,6 +44,8 @@ WlsInit(coordx, coordy, corrmodel, data, fixed, grid,
     considered (one temporal realisation), if \code{TRUE} a
     spatial-temporal random field is considered.}
   \item{type}{String; the type of estimation method.}
+  \item{vartype}{String; the type of estimation method for computing
+  the estimate variances, see the Section \bold{Details}.}
 }
 
 \seealso{\code{\link{FitComposite}}, \code{\link{WLeastSquare}}.}

@@ -10,8 +10,8 @@
 \usage{
 CheckInput(coordx, coordy, corrmodel, data, fixed,
            grid, likelihood, lonlat, model, optimizer,
-           start, varest, time, type, weighted,
-           weights)
+           start, time, type, varest, vartype, weighted,
+           weights, winconst)
 } 
 \arguments{
    \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -44,19 +44,24 @@ CheckInput(coordx, coordy, corrmodel, data, fixed,
   \item{start}{A named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure. \code{NULL} is the default.}
-  \item{varest}{Logical; if \code{TRUE} the estimate' variances and
-    standard errors are returned. 
-    \code{FALSE} is the default.}
   \item{time}{Logical; if \code{FALSE} (the default) a spatial random field is
     considered (one temporal realisation), if \code{TRUE} a
     spatial-temporal random field is considered.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods.}
+  \item{varest}{Logical; if \code{TRUE} the estimate' variances and
+    standard errors are returned. 
+    \code{FALSE} is the default.}
+  \item{vartype}{String; the type of estimation method for computing
+  the estimate variances, see \code{\link{FitComposite}}.}
   \item{weighted}{Logical; if \code{TRUE} the likelihood objects are
     weighted. If \code{FALSE} (the
     default) the composite likelihood is not weighted.}
   \item{weights}{A numeric vector of weights.}
+  \item{winconst}{Numeric; a positive real value -- if
+    \code{vartype=Sub-Samp} -- that determines the window size in the sub-sampling
+    estimates of the variances, see \code{\link{FitComposite}}.}
 }
 
 \seealso{\code{\link{FitComposite}}}
