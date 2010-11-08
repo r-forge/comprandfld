@@ -92,7 +92,7 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
 
             .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(data),
                as.double(dista), as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.double(lags),
-               as.integer(likelihood), as.integer(lonlat), as.integer(model), as.integer(numparam),
+               as.integer(likelihood), as.integer(lonlat), as.integer(model), as.integer(numdata), as.integer(numparam),
                as.integer(numparamcorr), as.integer(numcoord), as.double(paramcorr), as.double(nuisance),
                sensmat, as.integer(type), varimat, as.integer(vartype), as.double(winconst),
                PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
