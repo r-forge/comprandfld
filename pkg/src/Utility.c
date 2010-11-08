@@ -64,9 +64,10 @@ Output:
   return val;
 }
 
-void SetSampling(double *coordx, double *coordy, double *data, int *npts, 
-		 double *scoordx, double *scoordy, double *sdata, int *size, 
-		 double xmax, double xmin, double ymax, double ymin)
+void SetSampling(double *coordx, double *coordy, double *data, int n,
+		 int *ndata, int *npts, double *scoordx, double *scoordy, 
+		 double *sdata, int *size, double xmax, double xmin, 
+		 double ymax, double ymin)
 {
   int i=0, j=0;
 
@@ -76,7 +77,7 @@ void SetSampling(double *coordx, double *coordy, double *data, int *npts,
       {
 	scoordx[j] = coordx[i];
 	scoordy[j] = coordy[i];
-	sdata[j] = data[i];
+	sdata[j] = data[n * *ndata + i];
 	j++;
       }
   *npts = j;

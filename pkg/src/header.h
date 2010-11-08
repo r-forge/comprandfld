@@ -65,14 +65,14 @@ void CompScore(double *coordx, double *coordy, int *corrmod, double *data,
                int *ndata, int *ngrc, int *npar, int *nsite, double *par, 
                double *parcorr, double *res, int *type, int *weight);
 
-void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, 
-		    double *eps, int *flagcorr, int *flagnuis, int *like, int *model, 
-                    int *ndata, int *npar, int *nparc, int *nsite, double *parcorr, 
-                    double *nuisance, double *godambe, double *score, int *type);
+void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, double *dista,
+		    double *eps, int *flagcorr, int *flagnuis, double *lags, int *like, 
+		    int *model, int *ndata, int *npar, int *nparc, int *nsite, double *parcorr,
+                    double *nuisance, double *sensmat, double *varimat, int *type);
 
 void GodambeMat(double *coordx, double *coordy, int *corrmod, double *data, double *dista, 
-		double *eps, int *flagcorr, int *flagnuis, double *lags, int *like, 
-		int *lonlat, int *model, int *npar, int *nparc, int *nsite, double *parcorr, 
+		double *eps, int *flagcorr, int *flagnuis, double *lags, int *like, int *lonlat, 
+		int *model, int *ndata, int *npar, int *nparc, int *nsite, double *parcorr,
 		double *nuisance, double *sensmat, int *type, double *varimat, int *vartype, 
 		double *winc);
 
@@ -124,9 +124,9 @@ void Sensitivity(double *coordx, double *coordy, int *corrmod, double *dista,
 
 void Vari_SubSamp(double *coordx, double *coordy, int *corrmod, double *data, 
 		  double *dista, double *eps, int *flagcorr, int *flagnuis, 
-		  int *like, int *lonlat, int *npair, int *npar, int *nparc, 
-		  int *nsite, double *nuisance, double *parcorr, int *type,
-		  double *varimat, double *winc);
+		  int *like, int *lonlat, int *ndata, int *npair, int *npar, 
+		  int *nparc, int *nsite, double *nuisance, double *parcorr, 
+		  int *type, double *varimat, double *winc);
 
 /*----------------------------------------------------------------
 File name: Godambe.c
@@ -183,9 +183,10 @@ void Distances(double *coordx, double *coordy, double *lags, int *nsite, int *ty
 
 double Dist_geodesic(double lonx, double latx, double lony, double laty);
 
-void SetSampling(double *coordx, double *coordy, double *data, int *npts, 
-		 double *scoordx, double *scoordy, double *sdata, int *size, 
-		 double xmax, double xmin, double ymax, double ymin);
+void SetSampling(double *coordx, double *coordy, double *data, int n,
+		 int *ndata, int *npts, double *scoordx, double *scoordy, 
+		 double *sdata, int *size, double xmax, double xmin, 
+		 double ymax, double ymin);
 
 double Maxima(double *x, int *size);
 
