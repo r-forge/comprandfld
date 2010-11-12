@@ -6,7 +6,7 @@
 ### Description:
 ### This file contains a set of procedures
 ### for supporting all the other functions.
-### Last change: 01/04/2010.
+### Last change: 12/11/2010.
 ####################################################
 
 ### Procedures are in alphabetical order.
@@ -629,12 +629,12 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     .C('Distances', as.double(coord[,1]), as.double(coord[,2]), lags, as.integer(numcoord),
        as.integer(lonlat), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
-
     return(list(corrmodel=codecorrmodel, coord=coord, data=data, error=error, flagcorr=flagcorr, flagnuis=flagnuis,
                 fixed=fixed, lags=lags, likelihood=likelihood, lower=paramrange$lower, model=model, namescorr=namescorr,
-                namesnuis=namesnuis, namesparam=namesparam, namessim=namessim, numcoord=numcoord, numdata=numdata,
-                numpairs=numpairs, numparam=numparam, numparamcorr=numparamcorr, numfixed=numfixed, param=param,
-                numstart=numstart, upper=paramrange$upper, type=type, vartype=vartype))
+                namesfixed=namesfixed, namesnuis=namesnuis, namesparam=namesparam, namessim=namessim, namesstart=namesstart,
+                numcoord=numcoord, numdata=numdata, numpairs=numpairs, numparam=numparam, numparamcorr=numparamcorr,
+                numfixed=numfixed, numstart=numstart, param=param, start=start, upper=paramrange$upper, type=type,
+                vartype=vartype))
   }
 
 SetRangeParam <- function(namesparam, numparam)
