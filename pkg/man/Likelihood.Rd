@@ -8,9 +8,8 @@
   set of data and parameters.
 }
 \usage{
-Likelihood(corrmodel, data, fixed, grid, lags, model,
-           namescorr, namesnuis, numcoord, numdata,
-           numpairs, param, type)
+Likelihood(corrmodel, data, fixed, grid, model, namescorr,
+           namesnuis, numcoord, numdata, numpairs, param, type)
 } 
 \arguments{
   \item{corrmodel}{String; the name of a correlation model.}
@@ -22,7 +21,6 @@ Likelihood(corrmodel, data, fixed, grid, lags, model,
     are interpreted as a vector or a (\eqn{n \times d}{n x d})-matrix,
     instead if \code{TRUE} then (\eqn{d \times d
       \times n}{d x d x n})-matrix is considered.}
-  \item{lags}{A numeric vector of distances between points.}
   \item{model}{String; the density associated to the likelihood
     objects. \code{Gaussian} is the default.}
   \item{namescorr}{String; the names of the correlation parameters.}

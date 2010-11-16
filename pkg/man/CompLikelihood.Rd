@@ -8,9 +8,9 @@
   data and parameters.
 }
 \usage{
-CompLikelihood(coordx, coordy, corrmodel, data, dista, fixed, lags,
-               likelihood, model, namescorr, namesnuis, numcoord,
-               numdata, param, type)
+CompLikelihood(coordx, coordy, corrmodel, data, fixed, likelihood,
+               model, namescorr, namesnuis, numcoord, numdata,
+               param, type)
 } 
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -22,10 +22,8 @@ CompLikelihood(coordx, coordy, corrmodel, data, dista, fixed, lags,
   \item{corrmodel}{Numeric; the id of the correlation model.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
       \times n}{d x d x n})-matrix of observations.}
-  \item{dista}{A numeric value specifying the cut-off distance.}
   \item{fixed}{A numeric vector with the parameters that
     will be considered as known values.}
-  \item{lags}{A numeric vector of distances between points.}
   \item{likelihood}{Numeric; the configuration of the composite
     likelihood, see \code{\link{FitComposite}}.}
   \item{model}{Numeric; the id of the random field.}

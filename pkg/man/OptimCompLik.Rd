@@ -9,11 +9,11 @@
 }
 \usage{
 OptimCompLik(coordx, coordy, corrmodel, data, flagcorr,
-             flagnuis, fixed, grid, lags, likelihood,
-             lonlat, lower, model, namescorr, namesnuis,
-             namesparam, numcoord, numdata, numparam,
-             numparamcorr, optimizer, param, type, upper,
-             varest, vartype, weighted, winconst)
+             flagnuis, fixed, grid, likelihood, lonlat,
+             lower, model, namescorr, namesnuis, namesparam,
+             numcoord, numdata, numparam, numparamcorr,
+             optimizer, param, type, upper, varest, vartype,
+             winconst)
 } 
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -35,7 +35,6 @@ OptimCompLik(coordx, coordy, corrmodel, data, flagcorr,
     are interpreted as a vector or a (\eqn{n \times d}{n x d})-matrix,
     instead if \code{TRUE} then (\eqn{d \times d
       \times n}{d x d x n})-matrix is considered.}
-  \item{lags}{A numeric vector of distances between points.}
   \item{likelihood}{String; the configuration of the
     compositelikelihood, see \code{\link{FitComposite}}.}
   \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
@@ -65,9 +64,6 @@ OptimCompLik(coordx, coordy, corrmodel, data, flagcorr,
     \code{FALSE} is the default.}
   \item{vartype}{String; the type of estimation method for computing
   the estimate variances, see \code{\link{FitComposite}}.}
-  \item{weighted}{Logical; if \code{TRUE} the likelihood objects are
-    weighted, see the Section \bold{Details}. If \code{FALSE} (the
-    default) the composite likelihood is not weighted.}
   \item{winconst}{Numeric; a positive real value -- if
     \code{vartype=Sub-Samp} -- that determines the window size in the sub-sampling
     estimates of the variances, see \code{\link{FitComposite}}.}
