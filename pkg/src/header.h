@@ -6,6 +6,13 @@
 
 #define LOW -1.0e15
 
+//---------START GLOBAL VARIABLES-----------
+double *lags;
+double *dista;
+double *maximdista;
+double *minimdista;
+
+//---------END GLOBAL VARIABLES-------------
 
 // 1)
 /*----------------------------------------------------------------
@@ -16,15 +23,15 @@ Start
 
 double CorrelationFct(int *corrmod, double lag, double *par);
 
-void CorrelationMat(double *corr, int *corrmod, double *lags, 
-		    int *npairs, double *par);
+void CorrelationMat(double *corr, int *corrmod, int *npairs, double *par);
 
 void GradientCorrFct(double corr, int *corrmod, double *eps, int *flag, 
 		     double *grad,  double lag, double *par);
 
 double Variogram(int *corrmod, double lag, double *nuisance, double *par);
 
-void VectCorrelation(int *corrmod, double *corrfun, double *lags, int *npair, double *par);
+void VectCorrelation(double *corr, int *corrmod, double *lag, 
+		     int *nlags, double *par);
 
 /*----------------------------------------------------------------
 File name: CorrelationFunction.c
@@ -40,8 +47,8 @@ Start
  ---------------------------------------------------------------*/
 
 void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data, 
-		    double *dista, double *lags, int *like, int *model, double *nuisance, 
-		    int *ndata, int *nsite, double *par, double *res, int *type);
+		    int *like, int *model, double *nuisance, int *ndata, int *nsite, 
+		    double *par, double *res, int *type);
 
 double PairLikelihood(double corr, int *like, double *nuisance, 
 		      double s1, double s1s, double u, double v, int *type);
@@ -60,25 +67,19 @@ Description: procedures for the computation of the Godambe matrix
 Start
  ---------------------------------------------------------------*/
 
-void CompScore(double *coordx, double *coordy, int *corrmod, double *data, 
-	       double *eps, int *flag, int *flagcorr, int *model, int *like,
-               int *ndata, int *ngrc, int *npar, int *nsite, double *par, 
-               double *parcorr, double *res, int *type, int *weight);
+void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, double *eps, 
+		    int *flagcorr, int *flagnuis, int *like, int *model, int *ndata, int *npar, 
+		    int *nparc, int *nsite, double *parcorr, double *nuisance, double *sensmat, 
+		    double *varimat, int *type);
 
-void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, double *dista,
-		    double *eps, int *flagcorr, int *flagnuis, double *lags, int *like, 
-		    int *model, int *ndata, int *npar, int *nparc, int *nsite, double *parcorr,
-                    double *nuisance, double *sensmat, double *varimat, int *type);
+void GodambeMat(double *coordx, double *coordy, int *corrmod, double *data, double *eps, 
+		int *flagcorr, int *flagnuis, int *like, int *lonlat, int *model, int *ndata, 
+		int *npar, int *nparc, int *nsite, double *parcorr, double *nuisance, double *sensmat, 
+		int *type, double *varimat, int *vartype, double *winc);
 
-void GodambeMat(double *coordx, double *coordy, int *corrmod, double *data, double *dista, 
-		double *eps, int *flagcorr, int *flagnuis, double *lags, int *like, int *lonlat, 
-		int *model, int *ndata, int *npar, int *nparc, int *nsite, double *parcorr,
-		double *nuisance, double *sensmat, int *type, double *varimat, int *vartype, 
-		double *winc);
-
-void GodambeMat_Diff(double *coordx, double *coordy, int *corrmod, double *dista, double *eps, 
-		     int *flagcorr, int *flagnuis, double *lags, int *model, int *npar, int *nparc, 
-		     int *nsite, double *parcorr, double *nuisance, double *sensmat, double *varimat);
+void GodambeMat_Diff(double *coordx, double *coordy, int *corrmod, double *eps, int *flagcorr, 
+		     int *flagnuis, int *model, int *npar, int *nparc, int *nsite, double *parcorr, 
+		     double *nuisance, double *sensmat, double *varimat);
 
 void Grad_Hess_Gauss_Pair(double corr, int *flag, double *gradcorr, double *gradient, 
 			  double *hessian, double *hesscorr, int *npar,  double *par, 
@@ -96,37 +97,36 @@ void Grad_Diff_Vario(double corr, int *flag, double *gradcorr,
 void Grad_Pair_Gauss(double corr, int *flag, double *gradcorr, double *gradient, int *npar,
 		     double *par, double u, double v);
 
-void Sens_Cond_Gauss(int *corrmod, double *dista, double *eps, int *flagcorr,
-		     int *flagnuis, double *lags, int *nsite, double *nuisance,
-		     int *npair, int *npar, int *nparc, double *parcorr, double *sensmat);
+void Sens_Cond_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis, 
+		     int *nsite, double *nuisance, int *npair, int *npar, 
+		     int *nparc, double *parcorr, double *sensmat);
 
 void Sens_Cond_Gauss_ij(double corr, int *flag, double *gradcorr, int *npar, 
 			int *nparc, double *par, double *sensmat);
 
-void Sens_Diff_Gauss(int *corrmod, double *dista, double *eps, int *flagcorr,
-		     int *flagnuis, double *lags, int *nsite, double *nuisance,
-		     int *npair, int *npar, int *nparc, double *parcorr, double *sensmat);
+void Sens_Diff_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis, 
+		     int *nsite, double *nuisance, int *npair, int *npar, 
+		     int *nparc, double *parcorr, double *sensmat);
 
 void Sens_Diff_Gauss_ij(double *gradient, int *npar, double *sensmat);
 
-void Sens_Pair_Gauss(int *corrmod, double *dista, double *eps, int *flagcorr,
-		     int *flagnuis, double *lags, int *nsite, double *nuisance,
-		     int *npair, int *npar, int *nparc, double *parcorr, double *sensmat);
+void Sens_Pair_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis, 
+		     int *nsite, double *nuisance, int *npair, int *npar, 
+		     int *nparc, double *parcorr, double *sensmat);
 
 void Sens_Pair_Gauss_ij(double corr, int *flag, double *gradcorr, int *npar, 
 			int *nparc, double *par, double *sensmat);
 
-void Sensitivity(double *coordx, double *coordy, int *corrmod, double *dista, 
-		 double *eps, int *flagcorr, int *flagnuis, double *lags, 
-		 int *like, int *model, int *npair, int *npar, int *nparc, 
-		 int *nsite, double *parcorr, double *nuisance, double *sensmat, 
-		 int *type);
+void Sensitivity(double *coordx, double *coordy, int *corrmod, double *eps, 
+		 int *flagcorr, int *flagnuis, int *like, int *model, int *npair, 
+		 int *npar, int *nparc, int *nsite, double *parcorr, double *nuisance, 
+		 double *sensmat, int *type);
 
 void Vari_SubSamp(double *coordx, double *coordy, int *corrmod, double *data, 
-		  double *dista, double *eps, int *flagcorr, int *flagnuis, 
-		  int *like, int *lonlat, int *ndata, int *npair, int *npar, 
-		  int *nparc, int *nsite, double *nuisance, double *parcorr, 
-		  int *type, double *varimat, double *winc);
+		  double *eps, int *flagcorr, int *flagnuis, int *like, 
+		  int *lonlat, int *ndata, int *npair, int *npar, int *nparc, 
+		  int *nsite, double *nuisance, double *parcorr, int *type, 
+		  double *varimat, double *winc);
 
 /*----------------------------------------------------------------
 File name: Godambe.c
@@ -158,9 +158,9 @@ via the weighted least square method.
 Start
  ---------------------------------------------------------------*/
 
-void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, double *lags, 
-		       double *lenbins, double *maxdist, double *moments, int *npairs, int *nsite, 
-		       int *nbins);
+void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, 
+		       double *lenbins, double *maxdist, double *moments, int *npairs, 
+		       int *nsite, int *nbins);
 
 void Wls(double *bins, int *corrmod, double *par, int *nbins, double *moments, 
 	 double *lenbins, double *nuisance, int *weighted, double *res);
@@ -179,14 +179,15 @@ Description: procedures for the computation of useful quantities.
 Start
  ---------------------------------------------------------------*/
 
-void Distances(double *coordx, double *coordy, double *lags, int *nsite, int *type);
+void DelDistances();
+
+void RangeDist(double *max, double *min);
+
+void Distances_Euclidean(double *coordx, double *coordy, int *nsite);
+
+void Distances_Geodesic(double *coordx, double *coordy, int *nsite);
 
 double Dist_geodesic(double lonx, double latx, double lony, double laty);
-
-void SetSampling(double *coordx, double *coordy, double *data, int n,
-		 int *ndata, int *npts, double *scoordx, double *scoordy, 
-		 double *sdata, int *size, double xmax, double xmin, 
-		 double ymax, double ymin);
 
 double Maxima(double *x, int *size);
 
@@ -195,6 +196,14 @@ double Minima(double *x, int *size);
 void Range(double *x, double *ran, int *size);
 
 void Seq(double *x, int len, double *res);
+
+void SetSampling(double *coordx, double *coordy, double *data, int n,
+		 int *ndata, int *npts, double *scoordx, double *scoordy, 
+		 double *sdata, int *size, double xmax, double xmin, 
+		 double ymax, double ymin);
+
+void SetDistances(double *coordx, double *coordy, int *nsite, 
+		  int *type, int *weighted);
 
 /*----------------------------------------------------------------
 File name: Utility.c

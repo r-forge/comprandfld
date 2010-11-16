@@ -2,29 +2,42 @@
 #define REARTH 6378.388
 
 
-void Distances(double *coordx, double *coordy, double *lags, int *nsite, int *type)
+void RangeDist(double *max, double *min)
+{
+
+  *max = *maximdista;
+  *min = *minimdista;
+
+  return;
+}
+
+void Distances_Euclidean(double *coordx, double *coordy, int *nsite)
 {
   int i=0, j=0, h=0;
 
+  for(i = 0; i < (*nsite - 1); i++)
+    for(j = (i + 1); j < *nsite; j++)
+      {
+	lags[h] = pythag(coordx[i] - coordx[j], coordy[i] - coordy[j]);
+	*maximdista = fmax(*maximdista, lags[h]);
+	*minimdista = fmin(*minimdista, lags[h]);
+	h++;
+      }
+  return;
+}
 
-  if(*type)
-    {
-      for(i = 0; i < (*nsite - 1); i++)
-	for(j = (i + 1); j < *nsite; j++)
-	  {
-	    lags[h] = Dist_geodesic(coordx[i], coordy[i], coordx[j], coordy[j]);
-	    h++;
-	  }
-    }
-  else
-    {
-      for(i = 0; i < (*nsite - 1); i++)
-	for(j = (i + 1); j < *nsite; j++)
-	  {
-	    lags[h] = pythag(coordx[i] - coordx[j], coordy[i] - coordy[j]);
-	    h++;
-	  }
-    }
+void Distances_Geodesic(double *coordx, double *coordy, int *nsite)
+{
+  int i=0, j=0, h=0;
+
+  for(i = 0; i < (*nsite - 1); i++)
+    for(j = (i + 1); j < *nsite; j++)
+      {
+	lags[h] = Dist_geodesic(coordx[i], coordy[i], coordx[j], coordy[j]);
+	*maximdista = fmax(*maximdista, lags[h]);
+	*minimdista = fmin(*minimdista, lags[h]);
+	h++;
+      }
   return;
 }
 
@@ -62,27 +75,6 @@ Output:
   val = acos(val) *  REARTH;
 
   return val;
-}
-
-void SetSampling(double *coordx, double *coordy, double *data, int n,
-		 int *ndata, int *npts, double *scoordx, double *scoordy, 
-		 double *sdata, int *size, double xmax, double xmin, 
-		 double ymax, double ymin)
-{
-  int i=0, j=0;
-
-  for(i = 0; i < *size; i++)
-    if((xmin <= coordx[i]) && (coordx[i] <= xmax) && 
-       (ymin <= coordy[i]) && (coordy[i] <= ymax))
-      {
-	scoordx[j] = coordx[i];
-	scoordy[j] = coordy[i];
-	sdata[j] = data[n * *ndata + i];
-	j++;
-      }
-  *npts = j;
-
-  return;
 }
 
 double Maxima(double *x, int *size)
@@ -137,6 +129,62 @@ void Seq(double *x, int len, double *res)
 
   for(i = 1; i < len; i++)
     res[i] = res[i - 1] + delta;
+
+  return;
+}
+
+void SetSampling(double *coordx, double *coordy, double *data, int n,
+		 int *ndata, int *npts, double *scoordx, double *scoordy, 
+		 double *sdata, int *size, double xmax, double xmin, 
+		 double ymax, double ymin)
+{
+  int i=0, j=0;
+
+  for(i = 0; i < *size; i++)
+    if((xmin <= coordx[i]) && (coordx[i] <= xmax) && 
+       (ymin <= coordy[i]) && (coordy[i] <= ymax))
+      {
+	scoordx[j] = coordx[i];
+	scoordy[j] = coordy[i];
+	sdata[j] = data[n * *ndata + i];
+	j++;
+      }
+  *npts = j;
+
+  return;
+}
+
+void SetDistances(double *coordx, double *coordy, int *nsite, int *type, int *weighted)
+{
+  int npairs=*nsite * (*nsite - 1) / 2;
+
+  lags = (double *) malloc(npairs * sizeof(double));
+  dista = (double *) malloc(1 * sizeof(double));
+  maximdista = (double *) malloc(1 * sizeof(double));
+  minimdista = (double *) malloc(1 * sizeof(double));
+
+  *dista = 1.0e15;
+  *maximdista = 0;
+  *minimdista = 1.0e15;
+
+  if(*type)
+    Distances_Geodesic(coordx, coordy, nsite);
+  else
+    Distances_Euclidean(coordx, coordy, nsite);
+
+  if(*weighted)
+    *dista = *maximdista / 2;
+
+  return;
+}
+
+void DelDistances()
+{
+  free(dista);
+  dista = NULL;
+
+  free(lags);
+  lags = NULL;
 
   return;
 }

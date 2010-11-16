@@ -3,8 +3,8 @@
 // Composite log-likelihood for Gaussian models:
 
 void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data, 
-		    double *dista, double *lags, int *like, int *model, double *nuisance, 
-		    int *ndata, int *nsite, double *par, double *res, int *type)
+		    int *like, int *model, double *nuisance, int *ndata, int *nsite, 
+		    double *par, double *res, int *type)
 {
   int i=0, h=0, j=0, n=0; 
   double corr=0.0, s1=0.0, s12=0.0, s1s=0.0;

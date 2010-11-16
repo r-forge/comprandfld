@@ -44,7 +44,7 @@ double CorrelationFct(int *corrmod, double lag, double *par)
 }
 
 // Computation of the lower (upper) triangular correlation matrix
-void CorrelationMat(double *corr, int *corrmod, double *lags, int *npairs, double *par)
+void CorrelationMat(double *corr, int *corrmod, int *npairs, double *par)
 {
   int i;
 
@@ -166,12 +166,12 @@ double Variogram(int *corrmod, double lag, double *nuisance, double *par)
   return vario;
 }
 
-void VectCorrelation(int *corrmod, double *corrfun, double *lags, int *npair, double *par)
+void VectCorrelation(double *corr, int *corrmod, double *lag, int *nlags, double *par)
 {
-  int i=0;
+  int i;
 
-  for(i = 0; i < *npair; i++)
-    corrfun[i] = CorrelationFct(corrmod, lags[i], par);
+  for(i = 0; i < *nlags; i++)
+    corr[i] = CorrelationFct(corrmod, lag[i], par);
 
   return;
 }

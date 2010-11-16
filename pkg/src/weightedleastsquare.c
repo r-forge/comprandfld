@@ -2,20 +2,18 @@
 
 // empirical variogram
 
-void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, double *lags, 
-		       double *lenbins, double *maxdist, double *moments, int *npairs, int *nsite, 
-		       int *nbins)
+void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, 
+		       double *lenbins, double *maxdist, double *moments, int *npairs, 
+		       int *nsite, int *nbins)
 {
   int h=0, i=0, j=0, p=0;
-  double lower=0.0, step=0.0;
-
-  lower = Minima(lags, npairs);
+  double step=0.0;
 
   if(*maxdist == 0)
-    *maxdist = Maxima(lags, npairs) / 2;
+    *maxdist = *maximdista;
 
-  step = (*maxdist - lower) / (*nbins - 1);
-  bins[0] = lower;
+  step = (*maxdist - *minimdista) / (*nbins - 1);
+  bins[0] = *minimdista;
 
   //define bins:
   for(h = 1; h < *nbins; h++)
@@ -38,7 +36,6 @@ void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *dat
 
   return;
 }
-
 
 // squared differences
 
