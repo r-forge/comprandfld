@@ -7,7 +7,7 @@
 ### This file contains a set of procedures
 ### for maximum likelihood fitting of
 ### random fields.
-### Last change: 06/04/2010.
+### Last change: 12/11/2010.
 ####################################################
 
 
@@ -17,7 +17,7 @@
 
 ### Log-likelihood procedure for Random Fields
 
-Likelihood <- function(corrmodel, data, fixed, grid, lags, model, namescorr, namesnuis,
+Likelihood <- function(corrmodel, data, fixed, grid, model, namescorr, namesnuis,
                        numcoord, numdata, numpairs, param, type)
   {
     result <- -1.0e8
@@ -36,9 +36,8 @@ Likelihood <- function(corrmodel, data, fixed, grid, lags, model, namescorr, nam
         stdata <- data - nuisance['mean']
         corr <- double(numpairs)
 
-        .C('CorrelationMat', corr, as.integer(corrmodel), as.double(lags),
-          as.integer(numpairs), as.double(paramcorr), PACKAGE='CompRandFld',
-          DUP = FALSE, NAOK=TRUE)
+        .C('CorrelationMat', corr, as.integer(corrmodel), as.integer(numpairs),
+           as.double(paramcorr), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
         corr <- corr * nuisance['sill']
 
@@ -92,23 +91,23 @@ LogNormDen <- function(stdata, detvarcov, ivarcov, numcoord, type)
 
 ### Optim call for log-likelihood maximization
 
-OptimLik <- function(corrmodel, data, fixed, grid, lags, lower, model,
-                     namescorr, namesnuis, namesparam, numcoord, numdata,
-                     numpairs, optimizer, param, varest, type, upper)
+OptimLik <- function(corrmodel, data, fixed, grid, lower, model, namescorr,
+                     namesnuis, namesparam, numcoord, numdata, numpairs,
+                     optimizer, param, varest, type, upper)
   {
     if(optimizer=='L-BFGS-B')
       OptimLik <- optim(param, Likelihood, corrmodel=corrmodel, control=list(fnscale=-1,
                         factr=1, pgtol=1e-14, maxit = 1e8), data=data, fixed=fixed,
-                        grid=grid, hessian=varest, lags=lags, lower=lower,
-                        method=optimizer, model=model, namescorr=namescorr,
-                        namesnuis=namesnuis, numcoord=numcoord, numdata=numdata,
-                        numpairs=numpairs, upper=upper, type=type)
+                        grid=grid, hessian=varest, lower=lower, method=optimizer,
+                        model=model, namescorr=namescorr, namesnuis=namesnuis,
+                        numcoord=numcoord, numdata=numdata, numpairs=numpairs,
+                        upper=upper, type=type)
     else
       OptimLik <- optim(param, Likelihood, corrmodel=corrmodel, control=list(fnscale=-1,
                         reltol=1e-14, maxit=1e8), data=data, fixed=fixed, grid=grid,
-                        hessian=varest, lags=lags, method=optimizer, model=model,
-                        namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
-                        numdata=numdata, numpairs=numpairs, type=type)
+                        hessian=varest, method=optimizer, model=model, namescorr=namescorr,
+                        namesnuis=namesnuis, numcoord=numcoord, numdata=numdata,
+                        numpairs=numpairs, type=type)
 
     ### Some checks of the output from the optimization procedure:
     if(OptimLik$convergence == 0)

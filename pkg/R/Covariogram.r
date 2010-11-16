@@ -8,7 +8,7 @@
 ### to compute and plot the estimated covariance
 ### function and the variogram after fitting a
 ### random field by composite-likelihood.
-### Last change: 20/06/2010.
+### Last change: 16/11/2010.
 ####################################################
 
 
@@ -48,17 +48,14 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
     if(is.null(lags))
       {
         numcoord <- nrow(fitted$coord)
-        numpairs <- numcoord * (numcoord - 1) / 2
-        lags <- double(numpairs)
-        .C('Distances', as.double(fitted$coord[,1]), as.double(fitted$coord[,2]), lags,
-           as.integer(numcoord), as.integer(fitted$lonlat), PACKAGE='CompRandFld',
-           DUP = FALSE, NAOK=TRUE)
-        rgdist <- range(lags)
-        lags <- seq(rgdist[1], rgdist[2], length=100)
+        maxlags <- double(1)
+        minlags <- double(1)
+        .C('RangeDist',  maxlags, minlags,  PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+        lags <- seq(minlags, maxlags, length=100)
       }
 
     detect <- DetectParam(fitted$corrmodel, fitted$fixed, fitted$param)
-    correlation <- CorrelationFct(detect$corrmodel, lags, length(lags), detect$param)
+    correlation <- CorrelationFct(detect$corrmodel, lags, detect$param)
     param <- c(fitted$fixed, fitted$param)
     sill <- param['sill']
     nugget <- param['nugget']
@@ -77,11 +74,11 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
             upper <- 1e100
           }
         PracticalRange <- function(corrmodel, lags, param, pract.range)
-          return(nugget + sill * CorrelationFct(corrmodel, lags, length(lags), detect$param) -
+          return(nugget + sill * CorrelationFct(corrmodel, lags, param) -
                  (nugget + sill * (1 - pract.range)))
         
         Range <- uniroot(PracticalRange, c(lower, upper), corrmodel=detect$corrmodel,
-                         param=param, pract.range=pract.range)$root
+                         param=detect$param, pract.range=pract.range)$root
       }
     
     if(answer.vario || show.vario)
@@ -138,12 +135,13 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
       return(result)
   }
 
-CorrelationFct <- function(corrmodel, lags, numpairs, param)
+CorrelationFct <- function(corrmodel, lags, param)
 {
-  corr <- double(numpairs)
+  numlags <- length(lags)
+  corr <- double(numlags)
 
-  .C('VectCorrelation', as.integer(corrmodel), corr, as.double(lags),
-     as.integer(numpairs), as.double(param), PACKAGE='CompRandFld',
+  .C('VectCorrelation', corr, as.integer(corrmodel), as.double(lags),
+     as.integer(numlags), as.double(param), PACKAGE='CompRandFld',
      DUP = FALSE, NAOK=TRUE)
 
   return(corr)

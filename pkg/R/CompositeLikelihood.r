@@ -7,16 +7,15 @@
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 30/06/2010.
+### Last change: 12/11/2010.
 ####################################################
 
 
 ### Procedures are in alphabetical order.
 
 
-CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
-                           likelihood, model, namescorr, namesnuis, numcoord,
-                           numdata, param, type)
+CompLikelihood <- function(coordx, coordy, corrmodel, data, fixed, likelihood,
+                           model, namescorr, namesnuis, numcoord, numdata, param, type)
   {
     result <- -1.0e15
 
@@ -29,10 +28,9 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
     nuisance <- param[namesnuis]
 
     .C('CompLikelihood', as.double(coordx), as.double(coordy), as.integer(corrmodel),
-       as.double(data), as.double(dista), as.double(lags), as.integer(likelihood),
-       as.integer(model), as.double(nuisance), as.integer(numdata), as.integer(numcoord),
-       as.double(paramcorr), result, as.integer(type),
-       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+       as.double(data), as.integer(likelihood), as.integer(model), as.double(nuisance),
+       as.integer(numdata), as.integer(numcoord), as.double(paramcorr), result,
+       as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
     
     return(result)
   }
@@ -40,27 +38,23 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, dista, fixed, lags,
 ### Optim call for Composite log-likelihood maximization
 
 OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
-                         lags, likelihood, lonlat, lower, model, namescorr, namesnuis,
-                         namesparam, numcoord, numdata, numparam, numparamcorr, optimizer,
-                         param, type, upper, varest, vartype, weighted, winconst)
+                         likelihood, lonlat, lower, model, namescorr, namesnuis, namesparam,
+                         numcoord, numdata, numparam, numparamcorr, optimizer, param, type,
+                         upper, varest, vartype, winconst)
   {
-    # Temporary choice:
-    dista <- 1.0e15
-    if(weighted)
-      dista <- max(lags) / 2
    
     if(optimizer=='L-BFGS-B')
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
                             control=list(fnscale=-1, factr=1, pgtol=1e-14, maxit = 1e8), data=data,
-                            dista=dista, fixed=fixed, hessian=FALSE, lags=lags, likelihood=likelihood,
-                            lower=lower, method=optimizer, model=model, namescorr=namescorr,
-                            namesnuis=namesnuis, numcoord=numcoord, numdata=numdata, type=type, upper=upper)
+                            fixed=fixed, hessian=FALSE, likelihood=likelihood, lower=lower,
+                            method=optimizer, model=model, namescorr=namescorr, namesnuis=namesnuis,
+                            numcoord=numcoord, numdata=numdata, type=type, upper=upper)
     else
       OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
-                            control=list(fnscale=-1, reltol=1e-14, maxit=1e8), data=data, dista=dista,
-                            fixed=fixed, hessian=FALSE, lags=lags, likelihood=likelihood, method=optimizer,
-                            model=model, namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
-                            numdata=numdata, type=type)
+                            control=list(fnscale=-1, reltol=1e-14, maxit=1e8), data=data, fixed=fixed,
+                            hessian=FALSE, likelihood=likelihood, method=optimizer, model=model,
+                            namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord, numdata=numdata,
+                            type=type)
     
     if(OptimCompLik$convergence == 0)
       OptimCompLik$convergence <- 'Successful'
@@ -91,11 +85,10 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
             # Set the window parameter:
 
             .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(data),
-               as.double(dista), as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.double(lags),
-               as.integer(likelihood), as.integer(lonlat), as.integer(model), as.integer(numdata), as.integer(numparam),
-               as.integer(numparamcorr), as.integer(numcoord), as.double(paramcorr), as.double(nuisance),
-               sensmat, as.integer(type), varimat, as.integer(vartype), as.double(winconst),
-               PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+               as.double(eps), as.integer(flagcorr), as.integer(flagnuis), as.integer(likelihood), as.integer(lonlat),
+               as.integer(model), as.integer(numdata), as.integer(numparam), as.integer(numparamcorr),
+               as.integer(numcoord), as.double(paramcorr), as.double(nuisance), sensmat, as.integer(type),
+               varimat, as.integer(vartype), as.double(winconst), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
           
             # Set sensitivity matrix:
             OptimCompLik$sensmat <- matrix(double(dimmat), ncol=numparam)

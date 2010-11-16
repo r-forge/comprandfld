@@ -7,7 +7,7 @@
 ### This file contains a set of procedures
 ### for maximum likelihood fitting of
 ### random fields.
-### Last change: 18/06/2010.
+### Last change: 16/11/2010.
 ####################################################
 
 
@@ -72,14 +72,15 @@ Wls <- function(bins, corrmodel, fixed, lenbins, moments, numbins, param, weight
   }
 
 WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                    lonlat, model, parscale, paramrange, start, time, type, vartype)
+                    lonlat, model, parscale, paramrange, start, time, type,
+                    vartype, weighted)
   {
     
     ### Initialization parameters:
     
     initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid,
                            likelihood, lonlat, model, parscale, paramrange,
-                           start, time, 'WLeastSquare', vartype)
+                           start, time, 'WLeastSquare', vartype, weighted)
 
     if(!is.null(initparam$error))
       stop(initparam$error)
@@ -107,7 +108,6 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
 
         return(initparam)
       }
-
     if(initparam$numstart > 0)
       {
         for(i in 1 : initparam$numstart)
@@ -116,7 +116,6 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
             initparam$fixed <- c(initparam$fixed, initparam$start[initparam$namesstart[i]])
           }
       }
-
     ### Estimation of empirical variogram:
 
     numbins <- 13
@@ -127,10 +126,9 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     lenbins <- double(numbins - 1)
 
     .C('Empiric_Variogram', as.double(bins), as.double(initparam$coord[,1]), as.double(initparam$coord[,2]),
-       as.double(initparam$data), as.double(initparam$lags), as.double(lenbins), as.double(maxdist),
-       as.double(moments), as.integer(initparam$numpairs), as.integer(initparam$numcoord), as.integer(numbins),
+       as.double(initparam$data), as.double(lenbins), as.double(maxdist), as.double(moments),
+       as.integer(initparam$numpairs), as.integer(initparam$numcoord), as.integer(numbins),
        PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-
 
     ### Model fitting:
     fitted <- optim(initparam$param, Wls, bins=bins, corrmodel=initparam$corrmodel,
@@ -218,7 +216,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     parscale <- NULL
     initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid, 'None',
                          lonlat, 'None', parscale, optimizer=='L-BFGS-B',
-                         start, time, 'WLeastSquare', 'SubSamp')
+                         start, time, 'WLeastSquare', 'SubSamp', weighted)
   
     if(!is.null(initparam$error))
       stop(initparam$error)
@@ -230,9 +228,8 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     lenbins <- double(numbins - 1)
 
     .C('Empiric_Variogram', bins, as.double(initparam$coord[,1]), as.double(initparam$coord[,2]),
-       as.double(initparam$data), as.double(initparam$lags), lenbins, as.double(maxdist), moments,
-       as.integer(initparam$numpairs), as.integer(initparam$numcoord), as.integer(numbins),
-       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+       as.double(initparam$data), lenbins, as.double(maxdist), moments, as.integer(initparam$numpairs),
+       as.integer(initparam$numcoord), as.integer(numbins), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
     ### Model fitting:(bins, corrmodel, fixed, lenbins, moments, numbins, param, weighted)
     if(optimizer=='L-BFGS-B')

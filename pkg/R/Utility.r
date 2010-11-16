@@ -465,7 +465,7 @@ DetectParam <- function(corrmodel, fixed, param)
 
 InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
                       lonlat, model, parscale, paramrange, start, time, type,
-                      vartype)
+                      vartype, weighted)
   {    
     ### Initialize the model parameters:
     error <- NULL
@@ -514,6 +514,9 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
 
     ### Update the  parameters with fixed values:
 
+    numfixed <- 0
+    namesfixed <- NULL
+
     if(!is.null(fixed))
       {
         fixed <- unlist(fixed)
@@ -540,6 +543,9 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     flagnuis <- flag[namesnuis]
     
     ### Update the parameters with starting values:
+
+    numstart <- 0
+    namesstart <- NULL
     
     if(!is.null(start))
       {
@@ -625,12 +631,12 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
 
     ### Compute distances:
     numpairs <- numcoord * (numcoord - 1) / 2
-    lags <- double(numpairs)
-    .C('Distances', as.double(coord[,1]), as.double(coord[,2]), lags, as.integer(numcoord),
-       as.integer(lonlat), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    #lags <- double(numpairs)
+    .C('SetDistances', as.double(coord[,1]), as.double(coord[,2]), as.integer(numcoord),
+       as.integer(lonlat), as.integer(weighted), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
     return(list(corrmodel=codecorrmodel, coord=coord, data=data, error=error, flagcorr=flagcorr, flagnuis=flagnuis,
-                fixed=fixed, lags=lags, likelihood=likelihood, lower=paramrange$lower, model=model, namescorr=namescorr,
+                fixed=fixed, likelihood=likelihood, lower=paramrange$lower, model=model, namescorr=namescorr,
                 namesfixed=namesfixed, namesnuis=namesnuis, namesparam=namesparam, namessim=namessim, namesstart=namesstart,
                 numcoord=numcoord, numdata=numdata, numpairs=numpairs, numparam=numparam, numparamcorr=numparamcorr,
                 numfixed=numfixed, numstart=numstart, param=param, start=start, upper=paramrange$upper, type=type,
