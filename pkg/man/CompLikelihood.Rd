@@ -1,16 +1,19 @@
 \name{CompLikelihood}
 \alias{CompLikelihood}
 
-\title{Computation of the Composite-likelihood}
+\title{Optimizes the Composite log-likelihood}
 \description{
-  Subroutine called by OptimCompLik.
-  The procedure computes the composite-likelihood for a given set of
-  data and parameters.
+  Subroutine called by FitComposite.
+  The procedure estimates the model parameters by maximisation of the 
+  composite log-likelihood.
 }
 \usage{
-CompLikelihood(coordx, coordy, corrmodel, data, fixed, likelihood,
-               model, namescorr, namesnuis, numcoord, numdata,
-               param, type)
+CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
+               flagnuis, fixed, grid, likelihood, lonlat,
+               lower, model, namescorr, namesnuis, namesparam,
+               numcoord, numdata, numparam, numparamcorr,
+               optimizer, param, type, upper, varest, vartype,
+               winconst)
 } 
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -22,22 +25,53 @@ CompLikelihood(coordx, coordy, corrmodel, data, fixed, likelihood,
   \item{corrmodel}{Numeric; the id of the correlation model.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
       \times n}{d x d x n})-matrix of observations.}
-  \item{fixed}{A numeric vector with the parameters that
+  \item{flagcorr}{A numeric vector of binary values denoting which
+    paramerters of the correlation function will be estimated.}
+  \item{flagnuis}{A numeric vector of binary values denoting which
+    nuisance paramerters will be estimated.}
+  \item{fixed}{A numeric vector of parameters that
     will be considered as known values.}
-  \item{likelihood}{Numeric; the configuration of the composite
-    likelihood, see \code{\link{FitComposite}}.}
-  \item{model}{Numeric; the id of the random field.}
+  \item{grid}{Logical; if \code{FALSE} (the default) the data
+    are interpreted as a vector or a (\eqn{n \times d}{n x d})-matrix,
+    instead if \code{TRUE} then (\eqn{d \times d
+      \times n}{d x d x n})-matrix is considered.}
+  \item{likelihood}{String; the configuration of the
+    compositelikelihood, see \code{\link{FitComposite}}.}
+  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
+    and \code{coordy} are interpreted as Cartesian coordinates
+    otherwise they are considered as longitude and latitude.}
+  \item{lower}{A numeric vector with the lower bounds of the parameters' ranges.}
+  \item{model}{Numeric; the id value of the density associated to the likelihood
+    objects.}
   \item{namescorr}{String; the names of the correlation parameters.}
   \item{namesnuis}{String; the names of the nuisance parameters.}
+  \item{namesparam}{String; the names of the parameters to be maximised.}
   \item{numcoord}{Numeric; the number of coordinates.}
-  \item{numdata}{Numeric; the number of the data in time.}
-  \item{param}{A numeric vector with the parameter values.}
-  \item{type}{Numeric; the type of the likelihood objects, see \code{\link{FitComposite}}.}
+  \item{numdata}{Numeric; the number of data replications in time.}
+  \item{numparam}{Numeric; the number of parameters to be maximised.}
+  \item{numparamcorr}{Numeric; the number of correlation parameters.}
+  \item{optimizer}{String; the optimization algorithm
+    (see \code{\link{optim}} for details). 'Nelder-Mead' is the
+    default.}
+  \item{param}{A numeric vector of parameters' values.}
+  \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
+    default) then the marginal composite likelihood is formed by
+    pairwise marginal likelihoods.}
+  \item{upper}{A numeric vector with the upper bounds of the parameters'
+    ranges.}
+  \item{varest}{Logical; if \code{TRUE} the estimate' variances and
+    standard errors are returned. 
+    \code{FALSE} is the default.}
+  \item{vartype}{String; the type of estimation method for computing
+  the estimate variances, see \code{\link{FitComposite}}.}
+  \item{winconst}{Numeric; a positive real value -- if
+    \code{vartype=Sub-Samp} -- that determines the window size in the sub-sampling
+    estimates of the variances, see \code{\link{FitComposite}}.}
 }
 
 \seealso{\code{\link{FitComposite}}}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \keyword{Composite}

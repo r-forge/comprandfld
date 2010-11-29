@@ -1,7 +1,7 @@
 \name{CorrelationFct}
 \alias{CorrelationFct}
 
-\title{Computation of the Correlation function}
+\title{Computes the Correlation function}
 \description{
   Subroutine called by Covariogram.
   The procedure computes the estimated correlation function for a given
@@ -19,6 +19,6 @@ CorrelationFct(corrmodel, lags, param)
 \seealso{\code{\link{FitComposite}}}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \keyword{Composite}

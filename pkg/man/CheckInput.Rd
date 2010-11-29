@@ -10,8 +10,8 @@
 \usage{
 CheckInput(coordx, coordy, corrmodel, data, fixed,
            grid, likelihood, lonlat, model, optimizer,
-           start, time, type, varest, vartype, weighted,
-           weights, winconst)
+           replicates, start, type, varest, vartype,
+           weighted, weights, winconst)
 } 
 \arguments{
    \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -40,13 +40,13 @@ CheckInput(coordx, coordy, corrmodel, data, fixed,
   \item{model}{String; the density associated to the likelihood
     objects. \code{Gaussian} is the default.}
   \item{optimizer}{String; the optimization algorithm
-    (see \code{\link{optim}} for details). 'Nelder-Mead' is the default.}
+    (see \code{\link{optim}} for details). 'Nelder-Mead' is the
+    default.}
+  \item{replicates}{Logical; if \code{FALSE} (the default) one spatial random field is
+    considered, instead if \code{TRUE} the data are considered as iid replicates of a field.}
   \item{start}{A named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure. \code{NULL} is the default.}
-  \item{time}{Logical; if \code{FALSE} (the default) a spatial random field is
-    considered (one temporal realisation), if \code{TRUE} a
-    spatial-temporal random field is considered.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods.}
@@ -67,6 +67,6 @@ CheckInput(coordx, coordy, corrmodel, data, fixed,
 \seealso{\code{\link{FitComposite}}}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \keyword{Composite}

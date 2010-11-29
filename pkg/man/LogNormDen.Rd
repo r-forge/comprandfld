@@ -1,7 +1,7 @@
 \name{LogNormDen}
 \alias{LogNormDen}
 
-\title{Computation of the multivariate log-normal density}
+\title{Computes the multivariate log-normal density}
 \description{
   Subroutine called by the Likelihood procedure.
   The procedure compute the multivariate log-normal density
@@ -22,6 +22,6 @@ LogNormDen(stdata, detvarcov, ivarcov, numcoord, type)
 \seealso{\code{\link{FitComposite}}}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \keyword{Composite}

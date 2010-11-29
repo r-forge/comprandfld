@@ -8,10 +8,10 @@
   of a random field obtained by the weigthed least squares estimator.
 }
 \usage{
-WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL,
-             grid=FALSE, lonlat=FALSE, maxdist=NULL,
-             optimizer='Nelder-Mead', numbins=NULL, start=NULL,
-             time=FALSE, weighted=FALSE)
+WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE,
+             lonlat=FALSE, maxdist=NULL, model='Gaussian',
+             optimizer='Nelder-Mead', numbins=NULL,
+             replicates=FALSE, start=NULL, weighted=FALSE)
 } 
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -35,24 +35,33 @@ WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL,
   \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
     and \code{coordy} are interpreted as Cartesian coordinates
     otherwise they are considered as longitude and latitude.}
-  \item{maxdist}{A numeric value denoting the maximum distance, see the Section \bold{Details}.}
+  \item{maxdist}{A numeric value denoting the maximum distance, see the
+    Section \bold{Details}.}
+  \item{model}{String; the type of random field. \code{Gaussian} is the default, see
+    \code{\link{FitComposite}} for the different types.}
   \item{optimizer}{String; the optimization algorithm
     (see \code{\link{optim}} for details). 'Nelder-Mead' is the
     default.}
-  \item{numbins}{A numeric value denoting the numbers of bins, see the Section \bold{Details}}
+  \item{numbins}{A numeric value denoting the numbers of bins, see the
+    Section \bold{Details}}
+  \item{replicates}{Logical; if \code{FALSE} (the default) one spatial random field is
+    considered, instead if \code{TRUE} the data are considered as iid replicates of a field.}
   \item{start}{A named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure. \code{NULL} is the default (see \code{\link{FitComposite}}).}
-  \item{time}{Logical; if \code{FALSE} (the default) a spatial random field is
-    considered (one temporal realisation), if \code{TRUE} a
-    spatial-temporal random field is considered (see \code{\link{FitComposite}}).}
   \item{weighted}{Logical; if \code{TRUE} then the weighted least square
     estimator is considered. If \code{FALSE} (the
     default) then the classic least square is used.}
 }
 
 \details{
-  Insert description of \code{maxdist} and \code{numbins}.
+  The  \code{numbins} parameter indicates the number of adjacent
+  intervals to consider in order to grouped distances with which to
+  compute the (weighted) lest squares.
+
+  The \code{maxdist} parameter indicates the maximum distance below which
+  the shorter distances will be considered in the calculation of
+  the (weigthed) least squares.
 }
 
 \value{
@@ -75,20 +84,20 @@ WLeastSquare(coordx, coordy, corrmodel, data, fixed=NULL,
 
 \references{
   
-  Cressie, N. A. C. (1993) Statistics for Spatial Data. New York: Wiley.
+  Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York: Wiley.
 
   Barry, J. T., Crowder, M. J. and Diggle, P. J. (1997)
-  Parametric estimation of the variogram. Tech. Report, Dept Maths &
+  \emph{Parametric estimation of the variogram}. Tech. Report, Dept Maths &
   Stats, Lancaster University.
 
-  Gaetan, C. and Guyon, X. (2009) Spatial Statistics and Modelling.
-  \emph{Spring Verlang, New York}.
+  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
+  Spring Verlang, New York.
 }
 
 \seealso{\code{\link{FitComposite}}, \code{\link{optim}}}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php};
+  \url{http://people.epfl.ch/simone.padoan};
   Moreno Bevilacqua, \email{moreno.bevilacqua@unive.it}.}
 
 \examples{

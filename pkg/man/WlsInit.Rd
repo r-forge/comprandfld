@@ -1,7 +1,7 @@
 \name{WlsInit}
 \alias{WlsInit}
 
-\title{Computation of Starting Values based on Weighted Least Squares}
+\title{Computes Starting Values based on Weighted Least Squares}
 \description{
   Subroutine called by FitComposite.
   The function returns opportune starting values for the
@@ -10,7 +10,7 @@
 \usage{
 WlsInit(coordx, coordy, corrmodel, data, fixed, grid,
         likelihood, lonlat, model, parscale, paramrange,
-        start, time, type, vartype, weighted)
+        replicates, start, type, vartype, weighted)
 } 
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -39,10 +39,9 @@ WlsInit(coordx, coordy, corrmodel, data, fixed, grid,
     maximisation routine.}
   \item{paramrange}{A numeric vector with the range of the parameter
     space.}
+  \item{replicates}{Logical; if \code{FALSE} (the default) one spatial random field is
+    considered, instead if \code{TRUE} the data are considered as iid replicates of a field.}
   \item{start}{A numeric vector with starting values.}
-  \item{time}{Logical; if \code{FALSE} (the default) a spatial random field is
-    considered (one temporal realisation), if \code{TRUE} a
-    spatial-temporal random field is considered.}
   \item{type}{String; the type of estimation method.}
   \item{vartype}{String; the type of estimation method for computing
     the estimate variances, see the Section \bold{Details}.}
@@ -53,6 +52,6 @@ WlsInit(coordx, coordy, corrmodel, data, fixed, grid,
 \seealso{\code{\link{FitComposite}}, \code{\link{WLeastSquare}}.}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \keyword{LeastSquare}

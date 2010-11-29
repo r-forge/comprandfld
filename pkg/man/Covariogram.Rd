@@ -1,7 +1,7 @@
 \name{Covariogram}
 \alias{Covariogram}
 
-\title{Computation of the covariance function and the variogram}
+\title{Computes (and Plots) the covariance function and the variogram}
 \description{
   The procedure computes and plots the estimated covariance function
   and the variogram from a fitted model obtained fitting a random field
@@ -11,7 +11,7 @@
 Covariogram(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
             answer.range=FALSE, show.cov=FALSE, show.vario=FALSE,
             show.range=FALSE, add.cov=FALSE, add.vario=FALSE,
-            pract.range=95, \dots)
+            pract.range=95, vario, \dots)
 } 
 \arguments{
   \item{fitted}{The fitted object obtained from the
@@ -42,6 +42,7 @@ Covariogram(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
     estimated variogram is added on the current plot; if \code{FALSE} (the
     default) the correlation is not added.}
   \item{pract.range}{Numeric; the percent of the sill to be reached.}
+  \item{vario}{An object of type \code{Variogram} obtained from \code{\link{EVariogram}}.}
   \item{\dots}{other optional parameters which are passed to plot function.}
 }
 
@@ -54,12 +55,12 @@ Covariogram(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
 }
 
 \references{
-  Gaetan, C. and Guyon, X. (2009) Spatial Statistics and Modelling.
+  Gaetan, C. and Guyon, X. (2010) Spatial Statistics and Modelling.
   \emph{Spring Verlang, New York}.
 }
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \examples{
 library(RandomFields)

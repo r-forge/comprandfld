@@ -1,7 +1,7 @@
 \name{DetectParam}
 \alias{DetectParam}
 
-\title{Identification  of the Parameters of the Correlation function}
+\title{Identifies the Parameters of the Correlation function}
 \description{
   Subroutine called by Covariogram and others
   The procedure returns a list with the correlation model and
@@ -19,6 +19,6 @@ DetectParam(corrmodel, fixed, param)
 \seealso{\code{\link{FitComposite}}}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \keyword{Composite}

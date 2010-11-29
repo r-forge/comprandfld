@@ -1,7 +1,7 @@
 \name{SetRangeParam}
 \alias{SetRangeParam}
 
-\title{Identification of the Parameters' Range}
+\title{Identifies the Parameters' Range}
 \description{
   Subroutine called by InitParam and the fitting procedures.
   The procedure returns the range of the parameters for a given
@@ -18,6 +18,6 @@ SetRangeParam(namesparam, numparam)
 \seealso{\code{\link{FitComposite}}}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \keyword{Composite}

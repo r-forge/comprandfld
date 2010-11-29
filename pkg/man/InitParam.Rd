@@ -1,7 +1,7 @@
 \name{InitParam}
 \alias{InitParam}
 
-\title{Initialization of the Fitting Procedures}
+\title{Initializes of the Fitting Procedures}
 \description{
   Subroutine called by the fitting procedures.
   The procedure initializes the fitting procedure.
@@ -9,7 +9,7 @@
 \usage{
 InitParam(coordx, coordy, corrmodel, data, fixed, grid,
           likelihood, lonlat, model, parscale, paramrange,
-          start, time, type, vartype, weighted)
+          replicates, start, type, vartype, weighted)
 } 
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -36,13 +36,13 @@ InitParam(coordx, coordy, corrmodel, data, fixed, grid,
     objects. \code{Gaussian} is the default.}
   \item{parscale}{A numeric vector of scaling factor to improve the
     maximizing procedure, see \code{\link{optim}}.}
-  \item{paramrange}{A numeric vector of parameters ranges, see \code{\link{optim}}.}
+  \item{paramrange}{A numeric vector of parameters ranges, see
+    \code{\link{optim}}.}
+  \item{replicates}{Logical; if \code{FALSE} (the default) one spatial random field is
+    considered, instead if \code{TRUE} the data are considered as iid replicates of a field.}
    \item{start}{A named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure. \code{NULL} is the default (see \bold{Details}).}
-  \item{time}{Logical; if \code{FALSE} (the default) a spatial random field is
-    considered (one temporal realisation), if \code{TRUE} a
-    spatial-temporal random field is considered.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods.}
@@ -55,6 +55,6 @@ InitParam(coordx, coordy, corrmodel, data, fixed, grid,
 \seealso{\code{\link{FitComposite}}}
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php}.}
+  \url{http://people.epfl.ch/simone.padoan}.}
 
 \keyword{Composite}

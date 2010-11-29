@@ -2,20 +2,19 @@
 \alias{FitComposite}
 \alias{print.FitComposite}
 
-\title{Maximum Composite-likelihood Fitting of Random Fields}
+\title{Maximum Weighted Composite-likelihood Fitting of Gaussian Random Fields}
 \description{
-  Maximum composite-likelihood fitting for random fields.
-  The function returns the parameters' estimates and the estimates'
-  variances of random fields obtained by maximisation of the
-  composite-likelihood and allows to fix any of the parameters.
+  Maximum weighted composite-likelihood fitting for Gaussian and max-stable random fields.
+  The function returns the model parameters' estimates and the estimates'
+  variances by weighted maximisation of the composite-likelihood and allows to
+  fix any of the parameters.
 }
 \usage{
-FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
-             grid=FALSE, likelihood='Marginal', lonlat=FALSE,
-             model='Gaussian', optimizer='Nelder-Mead', start=NULL,
-             time=FALSE, type='Pairwise', varest=FALSE,
-             vartype='SubSamp', weighted=FALSE, weights=NULL,
-             winconst=NULL)
+FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=FALSE,
+             likelihood='Marginal', lonlat=FALSE, model='Gaussian',
+             optimizer='Nelder-Mead', replicates=FALSE, start=NULL,
+             type='Pairwise', varest=FALSE, vartype='SubSamp',
+             weighted=FALSE, weights=NULL, winconst=NULL)
 } 
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -43,17 +42,17 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
   \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
     and \code{coordy} are interpreted as Cartesian coordinates
     otherwise they are considered as longitude and latitude.}
-  \item{model}{String; the density associated to the likelihood
+  \item{model}{String; the type of random field and therefore the densities associated to the likelihood
     objects. \code{Gaussian} is the default, see the Section
     \bold{Details}.}
   \item{optimizer}{String; the optimization algorithm
-    (see \code{\link{optim}} for details). 'Nelder-Mead' is the default.}
+    (see \code{\link{optim}} for details). 'Nelder-Mead' is the
+    default.}
+  \item{replicates}{Logical; if \code{FALSE} (the default) one spatial random field is
+    considered, instead if \code{TRUE} the data are considered as iid replicates of a field.}
   \item{start}{A named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure. \code{NULL} is the default (see \bold{Details}).}
-  \item{time}{Logical; if \code{FALSE} (the default) a spatial random field is
-    considered (one temporal realisation), if \code{TRUE} a
-    spatial-temporal random field is considered, see the Section \bold{Details}.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods (see \bold{Details}).}
@@ -88,67 +87,75 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
 
   With the \code{data} parameter:
   \itemize{
-    \item If a numeric vector, the data are interpreted as one spatial
+    \item If it is a numeric vector, the data are interpreted as a spatial or temporal
     realisation; 
-    \item If a numeric (\eqn{n \times d}{n x d})-matrix, the columns
-    represent the data observed at different points and
-    the rows represent the data for different time steps.
-    \item If a numeric (\eqn{d \times d \times n}{d x d x n})-matrix the data are
-    observed at (\eqn{d \times d}{d x d}) points for
-    \code{n} time steps.
+    \item If it is a numeric (\eqn{n \times d}{n x d})-matrix, the
+  \code{d} columns represent the different points where the data
+  observed and the \code{n} rows represent the available iid replications.
+    \item If it is a numeric (\eqn{d \times d \times n}{d x d x
+      n})-matrix then the data are considered as observations observed at
+    (\eqn{d \times d}{d x d}) points with eventually \code{n} available replications.
   } 
   
   The \code{likelihood} parameter represents the composite-likelihood
   configurations. The settings alternatives are:
   \enumerate{
     \item \code{Conditional}, the composite-likelihood is formed by
-    conditionals likelihoods (not implemented yet);
+    conditionals likelihoods;
     \item \code{Marginal}, the composite-likelihood is formed by
   marginals likelihoods; 
     \item \code{Full}, the composite-likelihood turns out to be the standard likelihood;
   }
 
-  The \code{model} paramter represents the density function underlying
-  the definition of the likelihoods which form the composite-likelihood.
-  The settings alternatives are:
+  The \code{model} paramter represents the type of random field
+  considered, an example is the Gaussian random field. Therefore, this also
+  determines the associated density functions that will define the
+  likelihood objects and then the composite-likelihood.
+  The available options:
   \itemize{
-    \item \code{Gaussian}, the Gaussian density.
-   }   
+    \item \code{Gaussian}, for a Gaussian random field.
+  }
+
+  The \code{replicates} parameter specifies if iid replications of the
+  random field are available.
+  If \code{FALSE}, then a realisation of spatial random field is considered. Instead if \code{TRUE}
+  the \code{data} are considered as iid replications of a spatial random field. For the moment
+  the option of iid replications is implemented only for a spatial
+  random field. The alternative is to work with a realisation of a
+  spatial-temporal random field.
  
    The \code{start} parameter allows to specify starting values.
    If \code{start} is omitted the routine is computing the
-  starting values using the weighted moment estimator.
+   starting values using the weighted moment estimator.
 
-  The \code{time} parameter allows to specify the type of random field.
-  If \code{FALSE} a spatial random field is considered, if \code{TRUE}
-  a spatial-temporal random field is used. For the moment
-  the case of i.i.d. time replications is implemented. Soon will be possible to
-  specify also dependence structure for the temporal component.
-  
-
-  The \code{type} parameter represents the type of likelihood used in the
-  composite-likelihood definition. The settings alternatives are:
+   The \code{type} parameter represents the type of likelihood used in the
+  composite-likelihood definition. The possible alternatives are listed
+  in the following scheme.
   \enumerate{
-    \item If the composite is formed by \code{Marginal} likelihoods:
+    \item If a Gaussian random field is considered
+    (\code{model=Gaussian}):
     \itemize{
-      \item If each likelihood is obtained by the \code{Gaussian}
-      density then with:
+      \item If the composite is formed by marginal likelihoods (\code{likelihood=Marginal}):
       \itemize{
-      \item \code{Pairwise}, the composite-likelihood is defined by
-      the pairwise likelihoods;
-      \item \code{Difference}, the composite-likelihood is defined by
-      likelihoods which are obtained as difference of the pairwise likelihoods.}
-    }
-    
-    \item If the \code{Full} likelihood is considered:
-    \itemize{
-      \item If the likelihood is obtained by the \code{Gaussian}
-      density then with:
+	\item \code{Pairwise}, the composite-likelihood is defined by
+	the pairwise likelihoods;
+	\item \code{Difference}, the composite-likelihood is defined by
+	likelihoods 
+	which are obtained as difference of the pairwise likelihoods.}
+      \item If the composite is formed by conditional likelihoods
+      (\code{likelihood=Conditional})
       \itemize{
-      \item \code{Standard}, the likelihood used is the standard version;
-      \item \code{Restricted}, the likelihood used is the restricted version.}
-    }
-  }
+	\item \code{Pairwise}, the composite-likelihood is defined by
+	the pairwise conditional likelihoods.}
+      \item If the composite is formed by a full likelihood
+      (\code{likelihood=Full}):
+      \itemize{
+	\item \code{Standard}, the likelihood that will be considered is the standard
+	multivariate version;
+	\item \code{Restricted}, the likelihood that will be considered
+        is the restricted version (see \bold{References}).}
+      }
+      }
 
   The \code{vartype} parameter -- if the \code{varest} is
   \code{TRUE} -- specifies the method used to compute the estimates' variances. The
@@ -157,8 +164,8 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
   \code{Theoretical} where for the variability matrix it is used the exact
   expression (for the moment it has been implemented only for the 
   \code{Difference} likelihood, see the \code{type} field) and \code{Sampling} where the variability matrix
-  in this case is estimated by the sample contro-part (available only for i.i.d.
-  replicates on time, see the \code{time} field).
+  in this case is estimated by the sample contro-part (available only for iid.
+  replicates of a random field, see the \code{replicates} parameter).
 
   The \code{weighted} parameter specifies if the likelihoods forming the
   composite-likelihood must be weighted. If \code{TRUE} the weights are
@@ -201,9 +208,15 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
 
 
 \references{
+  
+  Maximum Restricted Likelihood Estimator:
+  
   Harville, D. A. (1977)
   Maximum Likelihood Approaches to Variance Component Estimation and to Related Problems.
-  \emph{Journal of the American Statistical Association}, \bold{72}, 320--338.
+  \emph{Journal of the American Statistical Association}, \bold{72},
+  320--338.
+   
+  Composite-likelihood:
   
   Varin, C. and Vidoni, P. (2005)
   A Note on Composite Likelihood Inference and Model Selection.
@@ -213,19 +226,72 @@ FitComposite(coordx, coordy=NULL, corrmodel, data, fixed=NULL,
   On Composite Marginal Likelihoods.
   \emph{Advances in Statistical Analysis}, \bold{92}, 1--28.
 
-  Gaetan, C. and Guyon, X. (2009) Spatial Statistics and Modelling.
-  \emph{Spring Verlang, New York}.
-
-  Padoan, S. A. Ribatet, M and Sisson, S. A. (2010)
+  Weighted Composite-likelihood for max-stable random fields:
+  
+  Padoan, S. A. (2008). \emph{Computational
+    Methods for Complex Problems in Extreme Value Theory}. PhD. Thesis,
+  Department of Statistics, University of Padua.
+  
+  Padoan, S. A. Ribatet, M. and Sisson, S. A. (2010)
   Likelihood-Based Inference for Max-Stable Processes.
   \emph{Journal of the American Statistical Association, Theory & Methods}, \bold{105}, 263--277.
+
+  Weighted Composite-likelihood for Gaussian random fields:
+
+  Bevilacqua, M. Gaetan, C., Mateu, J. and Porcu, E. (2011)
+  Estimating space and space-time covariance functions for large data
+  sets: a weighted composite likelihood approach.
+  \emph{Journal of the American Statistical Association}, to appear.
+
+  Spatial Statistics:
+
+  Schlather, M. (1999) \emph{An introduction to positive definite
+    functions and to unconditional simulation of random fields}.
+  Technical report ST 99--10, Dept. of Maths and Statistics, Lancaster University
+
+  Wackernagel, H. (1998) \emph{Multivariate Geostatistics}. Berlin:
+  Springer, 2nd edition.
+
+  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
+  Spring Verlang, New York.
+
+  Spatial Extremes:
+
+  Smith, R. L. (1990) Max-Stable Processes and Spatial Extremes.
+  \emph{Unpublished manuscript}, University of North California.
+
+  Schlather, M. (2002) Models for Stationary Max-Stable Random
+  Fields. \emph{Extremes}, \bold{5}, 33--44.
+
+  de Haan, L., and Pereira, T. T. (2006) Spatial Extremes: Models for
+  the Stationary Case. \emph{The Annals of Statistics}, \bold{34},
+  146--168.
+
+  Kabluchko, Z., Schlather, M., and de Haan, L. (2009) Stationary max-stable fields
+associated to negative definite functions. \emph{The Annals of
+  Probability}, \bold{37}, 2042--2065.
+
+  Kabluchko, Z. (2010) Extremes of Independent Gaussian
+  Processes. \emph{Extremes}, to appear.
+
+  Sub-sampling estimation:
+
+  Heagerty, P. J. and Lumley T. (2000) Window Subsampling of Estimating
+  Functions with Application to Regression Models.
+  \emph{Journal of the American Statistical Association, Theory &
+    Methods}, \bold{95}, 197--211.
+
+  Lee, Y. D. and Lahiri S. N. (2002) Variogram Fitting by Spatial
+  Subsampling.
+  \emph{Journal of the Royal Statistical Society. Series B},
+  \bold{64}, 837--854.
 }
 
 \seealso{\code{\link[RandomFields]{CovarianceFct}}, \code{\link{WLeastSquare}}, \code{\link{optim}}}
 
 
 \author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://eflum.epfl.ch/people/padoan.en.php};
+  \url{http://people.epfl.ch/simone.padoan};
   Moreno Bevilacqua, \email{moreno.bevilacqua@unive.it}.}
 
 \examples{
