@@ -46,6 +46,15 @@ Description: functions for composite log-likelihood evaluation
 Start
  ---------------------------------------------------------------*/
 
+void Comp_Cond_Gauss(int *corrmod, double *data, double *nuisance, 
+		     int *ndata, int *nsite, double *par, double *res);
+
+void Comp_Diff_Gauss(int *corrmod, double *data, double *nuisance, 
+		     int *ndata, int *nsite, double *par, double *res);
+
+void Comp_Pair_Gauss(int *corrmod, double *data, double *nuisance, 
+		     int *ndata, int *nsite, double *par, double *res);
+
 void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data, 
 		    int *like, int *model, double *nuisance, int *ndata, int *nsite, 
 		    double *par, double *res, int *type);
@@ -61,6 +70,31 @@ End
  ---------------------------------------------------------------*/
 
 // 3)
+/*----------------------------------------------------------------
+File name: Distributions.c
+Description: procedures for the computation of useful distributions
+Start
+ ---------------------------------------------------------------*/
+
+void Dist2Dist(double *data, double *eloc, double *escale, double *eshape, 
+	       int *ndata, int *nsite, double *ploc, double *pscale, 
+	       double *pshape, int *type, double *res);
+
+double dgev(double x, double loc, double scale, double shape);
+
+void GevLogLik(double *data, int *ndata, double *par, double *res);
+
+double pgev(double x, double loc, double scale, double shape);
+
+double qgev(double x, double loc, double scale, double shape);
+
+/*----------------------------------------------------------------
+File name: Distributions.c
+Description: procedures for the computation of useful distributions
+End
+ ---------------------------------------------------------------*/
+
+// 4)
 /*----------------------------------------------------------------
 File name: Godambe.c
 Description: procedures for the computation of the Godambe matrix
@@ -134,7 +168,7 @@ Description: procedures for the computation of the Godambe matrix
 End
  ---------------------------------------------------------------*/
 
-// 4)
+// 5)
 /*----------------------------------------------------------------
 File name: Likelihood.c
 Description: procedures for computation of the full likelihood
@@ -150,7 +184,7 @@ End
  ---------------------------------------------------------------*/
 
 
-// 5)
+// 6)
 /*----------------------------------------------------------------
 File name: WeightedLeastSquare.c
 Description: procedures for the estimation of the model parameters
@@ -158,12 +192,29 @@ via the weighted least square method.
 Start
  ---------------------------------------------------------------*/
 
-void Empiric_Variogram(double *bins, double *coordx, double *coordy, double *data, 
-		       double *lenbins, double *maxdist, double *moments, int *npairs, 
-		       int *nsite, int *nbins);
+void Binned_Madogram(double *bins, double *data, int *lenbins,  double *maxdist, 
+		     double *moments, int *nbins, int *ndata, int *nsite);
 
-void Wls(double *bins, int *corrmod, double *par, int *nbins, double *moments, 
-	 double *lenbins, double *nuisance, int *weighted, double *res);
+void Binned_Variogram(double *bins, double *data, int *lenbins,  double *maxdist, 
+		      double *moments, int *nbins, int *ndata, int *nsite);
+
+void Cloud_Madogram(double *bins, double *data, int *lenbins, 
+		    double *moments, int *ndata, int *nsite);
+
+void Cloud_Variogram(double *bins, double *data, int *lenbins, 
+		     double *moments, int *ndata, int *nsite);
+
+void Empiric_Variogram(double *bins, int *cloud, double *data, 
+		       int *lenbins, double *maxdist, double *moments, 
+		       int *ndata, int *nsite, int *nbins, int *type);
+
+void LeastSquare_G(double *bins, int *corrmod, double *par, int *nbins, 
+		   double *moments, double *lenbins, double *nuisance, 
+		   double *res);
+
+void WLeastSquare_G(double *bins, int *corrmod, double *par, int *nbins, 
+		    double *moments, double *lenbins, double *nuisance, 
+		    double *res);
 
 /*----------------------------------------------------------------
 File name: WeightedLeastSquare.c
@@ -172,7 +223,7 @@ via the weighted least square method.
 End
  ---------------------------------------------------------------*/
 
-// 6)
+// 7)
 /*----------------------------------------------------------------
 File name: Utility.c
 Description: procedures for the computation of useful quantities.
