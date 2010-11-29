@@ -7,7 +7,7 @@
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 12/11/2010.
+### Last change: 23/11/2010.
 ####################################################
 
 
@@ -17,7 +17,7 @@
 ### Fitting procedure: 
 
 FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=FALSE, likelihood='Marginal',
-                         lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead', start=NULL, time=FALSE,
+                         lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead', replicates=FALSE, start=NULL,
                          type='Pairwise', varest=FALSE, vartype='SubSamp', weighted=FALSE, weights=NULL,
                          winconst=NULL)
 {
@@ -26,8 +26,8 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     ### Check the parameters given in input:
     
     checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid,
-                             likelihood, lonlat, model, optimizer, start,
-                             time, type, varest, vartype, weighted, weights,
+                             likelihood, lonlat, model, optimizer, replicates,
+                             start, type, varest, vartype, weighted, weights,
                              winconst)
 
 
@@ -46,8 +46,8 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     ### Initialization parameters:
 
     initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                         lonlat, model, parscale, optimizer=='L-BFGS-B', start,
-                         time, type, vartype, weighted)
+                         lonlat, model, parscale, optimizer=='L-BFGS-B', replicates,
+                         start, type, vartype, weighted)
     
     if(!is.null(initparam$error))
       stop(initparam$error)
@@ -59,10 +59,10 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     if(initparam$likelihood == 2)
       {
         # Fitting by log-likelihood maximization:
-        fitted <- OptimLik(initparam$corrmodel, initparam$data, initparam$fixed, grid, initparam$lower,
-                           initparam$model, initparam$namescorr, initparam$namesnuis, initparam$namesparam,
-                           initparam$numcoord, initparam$numdata, initparam$numpairs, optimizer, initparam$param,
-                           varest, initparam$type, initparam$upper) 
+        fitted <- Likelihood(initparam$corrmodel, initparam$data, initparam$fixed, grid, initparam$lower,
+                             initparam$model, initparam$namescorr, initparam$namesnuis, initparam$namesparam,
+                             initparam$numcoord, initparam$numdata, initparam$numpairs, optimizer, initparam$param,
+                             varest, initparam$type, initparam$upper) 
       }
     
     # Composite likelihood:
@@ -70,12 +70,12 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
     if(initparam$likelihood == 3 || initparam$likelihood == 1)
       {
         vartype <- CheckVarType(vartype)
-        fitted <- OptimCompLik(initparam$coord[,1], initparam$coord[,2], initparam$corrmodel, initparam$data,
-                               initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, initparam$likelihood,
-                               lonlat, initparam$lower, initparam$model, initparam$namescorr, initparam$namesnuis,
-                               initparam$namesparam, initparam$numcoord, initparam$numdata, initparam$numparam,
-                               initparam$numparamcorr, optimizer, initparam$param, initparam$type, initparam$upper,
-                               varest, vartype, winconst)
+        fitted <- CompLikelihood(initparam$coord[,1], initparam$coord[,2], initparam$corrmodel, initparam$data,
+                                 initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, initparam$likelihood,
+                                 lonlat, initparam$lower, initparam$model, initparam$namescorr, initparam$namesnuis,
+                                 initparam$namesparam, initparam$numcoord, initparam$numdata, initparam$numparam,
+                                 initparam$numparamcorr, optimizer, initparam$param, initparam$type, initparam$upper,
+                                 varest, vartype, winconst)
 
         .C('DelDistances', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
       }
@@ -160,7 +160,7 @@ print.FitComposite <- function(x, digits = max(3, getOption("digits") - 3), ...)
                       quote = FALSE)
       }
 
-    cat('\n##############################################################')    
+    cat('\n##############################################################\n')    
     invisible(x)
   }
 

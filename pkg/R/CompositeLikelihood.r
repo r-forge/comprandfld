@@ -7,62 +7,67 @@
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 12/11/2010.
+### Last change: 23/11/2010.
 ####################################################
 
 
 ### Procedures are in alphabetical order.
 
-
-CompLikelihood <- function(coordx, coordy, corrmodel, data, fixed, likelihood,
-                           model, namescorr, namesnuis, numcoord, numdata, param, type)
-  {
-    result <- -1.0e15
-
-    if(!CheckParamRange(param))
-      return(result)
-
-    result <- double(1)
-    param <- c(param, fixed)
-    paramcorr <- param[namescorr]
-    nuisance <- param[namesnuis]
-
-    .C('CompLikelihood', as.double(coordx), as.double(coordy), as.integer(corrmodel),
-       as.double(data), as.integer(likelihood), as.integer(model), as.double(nuisance),
-       as.integer(numdata), as.integer(numcoord), as.double(paramcorr), result,
-       as.integer(type), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-    
-    return(result)
-  }
-
 ### Optim call for Composite log-likelihood maximization
 
-OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
+CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
                          likelihood, lonlat, lower, model, namescorr, namesnuis, namesparam,
                          numcoord, numdata, numparam, numparamcorr, optimizer, param, type,
                          upper, varest, vartype, winconst)
   {
-   
+    ### Define the object function:
+    comploglik <- function(corrmodel, data, fixed, fun, namescorr,
+                           namesnuis, numcoord, numdata, param)
+      {
+        result <- -1.0e15
+
+        if(!CheckParamRange(param))
+          return(result)
+
+        result <- double(1)
+        param <- c(param, fixed)
+        paramcorr <- param[namescorr]
+        nuisance <- param[namesnuis]
+
+        .C(fun, as.integer(corrmodel), as.double(data), as.double(nuisance),
+           as.integer(numdata), as.integer(numcoord), as.double(paramcorr),
+           result, PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+
+        return(result)
+      }
+    fname <- NULL
+
+    if(likelihood == 1 & type == 2)
+      fname <- 'Comp_Cond_Gauss'
+    if(likelihood == 3 & type == 1)
+      fname <- 'Comp_Diff_Gauss'
+    if(likelihood == 3 & type == 2)
+      fname <- 'Comp_Pair_Gauss'
+
     if(optimizer=='L-BFGS-B')
-      OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
-                            control=list(fnscale=-1, factr=1, pgtol=1e-14, maxit = 1e8), data=data,
-                            fixed=fixed, hessian=FALSE, likelihood=likelihood, lower=lower,
-                            method=optimizer, model=model, namescorr=namescorr, namesnuis=namesnuis,
-                            numcoord=numcoord, numdata=numdata, type=type, upper=upper)
+      CompLikelihood <- optim(param, comploglik, corrmodel=corrmodel, control=list(fnscale=-1,
+                            factr=1, pgtol=1e-14, maxit=1e8), data=data, fixed=fixed,
+                            fun=fname, hessian=FALSE, lower=lower, method=optimizer,
+                            namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord,
+                            numdata=numdata, upper=upper)
     else
-      OptimCompLik <- optim(param, CompLikelihood, coordx=coordx, coordy=coordy, corrmodel=corrmodel,
-                            control=list(fnscale=-1, reltol=1e-14, maxit=1e8), data=data, fixed=fixed,
-                            hessian=FALSE, likelihood=likelihood, method=optimizer, model=model,
-                            namescorr=namescorr, namesnuis=namesnuis, numcoord=numcoord, numdata=numdata,
-                            type=type)
+      CompLikelihood <- optim(param, comploglik, corrmodel=corrmodel, control=list(fnscale=-1,
+                            reltol=1e-14, maxit=1e8), data=data, fixed=fixed, fun=fname,
+                            hessian=FALSE, method=optimizer, namescorr=namescorr,
+                            namesnuis=namesnuis, numcoord=numcoord, numdata=numdata)
     
-    if(OptimCompLik$convergence == 0)
-      OptimCompLik$convergence <- 'Successful'
+    if(CompLikelihood$convergence == 0)
+      CompLikelihood$convergence <- 'Successful'
     else
-      if(OptimCompLik$convergence == 1)
-        OptimCompLik$convergence <- 'Iteration limit reached'
+      if(CompLikelihood$convergence == 1)
+        CompLikelihood$convergence <- 'Iteration limit reached'
       else
-        OptimCompLik$convergence <- "Optimization may have failed"
+        CompLikelihood$convergence <- "Optimization may have failed"
 
         ### Computation of the variance-covariance matrix:
 
@@ -74,7 +79,7 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
             dimmat <- numparam^2
             dmat <- numparam * (numparam + 1) / 2
             eps <- (.Machine$double.eps)^(1/3)
-            param <- c(OptimCompLik$par, fixed)
+            param <- c(CompLikelihood$par, fixed)
                 
             paramcorr <- param[namescorr]
             nuisance <- param[namesnuis]
@@ -91,43 +96,43 @@ OptimCompLik <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fi
                varimat, as.integer(vartype), as.double(winconst), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
           
             # Set sensitivity matrix:
-            OptimCompLik$sensmat <- matrix(double(dimmat), ncol=numparam)
-            OptimCompLik$sensmat[lower.tri(OptimCompLik$sensmat, diag=TRUE)] <- sensmat
-            OptimCompLik$sensmat <- t(OptimCompLik$sensmat)
-            OptimCompLik$sensmat[lower.tri(OptimCompLik$sensmat, diag=TRUE)] <- sensmat
+            CompLikelihood$sensmat <- matrix(double(dimmat), ncol=numparam)
+            CompLikelihood$sensmat[lower.tri(CompLikelihood$sensmat, diag=TRUE)] <- sensmat
+            CompLikelihood$sensmat <- t(CompLikelihood$sensmat)
+            CompLikelihood$sensmat[lower.tri(CompLikelihood$sensmat, diag=TRUE)] <- sensmat
             
             # Set variability matrix:
-            OptimCompLik$varimat <- matrix(double(dimmat), ncol=numparam)
-            OptimCompLik$varimat[lower.tri(OptimCompLik$varimat, diag=TRUE)] <- varimat
-            OptimCompLik$varimat <- t(OptimCompLik$varimat)
-            OptimCompLik$varimat[lower.tri(OptimCompLik$varimat, diag=TRUE)] <- varimat
+            CompLikelihood$varimat <- matrix(double(dimmat), ncol=numparam)
+            CompLikelihood$varimat[lower.tri(CompLikelihood$varimat, diag=TRUE)] <- varimat
+            CompLikelihood$varimat <- t(CompLikelihood$varimat)
+            CompLikelihood$varimat[lower.tri(CompLikelihood$varimat, diag=TRUE)] <- varimat
                  
             namesgod <- c(namesnuis[as.logical(flagnuis)], namescorr[as.logical(flagcorr)])
-            dimnames(OptimCompLik$sensmat) <- list(namesgod, namesgod)
-            dimnames(OptimCompLik$varimat) <- list(namesgod, namesgod)
-            OptimCompLik$sensmat <- OptimCompLik$sensmat[namesparam, namesparam]
-            OptimCompLik$varimat <- OptimCompLik$varimat[namesparam, namesparam]
-            isensmat <- try(solve(OptimCompLik$sensmat), silent = TRUE)
+            dimnames(CompLikelihood$sensmat) <- list(namesgod, namesgod)
+            dimnames(CompLikelihood$varimat) <- list(namesgod, namesgod)
+            CompLikelihood$sensmat <- CompLikelihood$sensmat[namesparam, namesparam]
+            CompLikelihood$varimat <- CompLikelihood$varimat[namesparam, namesparam]
+            isensmat <- try(solve(CompLikelihood$sensmat), silent = TRUE)
     
-            if(!is.matrix(isensmat) || !is.matrix(OptimCompLik$varimat))
+            if(!is.matrix(isensmat) || !is.matrix(CompLikelihood$varimat))
               {
                 warning("observed information matrix is singular")
-                OptimCompLik$varcov <- 'none'
-                OptimCompLik$stderr <- 'none'
+                CompLikelihood$varcov <- 'none'
+                CompLikelihood$stderr <- 'none'
               }
             else
               {
-                penalty <- OptimCompLik$varimat %*% isensmat
-                OptimCompLik$clic <- -2 * (OptimCompLik$value - sum(diag(penalty)))
+                penalty <- CompLikelihood$varimat %*% isensmat
+                CompLikelihood$clic <- -2 * (CompLikelihood$value - sum(diag(penalty)))
         
-                OptimCompLik$varcov <- isensmat %*% penalty
-                OptimCompLik$stderr <- diag(OptimCompLik$varcov)
-                if(any(OptimCompLik$stderr < 0))
-                  OptimCompLik$stderr <- 'none'
+                CompLikelihood$varcov <- isensmat %*% penalty
+                CompLikelihood$stderr <- diag(CompLikelihood$varcov)
+                if(any(CompLikelihood$stderr < 0))
+                  CompLikelihood$stderr <- 'none'
                 else
-                  OptimCompLik$stderr <- sqrt(OptimCompLik$stderr)
+                  CompLikelihood$stderr <- sqrt(CompLikelihood$stderr)
               }
           }
-    return(OptimCompLik)
+    return(CompLikelihood)
   }
 

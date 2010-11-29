@@ -6,7 +6,7 @@
 ### Description:
 ### This file contains a set of procedures
 ### for supporting all the other functions.
-### Last change: 12/11/2010.
+### Last change: 26/11/2010.
 ####################################################
 
 ### Procedures are in alphabetical order.
@@ -28,7 +28,7 @@ CheckCorrModel <- function(corrmodel)
   }
 
 CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                       lonlat, model, optimizer, start, time, type, varest, vartype,
+                       lonlat, model, optimizer, replicates, start, type, varest, vartype,
                        weighted, weights, winconst)
   {
     error <- NULL
@@ -110,9 +110,9 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         return(list(error=error))
       }
 
-    if(!is.null(time) & !is.logical(time))
+    if(!is.null(replicates) & !is.logical(replicates))
       {
-        error <- 'the parameter time need to be a logical value\n'
+        error <- 'the parameter replicates need to be a logical value\n'
         return(list(error=error))
       }
 
@@ -204,7 +204,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
       {
         if(!any(checktype == c(3, 4)))
           {
-            error <- 'insert a type name of the likelihood objects compatible with the full likelihood'
+            error <- 'insert a type name of the likelihood objects compatible with the full likelihood\n'
             return(list(error=error))
           }
       }
@@ -213,7 +213,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
       {
         if(!any(checktype == c(1, 2)))
           {
-            error <- 'insert a type name of the likelihood objects compatible with the composite-likelihood'
+            error <- 'insert a type name of the likelihood objects compatible with the composite-likelihood\n'
             return(list(error=error))
           }
       }
@@ -233,9 +233,14 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
       }
 
     dimdata <- dim(data)
-    if(is.null(dimdata) & time)
+    if(is.null(dimdata) & replicates)
       {
-        error <- c('insert a numeric matrix of observations')
+        error <- c('insert a numeric matrix of observations\n')
+        return(list(error=error))
+      }
+    if(!is.null(dimdata) & !replicates)
+      {
+        error <- c('the replicates parameter need to be set to TRUE\n')
         return(list(error=error))
       }
 
@@ -247,7 +252,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
             return(list(error=error))
           }
                 
-        if(time)
+        if(replicates)
           {
             numcoord <- nrow(coordx)      
             if(grid)
@@ -274,7 +279,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
       }
     else
       {
-        if(time)
+        if(replicates)
           {
             numcoordx <- length(coordx)
             numcoordy <- length(coordy)
@@ -341,7 +346,10 @@ CheckModel <- function(model)
   {
     CheckModel <- switch(model,
                          None=0,
-                         Gaussian=1)
+                         Gaussian=1,
+                         Gaussian_Extreme=2,
+                         Extremal_Gauss=3,
+                         Extremal_T=4)
 
     return(CheckModel)
   }
@@ -464,7 +472,7 @@ DetectParam <- function(corrmodel, fixed, param)
   }
 
 InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                      lonlat, model, parscale, paramrange, start, time, type,
+                      lonlat, model, parscale, paramrange, replicates, start, type,
                       vartype, weighted)
   {    
     ### Initialize the model parameters:
@@ -589,7 +597,7 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
 
     dimdata <- dim(data)
     numdata <- 1
-    if(time)
+    if(replicates)
       {
         if(grid)
           numdata <- dim(data)[3] # number of observations
@@ -631,7 +639,6 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
 
     ### Compute distances:
     numpairs <- numcoord * (numcoord - 1) / 2
-    #lags <- double(numpairs)
     .C('SetDistances', as.double(coord[,1]), as.double(coord[,2]), as.integer(numcoord),
        as.integer(lonlat), as.integer(weighted), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 

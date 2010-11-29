@@ -8,7 +8,7 @@
 ### to compute and plot the estimated covariance
 ### function and the variogram after fitting a
 ### random field by composite-likelihood.
-### Last change: 16/11/2010.
+### Last change: 23/11/2010.
 ####################################################
 
 
@@ -19,13 +19,19 @@
 Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
                         answer.range=FALSE, show.cov=FALSE, show.vario=FALSE,
                         show.range=FALSE, add.cov=FALSE, add.vario=FALSE,
-                        pract.range=95, ...)
+                        pract.range=95, vario=NULL, ...)
   {
     result <- NULL
     
     if(!class(fitted)=='FitComposite' & !class(fitted)=='WLS')
       {
         cat('Enter an object obtained from fitting a random field with the composite-likelihood or the weigthed least square method\n')
+        return(result)
+      }
+
+    if(!is.null(vario) & !class(vario)=='Variogram')
+      {
+        cat('Enter an object obtained from the function EmpVariogram\n')
         return(result)
       }
       
@@ -104,13 +110,25 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
       {
         if(add.vario & dev.cur()!=1)
           {
+            if(class(vario)=='Variogram')
+              points(vario$centers, vario$variogram)
+            
             lines(lags, variogram)
             if(show.range)
               abline(v=Range)
           }
         else
           {
-            plot(lags, variogram, type='l', ylim=c(min(variogram), max(variogram)))
+            bnds <- range(variogram)
+            if(class(vario)=='Variogram')
+              {
+                bnds[1] <- min(bnds[1], vario$variogram)
+                bnds[2] <- max(bnds[2], vario$variogram)
+              }
+            plot(lags, variogram, type='l', ylim=c(bnds[1], bnds[2]))
+            if(class(vario)=='Variogram')
+              points(vario$centers, vario$variogram)
+              
             if(show.range)
               abline(v=Range)
           }

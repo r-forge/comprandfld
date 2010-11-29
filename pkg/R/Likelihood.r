@@ -7,32 +7,30 @@
 ### This file contains a set of procedures
 ### for maximum likelihood fitting of
 ### random fields.
-### Last change: 12/11/2010.
+### Last change: 29/11/2010.
 ####################################################
 
 
 ### Procedures are in alphabetical order.
 
-
-
-### Log-likelihood procedure for Random Fields
-
-Likelihood <- function(corrmodel, data, fixed, grid, model, namescorr, namesnuis,
-                       numcoord, numdata, numpairs, param, type)
+### Optim call for log-likelihood maximization
+Likelihood <- function(corrmodel, data, fixed, grid, lower, model, namescorr,
+                     namesnuis, namesparam, numcoord, numdata, numpairs,
+                     optimizer, param, varest, type, upper)
   {
-    result <- -1.0e8
-
-    if(!CheckParamRange(param))
-      return(result)
-
-    param <- c(param, fixed)
-    paramcorr <- param[namescorr]
-    nuisance <- param[namesnuis]
-    
-    ### Gaussian model:
-    
-    if(model == 1)
+    ### Define the object function:
+    loglik <- function(corrmodel, data, fixed, grid, model, namescorr,
+                       namesnuis, numcoord, numdata, numpairs, param, type)
       {
+        loglik <- -1.0e8
+
+        if(!CheckParamRange(param))
+          return(loglik)
+
+        param <- c(param, fixed)
+        paramcorr <- param[namescorr]
+        nuisance <- param[namesnuis]
+    
         stdata <- data - nuisance['mean']
         corr <- double(numpairs)
 
@@ -48,31 +46,85 @@ Likelihood <- function(corrmodel, data, fixed, grid, model, namescorr, namesnuis
 
         cholvarcov <- try(chol(varcov), silent = TRUE)
         if(!is.matrix(cholvarcov))
-          return(result)
+          return(loglik)
     
         ivarcov <- chol2inv(cholvarcov)
         if(!is.matrix(ivarcov))
-          return(result)
+          return(loglik)
 
         detvarcov <- sum(log(diag(cholvarcov)))
 
         if(!grid)
-          result <- sum(apply(stdata, 1, LogNormDen, detvarcov=detvarcov,
+          loglik <- sum(apply(stdata, 1, LogNormDen, detvarcov=detvarcov,
                               ivarcov=ivarcov, numcoord=numcoord, type=type))
 
         if(grid)
           {
-            result <- NULL
+            loglik <- NULL
             for(i in 1:numdata)
-              result <- result + sum(LogNormDen(c(stdata[,,i]), detvarcov, ivarcov, numcoord, type))
+              loglik <- loglik + sum(LogNormDen(c(stdata[,,i]), detvarcov, ivarcov, numcoord, type))
           }
     
-        return(result)
-      } 
+        return(loglik)
+      }
+
+    if(optimizer=='L-BFGS-B')
+      Likelihood <- optim(param, loglik, corrmodel=corrmodel, control=list(fnscale=-1,
+                          factr=1, pgtol=1e-14, maxit = 1e8), data=data, fixed=fixed,
+                          grid=grid, hessian=varest, lower=lower, method=optimizer,
+                          model=model, namescorr=namescorr, namesnuis=namesnuis,
+                          numcoord=numcoord, numdata=numdata, numpairs=numpairs,
+                          upper=upper, type=type)
+    else
+      Likelihood <- optim(param, loglik, corrmodel=corrmodel, control=list(fnscale=-1,
+                          reltol=1e-14, maxit=1e8), data=data, fixed=fixed, grid=grid,
+                          hessian=varest, method=optimizer, model=model, namescorr=namescorr,
+                          namesnuis=namesnuis, numcoord=numcoord, numdata=numdata,
+                          numpairs=numpairs, type=type)
+
+    ### Some checks of the output from the optimization procedure:
+    if(Likelihood$convergence == 0)
+      Likelihood$convergence <- 'Successful'
+    else
+      if(Likelihood$convergence == 1)
+        Likelihood$convergence <- 'Iteration limit reached'
+      else
+        Likelihood$convergence <- "Optimization may have failed"
+
+    penalty <- length(Likelihood$par)
+    Likelihood$clic <- -2 * (Likelihood$value - penalty)
+
+    ### Computation of the variance covariance matrix:
+    if(varest)
+      {
+        # Compute the variance-covariance matrix:
+        Likelihood$varcov <- try(solve(-Likelihood$hessian), silent = TRUE)
+        Likelihood$sensmat <- NULL
+        Likelihood$varimat <- NULL
+    
+        if(!is.matrix(Likelihood$varcov))
+          {
+            warning("observed information matrix is singular")
+            Likelihood$varcov <- 'none'
+            Likelihood$stderr <- 'none'
+          }
+        else
+          {
+            dimnames(Likelihood$varcov) <- list(namesparam, namesparam)
+            Likelihood$stderr <- diag(Likelihood$varcov)
+            if(any(Likelihood$stderr < 0))
+              Likelihood$stderr <- 'none'
+            else
+              {
+                Likelihood$stderr <- sqrt(Likelihood$stderr)
+                names(Likelihood$stderr) <- namesparam
+              }
+          }
+      }
+    return(Likelihood)
   }
 
-### log of the normal density:
-
+### Standard and restricted log-likelihood for multivariate normal density:
 LogNormDen <- function(stdata, detvarcov, ivarcov, numcoord, type)
   {
     if(type == 3)# Restricted log Gaussian density
@@ -89,66 +141,5 @@ LogNormDen <- function(stdata, detvarcov, ivarcov, numcoord, type)
     return(LogNormDen)
   }
 
-### Optim call for log-likelihood maximization
-
-OptimLik <- function(corrmodel, data, fixed, grid, lower, model, namescorr,
-                     namesnuis, namesparam, numcoord, numdata, numpairs,
-                     optimizer, param, varest, type, upper)
-  {
-    if(optimizer=='L-BFGS-B')
-      OptimLik <- optim(param, Likelihood, corrmodel=corrmodel, control=list(fnscale=-1,
-                        factr=1, pgtol=1e-14, maxit = 1e8), data=data, fixed=fixed,
-                        grid=grid, hessian=varest, lower=lower, method=optimizer,
-                        model=model, namescorr=namescorr, namesnuis=namesnuis,
-                        numcoord=numcoord, numdata=numdata, numpairs=numpairs,
-                        upper=upper, type=type)
-    else
-      OptimLik <- optim(param, Likelihood, corrmodel=corrmodel, control=list(fnscale=-1,
-                        reltol=1e-14, maxit=1e8), data=data, fixed=fixed, grid=grid,
-                        hessian=varest, method=optimizer, model=model, namescorr=namescorr,
-                        namesnuis=namesnuis, numcoord=numcoord, numdata=numdata,
-                        numpairs=numpairs, type=type)
-
-    ### Some checks of the output from the optimization procedure:
-    if(OptimLik$convergence == 0)
-      OptimLik$convergence <- 'Successful'
-    else
-      if(OptimLik$convergence == 1)
-        OptimLik$convergence <- 'Iteration limit reached'
-      else
-        OptimLik$convergence <- "Optimization may have failed"
-
-    penalty <- length(OptimLik$par)
-    OptimLik$clic <- -2 * (OptimLik$value - penalty)
-
-    ### Computation of the variance covariance matrix:
-    if(varest)
-      {
-        # Compute the variance-covariance matrix:
-        OptimLik$varcov <- try(solve(-OptimLik$hessian), silent = TRUE)
-        OptimLik$sensmat <- NULL
-        OptimLik$varimat <- NULL
-    
-        if(!is.matrix(OptimLik$varcov))
-          {
-            warning("observed information matrix is singular")
-            OptimLik$varcov <- 'none'
-            OptimLik$stderr <- 'none'
-          }
-        else
-          {
-            dimnames(OptimLik$varcov) <- list(namesparam, namesparam)
-            OptimLik$stderr <- diag(OptimLik$varcov)
-            if(any(OptimLik$stderr < 0))
-              OptimLik$stderr <- 'none'
-            else
-              {
-                OptimLik$stderr <- sqrt(OptimLik$stderr)
-                names(OptimLik$stderr) <- namesparam
-              }
-          }
-      }
-    return(OptimLik)
-  }
 
 

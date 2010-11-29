@@ -2,12 +2,12 @@
 ### Authors: Simone Padoan and Moreno Bevilacqua.
 ### Email: simone.padoan@epfl.ch.
 ### Institute: EPFL.
-### File name: Likelihood.r
+### File name: WeightedLeastSquare.r
 ### Description:
-### This file contains a set of procedures
-### for maximum likelihood fitting of
-### random fields.
-### Last change: 16/11/2010.
+### This file contains a set of procedures in order
+### to estimate the parameters of some covariance 
+### function models for a given dataset.
+### Last change: 28/11/2010.
 ####################################################
 
 
@@ -43,36 +43,12 @@ print.WLS <- function(x, digits = max(3, getOption("digits") - 3), ...)
     print.default(x$param, digits = digits, print.gap = 2,
                   quote = FALSE)
 
-    cat('\n##############################################################')    
+    cat('\n##############################################################\n')    
     invisible(x)
   }
 
-
-Wls <- function(bins, corrmodel, fixed, lenbins, moments, numbins, param, weighted)
-  {
-
-    result <- -1.0e15
-
-    if(!CheckParamRange(param))
-      return(result)
-
-    result <- double(1)
-    param <- c(param, fixed)
-    namesparam <- sort(names(param))
-    param <- param[namesparam]
-    nuisance <- c(param['nugget'], param['sill'])
-    corrparam <- param[-match(c('mean', 'nugget', 'sill'), namesparam)]
-
-    result <- .C('Wls', as.double(bins), as.integer(corrmodel), as.double(corrparam),
-                 as.integer(numbins), as.double(moments), as.double(lenbins),
-                 as.double(nuisance), as.integer(weighted), res=double(1),
-                 PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
-
-    return(result)
-  }
-
 WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                    lonlat, model, parscale, paramrange, start, time, type,
+                    lonlat, model, parscale, paramrange, replicates, start, type,
                     vartype, weighted)
   {
     
@@ -80,7 +56,7 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     
     initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid,
                            likelihood, lonlat, model, parscale, paramrange,
-                           start, time, 'WLeastSquare', vartype, weighted)
+                           replicates, start, 'WLeastSquare', vartype, weighted)
 
     if(!is.null(initparam$error))
       stop(initparam$error)
@@ -116,25 +92,53 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
             initparam$fixed <- c(initparam$fixed, initparam$start[initparam$namesstart[i]])
           }
       }
-    ### Estimation of empirical variogram:
 
-    numbins <- 13
+    ### Define the object function:
+    WLsquare <- function(bins, corrmodel, fixed, fun, lenbins, moments, numbins, param)
+      {
+        result <- -1.0e15
+        if(!CheckParamRange(param))
+          return(result)
+
+        result <- double(1)
+        param <- c(param, fixed)
+        namesparam <- sort(names(param))
+        param <- param[namesparam]
+        nuisance <- c(param['nugget'], param['sill'])
+        corrparam <- param[-match(c('mean', 'nugget', 'sill'), namesparam)]
+
+        result <- .C(fun, as.double(bins), as.integer(corrmodel),
+                     as.double(corrparam), as.integer(numbins), as.double(moments),
+                     as.double(lenbins), as.double(nuisance), res=double(1),
+                     PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+        return(result)
+      }
+
+    fname <- NULL
+
+    ### Estimation of the empirical variogram:
+    numbins <- as.integer(13)
     maxdist <- double(1)
 
     bins <- double(numbins)
     moments <- double(numbins - 1)
-    lenbins <- double(numbins - 1)
+    lenbins <- integer(numbins - 1)
 
-    .C('Empiric_Variogram', as.double(bins), as.double(initparam$coord[,1]), as.double(initparam$coord[,2]),
-       as.double(initparam$data), as.double(lenbins), as.double(maxdist), as.double(moments),
-       as.integer(initparam$numpairs), as.integer(initparam$numcoord), as.integer(numbins),
-       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('Empiric_Variogram', bins, as.integer(FALSE), as.double(initparam$data), lenbins,
+       maxdist, moments, as.integer(initparam$numdata), as.integer(initparam$numcoord),
+       numbins, as.integer(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
-    ### Model fitting:
-    fitted <- optim(initparam$param, Wls, bins=bins, corrmodel=initparam$corrmodel,
-                    fixed=initparam$fixed, lenbins=lenbins, moments=moments, numbins=numbins,
-                    weighted=FALSE, control=list(fnscale=-1, reltol=1e-14, maxit=1e8),
+    ###### ---------- START model fitting ----------######
+    
+    if(initparam$model == 1) # Gaussian case:
+      fname <- 'LeastSquare_G'
+
+    fitted <- optim(initparam$param, WLsquare, bins=bins, corrmodel=initparam$codecorrmodel,
+                    fixed=initparam$fixed, fun=fname, lenbins=lenbins, moments=moments,
+                    numbins=numbins, control=list(fnscale=-1, reltol=1e-14, maxit=1e8),
                     hessian=FALSE)
+
+    ###### ---------- END model fitting ----------######
 
     if(initparam$numstart > 0)
       {
@@ -167,20 +171,14 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         initparam$param[names(fitted$par)] <- fitted$par
       }
   
-#    if(is.list(start))
-#      {
-#        namesstart <- names(start)
-#        for(i in 1 : length(start))
-#          initparam$param[namesstart[i]] <- as.numeric(start[namesstart[i]])
-#      }
-
    return(initparam)
   }
 
   
 WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE,
-                         lonlat=FALSE, maxdist=NULL, optimizer='Nelder-Mead',
-                         numbins=NULL, start=NULL, time=FALSE, weighted=FALSE)
+                         lonlat=FALSE, maxdist=NULL, model='Gaussian',
+                         optimizer='Nelder-Mead', numbins=NULL, replicates=FALSE,
+                         start=NULL, weighted=FALSE)
   {
     
     call <- match.call()
@@ -188,7 +186,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     ### Check the parameters given in input:
 
     checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid, 'None',
-                             lonlat, 'None', optimizer, start, time, 'WLeastSquare',
+                             lonlat, model, optimizer, replicates, start, 'WLeastSquare',
                              FALSE, 'SubSamp', weighted, NULL, NULL)
 
     if(!is.null(checkinput$error))
@@ -207,42 +205,89 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
 
     if(is.null(maxdist))
       maxdist <- 0
+
+    ### Define the object function:
+
+    WLsquare <- function(bins, corrmodel, fixed, fun, lenbins, moments, numbins, param)
+      {
+        result <- -1.0e15
+        if(!CheckParamRange(param))
+          return(result)
+
+        result <- double(1)
+        param <- c(param, fixed)
+        namesparam <- sort(names(param))
+        param <- param[namesparam]
+        nuisance <- c(param['nugget'], param['sill'])
+        corrparam <- param[-match(c('mean', 'nugget', 'sill'), namesparam)]
+
+        result <- .C(fun, as.double(bins), as.integer(corrmodel),
+                     as.double(corrparam), as.integer(numbins), as.double(moments),
+                     as.double(lenbins), as.double(nuisance), res=double(1),
+                     PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+        return(result)
+      }
  
     ### Initialization global variables:
      
     WLeastSquare <- NULL
+    fname <- NULL
 
     ### Initialization parameters:
     parscale <- NULL
-    initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid, 'None',
-                         lonlat, 'None', parscale, optimizer=='L-BFGS-B',
-                         start, time, 'WLeastSquare', 'SubSamp', weighted)
+    initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid, 'None',
+                           lonlat, model, parscale, optimizer=='L-BFGS-B',
+                           replicates, start, 'WLeastSquare', 'SubSamp', FALSE)
   
     if(!is.null(initparam$error))
       stop(initparam$error)
 
-    ### Estimation of empirical variogram:
+    ### Estimation of the empirical variogram:
 
     bins <- double(numbins)
     moments <- double(numbins - 1)
-    lenbins <- double(numbins - 1)
+    lenbins <- integer(numbins - 1)
 
-    .C('Empiric_Variogram', bins, as.double(initparam$coord[,1]), as.double(initparam$coord[,2]),
-       as.double(initparam$data), lenbins, as.double(maxdist), moments, as.integer(initparam$numpairs),
-       as.integer(initparam$numcoord), as.integer(numbins), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    if(initparam$model > 1)
+      initparam$data <- Dist2Dist(initparam$data, to='Uniform')
 
-    ### Model fitting:(bins, corrmodel, fixed, lenbins, moments, numbins, param, weighted)
+    .C('Empiric_Variogram', bins, as.integer(FALSE), as.double(initparam$data),
+       lenbins, as.double(maxdist), moments, as.integer(initparam$numdata),
+       as.integer(initparam$numcoord), as.integer(numbins), as.integer(initparam$model),
+       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+
+    ###### ---------- START model fitting ----------######
+    
+    if(initparam$model == 1) # Gaussian case:
+      {
+        if(weighted)
+          fname <- 'WLeastSquare_G'
+        else
+          fname <- 'LeastSquare_G'
+      }
+
+    if(initparam$model > 1) # Max-stable case:
+      {
+        variogram <- moments / lenbins
+        extcoeff <- (1 + 2 * variogram) / (1 - 2 * variogram)
+        moments <- extcoeff
+      }
+
     if(optimizer=='L-BFGS-B')
-      fitted <- optim(initparam$param, Wls, bins=bins, corrmodel=initparam$codecorrmodel,
-                      fixed=initparam$fixed, lenbins=lenbins, method=optimizer, moments=moments,
-                      numbins=numbins, weighted=weighted, control=list(fnscale=-1, factr=1, pgtol=1e-14,
-                      maxit = 1e8), lower=initparam$lower, upper=initparam$upper, hessian=FALSE)
+      fitted <- optim(initparam$param, WLsquare, bins=bins, corrmodel=initparam$codecorrmodel,
+                      fixed=initparam$fixed, fun=fname, lenbins=lenbins, method=optimizer,
+                      moments=moments, numbins=numbins, control=list(fnscale=-1, factr=1,
+                      pgtol=1e-14, maxit = 1e8), lower=initparam$lower, upper=initparam$upper,
+                      hessian=FALSE)
     else
-      fitted <- optim(initparam$param, Wls, bins=bins, corrmodel=initparam$codecorrmodel,
-                          fixed=initparam$fixed, lenbins=lenbins, method=optimizer,
-                          moments=moments, numbins=numbins, weighted=weighted,
-                          control=list(fnscale=-1, reltol=1e-14, maxit=1e8), hessian=FALSE)
+      fitted <- optim(initparam$param, WLsquare, bins=bins, corrmodel=initparam$codecorrmodel,
+                      fixed=initparam$fixed, fun=fname, lenbins=lenbins, method=optimizer,
+                      moments=moments, numbins=numbins, control=list(fnscale=-1, reltol=1e-14,
+                      maxit=1e8), hessian=FALSE)
 
+    ###### ---------- END model fitting ----------######
+
+    .C('DelDistances', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
     WLeastSquare <- list(bins=bins,
                          coord = initparam$coord,
