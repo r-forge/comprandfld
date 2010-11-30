@@ -208,13 +208,17 @@ void Empiric_Variogram(double *bins, int *cloud, double *data,
 		       int *lenbins, double *maxdist, double *moments, 
 		       int *ndata, int *nsite, int *nbins, int *type);
 
-void LeastSquare_G(double *bins, int *corrmod, double *par, int *nbins, 
-		   double *moments, double *lenbins, double *nuisance, 
-		   double *res);
+void LeastSquare_G(double *bins, int *corrmod, double *par, double *lenbins,
+		   double *moments, int *nbins,  double *nuisance, double *res);
 
-void WLeastSquare_G(double *bins, int *corrmod, double *par, int *nbins, 
-		    double *moments, double *lenbins, double *nuisance, 
-		    double *res);
+void LeastSquare_M_EG(double *bins, int *corrmod, double *par, double *lenbins,
+		      double *moments, int *nbins,  double *nuisance, double *res);
+
+void WLeastSquare_G(double *bins, int *corrmod, double *par, double *lenbins,
+		    double *moments, int *nbins,  double *nuisance, double *res);
+
+void WLeastSquare_M_EG(double *bins, int *corrmod, double *par, double *lenbins,
+		       double *moments, int *nbins,  double *nuisance, double *res);
 
 /*----------------------------------------------------------------
 File name: WeightedLeastSquare.c

@@ -171,9 +171,8 @@ void Empiric_Variogram(double *bins, int *cloud, double *data,
 }
 
 // Least square method for Gaussian model:
-void LeastSquare_G(double *bins, int *corrmod, double *par, int *nbins, 
-		   double *moments, double *lenbins, double *nuisance, 
-		   double *res)
+void LeastSquare_G(double *bins, int *corrmod, double *par, double *lenbins,
+		   double *moments, int *nbins,  double *nuisance, double *res)
 {
   int h=0;
   double variogram=0.0, vario=0.0;
@@ -183,7 +182,7 @@ void LeastSquare_G(double *bins, int *corrmod, double *par, int *nbins,
       {
 	variogram = moments[h] / lenbins[h];
 	vario = nuisance[0] + nuisance[1] * //nugget+sill*(1-corr) 
-	  (1 - CorrelationFct(corrmod, (bins[h] + bins[h + 1]) / 2, par));
+	  (1 - CorrelationFct(corrmod, .5 * (bins[h] + bins[h + 1]), par));
 	if(vario)
 	  *res = *res - pow(variogram - vario, 2) * lenbins[h];
       }
@@ -192,9 +191,48 @@ void LeastSquare_G(double *bins, int *corrmod, double *par, int *nbins,
 }
 
 // Weighted least square method for Gaussian model:
-void WLeastSquare_G(double *bins, int *corrmod, double *par, int *nbins, 
-		    double *moments, double *lenbins, double *nuisance, 
-		    double *res)
+void WLeastSquare_G(double *bins, int *corrmod, double *par, double *lenbins,
+		    double *moments, int *nbins,  double *nuisance, double *res)
+{
+  int h=0;
+  double variogram=0.0, vario=0.0;
+
+  for(h = 0; h < (*nbins - 1); h++)
+    if(lenbins[h])
+      {
+	variogram = moments[h] / lenbins[h];
+	vario = nuisance[0] + nuisance[1] * //nugget+sill*(1-corr) 
+	  (1 - CorrelationFct(corrmod, .5 * (bins[h] + bins[h + 1]), par));
+	if(vario)
+	  *res = *res - pow(variogram / vario - 1, 2) * lenbins[h];
+      }
+
+  return;
+}
+
+// Least square method for max-stable extremal-Gaussian model:
+void LeastSquare_M_EG(double *bins, int *corrmod, double *par, double *lenbins,
+		      double *moments, int *nbins,  double *nuisance, double *res)
+{
+  int h=0;
+  double corr=0.0, variogram=0.0, extcoeff=0.0, extcfhat;
+
+  for(h = 0; h < (*nbins - 1); h++)
+    if(lenbins[h])
+      {
+	variogram = moments[h] / lenbins[h];
+	extcoeff = (1 + 2 * variogram) / (1 - 2 * variogram);
+	corr = CorrelationFct(corrmod, .5 * (bins[h] + bins[h + 1]), par);
+	extcfhat = 1 + sqrt(.5 * (1 - corr));
+	*res = *res - pow(extcoeff - extcfhat, 2) / lenbins[h];
+      }
+
+  return;
+}
+
+// Weighted least square method for max-stable extremal-Gaussian model:
+void WLeastSquare_M_EG(double *bins, int *corrmod, double *par, double *lenbins,
+		       double *moments, int *nbins,  double *nuisance, double *res)
 {
   int h=0;
   double variogram=0.0, vario=0.0;
@@ -211,49 +249,5 @@ void WLeastSquare_G(double *bins, int *corrmod, double *par, int *nbins,
 
   return;
 }
-/*
-// Least square method for max-stable models:
-void LeastSquare_M(double *bins, int *corrmod, double *par, int *nbins, 
-		   double *moments, double *lenbins, double *nuisance, 
-		   double *res)
-{
-  int h=0;
-  double variogram=0.0, extcoeff=0.0, rextcoeff=0.0;
 
-  for(h = 0; h < (*nbins - 1); h++)
-    if(lenbins[h])
-      {
-	variogram = moments[h] / lenbins[h];
-	rextcoeff = (1 + 2 * variogram) / (1 - 2 * variogram);
-	extcoeff = 1;
-	vario = nuisance[0] + nuisance[1] * //nugget+sill*(1-corr) 
-	  (1 - CorrelationFct(corrmod, (bins[h] + bins[h + 1]) / 2, par));
-	*res = *res - pow(rextcoeff - extcoeff, 2) * lenbins[h];
-      }
-
-  return;
-}
-
-// Weighted least square method for max-stable models:
-void WLeastSquare_M(double *bins, int *corrmod, double *par, int *nbins, 
-		    double *moments, double *lenbins, double *nuisance, 
-		    double *res, double *weights)
-{
-  int h=0;
-  double variogram=0.0, extcoeff=0.0, rextcoeff=0.0;
-
-  for(h = 0; h < (*nbins - 1); h++)
-    if(lenbins[h])
-      {
-	variogram = moments[h] / lenbins[h];
-	rextcoeff = (1 + 2 * variogram) / (1 - 2 * variogram);
-	extcoeff = 1;
-	vario = nuisance[0] + nuisance[1] * //nugget+sill*(1-corr) 
-	  (1 - CorrelationFct(corrmod, (bins[h] + bins[h + 1]) / 2, par));
-	*res = *res - pow(variogram / vario - 1, 2) * lenbins[h];
-      }
-
-  return;
-}
-*/
 
