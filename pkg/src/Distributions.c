@@ -73,7 +73,6 @@ void GevLogLik(double *data, int *ndata, double *par, double *res)
 {
   int n=0;
   
-  //  if((par[1] <= 0) || (par[2] < -1))
   if(par[1] <= 0)
     {
       *res = LOW;
@@ -115,74 +114,3 @@ double qgev(double x, double loc, double scale, double shape)
   return res;
 }
 
-/*
-double qgumbel(double x, double loc, double scale)
-{
-  double result=0.0;
-
-  result = loc - scale * log(-log(x));
-
-  return result;
-}
-
-
-double frechet2gev(double x, double alpha, double beta, double gamma,
-		   double loc, double scale, double shape)
-{
-  double u=0.0, result=0.0;
-
-  u = pgev(x, alpha, beta, gamma);
-
-  result = qgev(u, loc, scale, shape);
-
-  return result;
-
-}
-*/
-
-/*
-double gumbel2gev(double x, double loc, double scale, double shape)
-{
-  double y=0.0, result=0.0;
-
-  y = exp(x);
-
-  result = unitfrechet2gev(y, loc, scale, shape);
-
-  return result;
-
-}
-
-double gev2gumbel(double x, double loc, double scale, double shape)
-{
-  double u=0.0, result=0.0;
-
-  u = pgev(x, loc, scale, shape);
-  // Transform to unit Gumbel
-  result = qgumbel(u, 0, 1);
-
-  return result;
-}
-
-double gev2unitfrechet(double x, double loc, double scale, double shape)
-{
-  double u=0.0, result=0.0;
-
-  u = pgev(x, loc, scale, shape);
-  // Transform to unit Frechet
-  result = qgev(u, 1, 1, 1);
-
-  return result;
-
-}
-
-double unitfrechet2gev(double x, double loc, double scale, double shape)
-{
-  double result=0.0;
-
-  result = scale * (pow(x, 1 / shape) - 1) /  shape + loc;
-
-  return result;
-
-}
-*/
