@@ -107,10 +107,10 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         nuisance <- c(param['nugget'], param['sill'])
         corrparam <- param[-match(c('mean', 'nugget', 'sill'), namesparam)]
 
-        result <- .C(fun, as.double(bins), as.integer(corrmodel),
-                     as.double(corrparam), as.integer(numbins), as.double(moments),
-                     as.double(lenbins), as.double(nuisance), res=double(1),
-                     PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+        result <- .C(fun, as.double(bins), as.integer(corrmodel), as.double(corrparam),
+                     as.double(lenbins), as.double(moments), as.integer(numbins), 
+                     as.double(nuisance), res=double(1), PACKAGE='CompRandFld',
+                     DUP = FALSE, NAOK=TRUE)$res
         return(result)
       }
 
@@ -211,6 +211,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     WLsquare <- function(bins, corrmodel, fixed, fun, lenbins, moments, numbins, param)
       {
         result <- -1.0e15
+        print(param)
         if(!CheckParamRange(param))
           return(result)
 
@@ -221,10 +222,11 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
         nuisance <- c(param['nugget'], param['sill'])
         corrparam <- param[-match(c('mean', 'nugget', 'sill'), namesparam)]
 
-        result <- .C(fun, as.double(bins), as.integer(corrmodel),
-                     as.double(corrparam), as.integer(numbins), as.double(moments),
-                     as.double(lenbins), as.double(nuisance), res=double(1),
-                     PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+        result <- .C(fun, as.double(bins), as.integer(corrmodel), as.double(corrparam),
+                     as.double(lenbins), as.double(moments), as.integer(numbins),
+                     as.double(nuisance), res=double(1), PACKAGE='CompRandFld',
+                     DUP = FALSE, NAOK=TRUE)$res
+        print(result)
         return(result)
       }
  
@@ -258,7 +260,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
 
     ###### ---------- START model fitting ----------######
     
-    if(initparam$model == 1) # Gaussian case:
+    if(initparam$model == 1) # Gaussian random field:
       {
         if(weighted)
           fname <- 'WLeastSquare_G'
@@ -266,12 +268,14 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
           fname <- 'LeastSquare_G'
       }
 
-    if(initparam$model > 1) # Max-stable case:
+    if(initparam$model == 3) # Max-stable random field (extremal Gaussian):
       {
-        variogram <- moments / lenbins
-        extcoeff <- (1 + 2 * variogram) / (1 - 2 * variogram)
-        moments <- extcoeff
+        if(weighted)
+          fname <- 'WLeastSquare_M_EG'
+        else
+          fname <- 'LeastSquare_M_EG'
       }
+    print(initparam$model)
 
     if(optimizer=='L-BFGS-B')
       fitted <- optim(initparam$param, WLsquare, bins=bins, corrmodel=initparam$codecorrmodel,
