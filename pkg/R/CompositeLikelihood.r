@@ -1,13 +1,13 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: CompositeLikelihood.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 23/11/2010.
+### Last change: 2011/08/03.
 ####################################################
 
 
@@ -60,7 +60,7 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
                             reltol=1e-14, maxit=1e8), data=data, fixed=fixed, fun=fname,
                             hessian=FALSE, method=optimizer, namescorr=namescorr,
                             namesnuis=namesnuis, numcoord=numcoord, numdata=numdata)
-    
+
     if(CompLikelihood$convergence == 0)
       CompLikelihood$convergence <- 'Successful'
     else
@@ -80,13 +80,13 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
             dmat <- numparam * (numparam + 1) / 2
             eps <- (.Machine$double.eps)^(1/3)
             param <- c(CompLikelihood$par, fixed)
-                
+
             paramcorr <- param[namescorr]
             nuisance <- param[namesnuis]
-            
+
             sensmat <- double(dmat)
             varimat <- double(dmat)
- 
+
             # Set the window parameter:
 
             .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel), as.double(data),
@@ -94,26 +94,26 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
                as.integer(model), as.integer(numdata), as.integer(numparam), as.integer(numparamcorr),
                as.integer(numcoord), as.double(paramcorr), as.double(nuisance), sensmat, as.integer(type),
                varimat, as.integer(vartype), as.double(winconst), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-          
+
             # Set sensitivity matrix:
             CompLikelihood$sensmat <- matrix(double(dimmat), ncol=numparam)
             CompLikelihood$sensmat[lower.tri(CompLikelihood$sensmat, diag=TRUE)] <- sensmat
             CompLikelihood$sensmat <- t(CompLikelihood$sensmat)
             CompLikelihood$sensmat[lower.tri(CompLikelihood$sensmat, diag=TRUE)] <- sensmat
-            
+
             # Set variability matrix:
             CompLikelihood$varimat <- matrix(double(dimmat), ncol=numparam)
             CompLikelihood$varimat[lower.tri(CompLikelihood$varimat, diag=TRUE)] <- varimat
             CompLikelihood$varimat <- t(CompLikelihood$varimat)
             CompLikelihood$varimat[lower.tri(CompLikelihood$varimat, diag=TRUE)] <- varimat
-                 
+
             namesgod <- c(namesnuis[as.logical(flagnuis)], namescorr[as.logical(flagcorr)])
             dimnames(CompLikelihood$sensmat) <- list(namesgod, namesgod)
             dimnames(CompLikelihood$varimat) <- list(namesgod, namesgod)
             CompLikelihood$sensmat <- CompLikelihood$sensmat[namesparam, namesparam]
             CompLikelihood$varimat <- CompLikelihood$varimat[namesparam, namesparam]
             isensmat <- try(solve(CompLikelihood$sensmat), silent = TRUE)
-    
+
             if(!is.matrix(isensmat) || !is.matrix(CompLikelihood$varimat))
               {
                 warning("observed information matrix is singular")
@@ -124,7 +124,7 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
               {
                 penalty <- CompLikelihood$varimat %*% isensmat
                 CompLikelihood$clic <- -2 * (CompLikelihood$value - sum(diag(penalty)))
-        
+
                 CompLikelihood$varcov <- isensmat %*% penalty
                 CompLikelihood$stderr <- diag(CompLikelihood$varcov)
                 if(any(CompLikelihood$stderr < 0))
