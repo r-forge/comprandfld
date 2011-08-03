@@ -1,12 +1,12 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: Utility.r
 ### Description:
 ### This file contains a set of procedures
 ### for supporting all the other functions.
-### Last change: 26/11/2010.
+### Last change: 2011/08/03.
 ####################################################
 
 ### Procedures are in alphabetical order.
@@ -23,7 +23,7 @@ CheckCorrModel <- function(corrmodel)
                       stable=5,
                       whittlematern=6)
 
-    
+
     return(CheckCorrModel)
   }
 
@@ -34,7 +34,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     error <- NULL
 
     # Check if the input is inserted correctly
-    
+
     if(missing(coordx) || !is.numeric(coordx))
       {
         error <- 'insert a suitable set of numeric coordinates\n'
@@ -46,13 +46,13 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         error <- 'insert a suitable set of numeric coordinates\n'
         return(list(error=error))
       }
-    
+
     if(missing(corrmodel) || !is.character(corrmodel))
       {
         error <- 'insert the correlation model\n'
         return(list(error=error))
       }
-      
+
     if(missing(data) || !is.numeric(data))
       {
         error <- 'insert a numeric vector or matrix of data\n'
@@ -70,7 +70,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         error <- 'the parameter grid need to be a logic value\n'
         return(list(error=error))
       }
-        
+
     if(!is.null(likelihood) & !is.character(likelihood))
       {
         error <- 'insert the type of likelihood objects\n'
@@ -127,7 +127,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         error <- 'insert the type of coordinates'
         return(list(error=error))
       }
-    
+
     if(!is.null(weighted) & !is.logical(weighted))
       {
         error <- 'insert if the composite likelihood need to be weighted'
@@ -141,7 +141,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
       }
 
     # Check the correctness of the inserted input
- 
+
     if(is.null(CheckCorrModel(corrmodel)))
       {
         error <- 'the name of the correlation model is not correct\n'
@@ -155,16 +155,16 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
             error <- 'some names of the fixed parameters is/are not correct\n'
             return(list(error=error))
           }
-        
+
         if(!CheckParamRange(unlist(fixed)))
           {
             error <- 'some fixed values are out of the range\n'
             return(list(error=error))
           }
       }
-    
+
     checklik <- CheckLikelihood(likelihood)
-    
+
     if(is.null(checklik))
       {
         error <- 'the setting name of the likelihood objects is not correct\n'
@@ -184,7 +184,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
             error <- 'some names of the starting parameters is/are not correct\n'
             return(list(error=error))
           }
-        
+
         if(!CheckParamRange(unlist(start)))
           {
             error <- 'some starting values are out of the range\n'
@@ -193,7 +193,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
       }
 
     checktype <- CheckType(type)
-    
+
     if(is.null(checktype))
       {
         error <- 'the type name of the likelihood objects is not correct\n'
@@ -251,10 +251,10 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
             error <- ('insert a d x 2 matrix of coordinates\n')
             return(list(error=error))
           }
-                
+
         if(replicates)
           {
-            numcoord <- nrow(coordx)      
+            numcoord <- nrow(coordx)
             if(grid)
               {
                 numcoordx <- sqrt(numcoord)
@@ -283,7 +283,7 @@ CheckInput <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
           {
             numcoordx <- length(coordx)
             numcoordy <- length(coordy)
-            
+
             if(grid)
               {
                 if(numcoordx != dimdata[1] || numcoordy != dimdata[2])
@@ -383,7 +383,7 @@ CheckParam <- function(corrmodel, namesparam, numparam)
                             scale=5,
                             sill=6)))
             return(FALSE)
-        
+
         if(corrmodel=='gencauchy')
           if(is.null(switch(namesparam[i],
                             mean=2,
@@ -443,10 +443,10 @@ CheckType <- function(type)
 CorrelationParam <- function(corrmodel)
   {
     namesparam <- NULL
-    
+
     if(corrmodel=='cauchy')
       namesparam <- c('power2', 'scale')
-    
+
     if(corrmodel=='exponential' || corrmodel=='gauss')
       namesparam <- c('scale')
 
@@ -474,7 +474,7 @@ DetectParam <- function(corrmodel, fixed, param)
 InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
                       lonlat, model, parscale, paramrange, replicates, start, type,
                       vartype, weighted)
-  {    
+  {
     ### Initialize the model parameters:
     error <- NULL
     mean <- mean(data)
@@ -485,15 +485,15 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     numfixed <- numstart <- 0
 
     ### Set returning variables:
-    
+
     codecorrmodel <- CheckCorrModel(corrmodel)
     likelihood <- CheckLikelihood(likelihood)
     model <- CheckModel(model)
     vartype <- CheckVarType(vartype)
     type <- CheckType(type)
-    
+
     ### Set the names of the parameters
-    
+
     param <- c(mean, nugget, scale, sill, rep(smooth, 4))
     namesparam <- c("mean", "nugget", "scale", "sill", "power",
                     "power1", "power2", "smooth")
@@ -503,7 +503,7 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     namesnuis <- c('mean', 'nugget', 'sill')
     namesparam <- sort(c(namescorr, namesnuis))
     namessim <- c('mean', 'sill', 'nugget', 'scale', namescorr[!namescorr == 'scale'])
-    
+
     param <- param[namesparam]
 
     numparam <- length(param)
@@ -530,13 +530,13 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         fixed <- unlist(fixed)
         namesfixed <- names(fixed)
         numfixed <- length(namesfixed)
-    
+
         if(numfixed==numparam)
           {
             error <- 'the are not parameters left to estimate\n'
             return(list(error=error))
           }
-        
+
         for(i in 1 : numfixed)
           {
             flag[namesflag==namesfixed[i]] <- 0
@@ -549,12 +549,12 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
       }
     flagcorr <- flag[namescorr]
     flagnuis <- flag[namesnuis]
-    
+
     ### Update the parameters with starting values:
 
     numstart <- 0
     namesstart <- NULL
-    
+
     if(!is.null(start))
       {
         start <- unlist(start)
@@ -566,13 +566,13 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
 
         namesstart <- names(start)
         numstart <- length(start)
-        
+
         for(i in 1 : numstart)
           param[namesstart[i]] <- start[namesstart[i]]
       }
 
     ### Check the consistency between fixed and starting values
-    
+
     if(numstart > 0 && numfixed > 0)
       for(i in 1 : numstart)
         for(j in 1 : numfixed)
@@ -585,7 +585,7 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
     ### set the scale of the parameters:
 
     # Insert here!
-    
+
     ### set the range of the parameters if its the case
 
     if(paramrange)
@@ -616,10 +616,10 @@ InitParam <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
             dim(data) <- c(numcoordx, numcoordx, numdata)
           }
         else
-          dim(data) <- c(numdata, numcoord)              
+          dim(data) <- c(numdata, numcoord)
       }
     else
-      {        
+      {
         numcoordx <- length(coordx)
         numcoordy <- length(coordy)
 
@@ -655,7 +655,7 @@ SetRangeParam <- function(namesparam, numparam)
     low <- 1e-12
     lower <- NULL
     upper <- NULL
-    
+
     for(i in 1 : numparam)
       {
         if(namesparam[i]=='mean')
@@ -663,7 +663,7 @@ SetRangeParam <- function(namesparam, numparam)
             lower <- c(lower, -Inf)
             upper <- c(upper, Inf)
           }
-        
+
         if(namesparam[i]=='nugget')
           {
             lower <- c(lower, 0)
@@ -699,7 +699,7 @@ SetRangeParam <- function(namesparam, numparam)
             lower <- c(lower, low)
             upper <- c(upper, Inf)
           }
-        
+
         if(namesparam[i]=='smooth')
           {
             lower <- c(lower, low)
