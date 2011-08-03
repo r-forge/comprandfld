@@ -1,7 +1,7 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: Covariogram.r
 ### Description:
 ### This file contains a set of procedures
@@ -15,14 +15,14 @@
 ### Procedures are in alphabetical order.
 
 ### Compute and plot the (estimated) covariance function and the variogram
-### from a fitted model obtain from the FitComposite or the WLeastSquare procedure 
+### from a fitted model obtain from the FitComposite or the WLeastSquare procedure
 Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
                         answer.range=FALSE, show.cov=FALSE, show.vario=FALSE,
                         show.range=FALSE, add.cov=FALSE, add.vario=FALSE,
                         pract.range=95, vario=NULL, ...)
   {
     result <- NULL
-    
+
     if(!class(fitted)=='FitComposite' & !class(fitted)=='WLS')
       {
         cat('Enter an object obtained from fitting a random field with the composite-likelihood or the weigthed least square method\n')
@@ -34,7 +34,7 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
         cat('Enter an object obtained from the function EmpVariogram\n')
         return(result)
       }
-      
+
     if(!is.numeric(pract.range) & answer.range)
       {
         cat('Enter a number for the parameter % of sill\n')
@@ -50,7 +50,7 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
         else
           pract.range <- pract.range / 100
       }
-    
+
     if(is.null(lags))
       {
         numcoord <- nrow(fitted$coord)
@@ -82,11 +82,11 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
         PracticalRange <- function(corrmodel, lags, param, pract.range)
           return(nugget + sill * CorrelationFct(corrmodel, lags, param) -
                  (nugget + sill * (1 - pract.range)))
-        
+
         Range <- uniroot(PracticalRange, c(lower, upper), corrmodel=detect$corrmodel,
                          param=detect$param, pract.range=pract.range)$root
       }
-    
+
     if(answer.vario || show.vario)
       variogram <- nugget + sill * (1 - correlation)
 
@@ -112,7 +112,7 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
           {
             if(class(vario)=='Variogram')
               points(vario$centers, vario$variogram)
-            
+
             lines(lags, variogram)
             if(show.range)
               abline(v=Range)
@@ -128,7 +128,7 @@ Covariogram <- function(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
             plot(lags, variogram, type='l', ylim=c(bnds[1], bnds[2]))
             if(class(vario)=='Variogram')
               points(vario$centers, vario$variogram)
-              
+
             if(show.range)
               abline(v=Range)
           }
