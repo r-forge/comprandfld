@@ -18,7 +18,7 @@ void Distances_Euclidean(double *coordx, double *coordy, int *nsite)
   for(i = 0; i < (*nsite - 1); i++)
     for(j = (i + 1); j < *nsite; j++)
       {
-	lags[h] = pythag(coordx[i] - coordx[j], coordy[i] - coordy[j]);
+	lags[h] = hypot(coordx[i] - coordx[j], coordy[i] - coordy[j]);
 	*maximdista = fmax(*maximdista, lags[h]);
 	*minimdista = fmin(*minimdista, lags[h]);
 	h++;
@@ -60,8 +60,8 @@ Output:
 {
   double ax, bx, ay, by, val;
   val = 0.0;
-  // this is a trick 
-  if (lonx == lony) 
+  // this is a trick
+  if (lonx == lony)
     {
       if(latx == laty)
 	return val;
@@ -134,14 +134,14 @@ void Seq(double *x, int len, double *res)
 }
 
 void SetSampling(double *coordx, double *coordy, double *data, int n,
-		 int *ndata, int *npts, double *scoordx, double *scoordy, 
-		 double *sdata, int *size, double xmax, double xmin, 
+		 int *ndata, int *npts, double *scoordx, double *scoordy,
+		 double *sdata, int *size, double xmax, double xmin,
 		 double ymax, double ymin)
 {
   int i=0, j=0;
 
   for(i = 0; i < *size; i++)
-    if((xmin <= coordx[i]) && (coordx[i] <= xmax) && 
+    if((xmin <= coordx[i]) && (coordx[i] <= xmax) &&
        (ymin <= coordy[i]) && (coordy[i] <= ymax))
       {
 	scoordx[j] = coordx[i];
