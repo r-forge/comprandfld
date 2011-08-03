@@ -2,22 +2,22 @@
 
 /*###################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: Godambe.c
 ### Description:
 ### This file contains a set of procedures
 ### for the computation of the Godambe matrix of
 ### random fields.
-### Last change: 12/11/2010.
+### Last change: 2011/08/03.
 ##################################################*/
 
 
 // Empirical estimation of the Senstive (H) and Variability (J) components of
 // the Godambe matrix:
-void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, double *eps, 
-		    int *flagcorr, int *flagnuis, int *like, int *model, int *ndata, int *npar, 
-		    int *nparc, int *nsite, double *parcorr, double *nuisance, double *sensmat, 
+void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, double *eps,
+		    int *flagcorr, int *flagnuis, int *like, int *model, int *ndata, int *npar,
+		    int *nparc, int *nsite, double *parcorr, double *nuisance, double *sensmat,
 		    double *varimat, int *type)
 {
   int d=0, h=0, i=0, j=0, k=0, m=0, n=0;
@@ -47,7 +47,7 @@ void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, 
 		    switch(*like)
 		      {
 		      case 1:// Conditional likelihood:
-			Grad_Cond_Gauss(corr, flagnuis, gradcorr, grad, npar, nuisance, 
+			Grad_Cond_Gauss(corr, flagnuis, gradcorr, grad, npar, nuisance,
 					data[(n + i * *ndata)], data[(n + j * *ndata)]);
 			break;
 		      case 3: // Marginal likelihood:
@@ -95,9 +95,9 @@ void GodambeMat_emp(double *coordx, double *coordy, int *corrmod, double *data, 
 
 // The exact Senstive (H) and Variability (J) components of
 // the Godambe matrix:
-void GodambeMat(double *coordx, double *coordy, int *corrmod, double *data, double *eps, 
-		int *flagcorr, int *flagnuis, int *like, int *lonlat, int *model, int *ndata, 
-		int *npar, int *nparc, int *nsite, double *parcorr, double *nuisance, double *sensmat, 
+void GodambeMat(double *coordx, double *coordy, int *corrmod, double *data, double *eps,
+		int *flagcorr, int *flagnuis, int *like, int *lonlat, int *model, int *ndata,
+		int *npar, int *nparc, int *nsite, double *parcorr, double *nuisance, double *sensmat,
 		int *type, double *varimat, int *vartype, double *winc)
 {
   int *npair;
@@ -109,16 +109,16 @@ void GodambeMat(double *coordx, double *coordy, int *corrmod, double *data, doub
   switch(*vartype)
     {
     case 1://------------ START EMPIRICAL ESTIMATION ------------//
-      GodambeMat_emp(coordx, coordy, corrmod, data, eps, flagcorr, 
-		     flagnuis, like, model, ndata, npar, nparc, nsite, 
+      GodambeMat_emp(coordx, coordy, corrmod, data, eps, flagcorr,
+		     flagnuis, like, model, ndata, npar, nparc, nsite,
 		     parcorr, nuisance, sensmat, varimat, type);
       break;//------------ END EMPIRICAL ESTIMATION ------------//
     case 2://------------ START SUB-SAMPLE ESTIMATION ------------//
-      Sensitivity(coordx, coordy, corrmod, eps, flagcorr, flagnuis, 
-		  like, model, npair, npar, nparc, nsite, parcorr, 
+      Sensitivity(coordx, coordy, corrmod, eps, flagcorr, flagnuis,
+		  like, model, npair, npar, nparc, nsite, parcorr,
 		  nuisance, sensmat, type);
-      Vari_SubSamp(coordx, coordy, corrmod, data, eps, flagcorr, 
-		   flagnuis, like, lonlat, ndata, npair, npar, nparc, 
+      Vari_SubSamp(coordx, coordy, corrmod, data, eps, flagcorr,
+		   flagnuis, like, lonlat, ndata, npair, npar, nparc,
 		   nsite, nuisance, parcorr, type, varimat, winc);
       break;//------------ END SUB-SAMPLE ESTIMATION ------------//
     case 3://------------ START THEORETICAL COMPUTATION ------------//
@@ -147,8 +147,8 @@ void GodambeMat(double *coordx, double *coordy, int *corrmod, double *data, doub
 }
 
 
-void GodambeMat_Diff(double *coordx, double *coordy, int *corrmod, double *eps, int *flagcorr, 
-		     int *flagnuis, int *model, int *npar, int *nparc, int *nsite, double *parcorr, 
+void GodambeMat_Diff(double *coordx, double *coordy, int *corrmod, double *eps, int *flagcorr,
+		     int *flagnuis, int *model, int *npar, int *nparc, int *nsite, double *parcorr,
 		     double *nuisance, double *sensmat, double *varimat)
 {
 
@@ -184,8 +184,8 @@ void GodambeMat_Diff(double *coordx, double *coordy, int *corrmod, double *eps, 
 
 	      for(l = 0; l < (*nsite - 1); l++)
 		{// Insert the case of great circle distance
-		  vario[2] = Variogram(corrmod, pythag(coordx[i] - coordx[l], coordy[i] - coordy[l]), nuisance, parcorr);
-		  vario[3] = Variogram(corrmod, pythag(coordx[j] - coordx[l], coordy[j] - coordy[l]), nuisance, parcorr);
+		  vario[2] = Variogram(corrmod, hypot(coordx[i] - coordx[l], coordy[i] - coordy[l]), nuisance, parcorr);
+		  vario[3] = Variogram(corrmod, hypot(coordx[j] - coordx[l], coordy[j] - coordy[l]), nuisance, parcorr);
 
 		  for(k = (l + 1); k < *nsite; k++)
 		    {
@@ -199,8 +199,8 @@ void GodambeMat_Diff(double *coordx, double *coordy, int *corrmod, double *eps, 
 			  Grad_Diff_Vario(corr_lk, flagnuis, gradcorr_lk, gradient_lk, npar, nuisance);
 
 			  vario[1] = Variogram(corrmod, lags[lk], nuisance, parcorr);
-			  vario[4] = Variogram(corrmod, pythag(coordx[i] - coordx[k], coordy[i] - coordy[k]), nuisance, parcorr);
-			  vario[5] = Variogram(corrmod, pythag(coordx[j] - coordx[k], coordy[j] - coordy[k]), nuisance, parcorr);
+			  vario[4] = Variogram(corrmod, hypot(coordx[i] - coordx[k], coordy[i] - coordy[k]), nuisance, parcorr);
+			  vario[5] = Variogram(corrmod, hypot(coordx[j] - coordx[k], coordy[j] - coordy[k]), nuisance, parcorr);
 
 			  crosscorr = (R_pow(vario[2] - vario[3] - vario[4] + vario[5],2)) / (4 * vario[0] * vario[1]);
 			  s = 0;
@@ -408,9 +408,9 @@ void Grad_Pair_Gauss(double corr, int *flag, double *gradcorr, double *gradient,
 }
 
 // Compute the Sensitivity matrix of a random field:
-void Sensitivity(double *coordx, double *coordy, int *corrmod, double *eps, 
-		 int *flagcorr, int *flagnuis, int *like, int *model, int *npair, 
-		 int *npar, int *nparc, int *nsite, double *parcorr, double *nuisance, 
+void Sensitivity(double *coordx, double *coordy, int *corrmod, double *eps,
+		 int *flagcorr, int *flagnuis, int *like, int *model, int *npair,
+		 int *npar, int *nparc, int *nsite, double *parcorr, double *nuisance,
 		 double *sensmat, int *type)
 {
   // Initialization variables:
@@ -424,21 +424,21 @@ void Sensitivity(double *coordx, double *coordy, int *corrmod, double *eps,
       switch(*like)
 	{
 	case 1:// Conditional likelihood:
-	  Sens_Cond_Gauss(corrmod,  eps, flagcorr, flagnuis, 
-			  nsite, nuisance, npair, npar, nparc, 
+	  Sens_Cond_Gauss(corrmod,  eps, flagcorr, flagnuis,
+			  nsite, nuisance, npair, npar, nparc,
 			  parcorr, sensmat);
 	  break;
 	case 3: // Marginal likelihood:
 	  switch(*type)
 	    {
 	    case 1: // Sensitivity for the difference likelihood case
-	      Sens_Diff_Gauss(corrmod, eps, flagcorr, flagnuis, 
-			      nsite, nuisance, npair, npar, nparc, 
+	      Sens_Diff_Gauss(corrmod, eps, flagcorr, flagnuis,
+			      nsite, nuisance, npair, npar, nparc,
 			      parcorr, sensmat);
 	      break;
 	    case 2: // Sensitivity for the pairwise likelihood case
-	      Sens_Pair_Gauss(corrmod, eps, flagcorr, flagnuis, 
-			      nsite, nuisance, npair, npar, nparc, 
+	      Sens_Pair_Gauss(corrmod, eps, flagcorr, flagnuis,
+			      nsite, nuisance, npair, npar, nparc,
 			      parcorr, sensmat);
 	      break;
 	    }
@@ -450,8 +450,8 @@ void Sensitivity(double *coordx, double *coordy, int *corrmod, double *eps,
 }
 
 // Compute the Sensitivity matrix for the composite Gaussian difference likelihood:
-void Sens_Diff_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis, 
-		     int *nsite, double *nuisance, int *npair, int *npar, 
+void Sens_Diff_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis,
+		     int *nsite, double *nuisance, int *npair, int *npar,
 		     int *nparc, double *parcorr, double *sensmat)
 {
   // Initialization variables:
@@ -500,8 +500,8 @@ void Sens_Diff_Gauss_ij(double *gradient, int *npar, double *sensmat)
 }
 
 // Compute the Sensitivity matrix for the pairwise composite Gaussian likelihood:
-void Sens_Pair_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis, 
-		     int *nsite, double *nuisance, int *npair, int *npar, 
+void Sens_Pair_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis,
+		     int *nsite, double *nuisance, int *npair, int *npar,
 		     int *nparc, double *parcorr, double *sensmat)
 {
   // Initialization variables:
@@ -638,8 +638,8 @@ void Sens_Pair_Gauss_ij(double corr, int *flag, double *gradcorr, int *npar,
 }
 
 // Compute the Sensitivity matrix for the conditional composite Gaussian likelihood:
-void Sens_Cond_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis, 
-		     int *nsite, double *nuisance, int *npair, int *npar, 
+void Sens_Cond_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis,
+		     int *nsite, double *nuisance, int *npair, int *npar,
 		     int *nparc, double *parcorr, double *sensmat)
 {
   // Initialization variables:
@@ -663,7 +663,7 @@ void Sens_Cond_Gauss(int *corrmod, double *eps, int *flagcorr, int *flagnuis,
 	    // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
 	    Sens_Cond_Gauss_ij(corr, flagnuis, gradcorr, npar, nparc, nuisance, sens);
 	    *npair = *npair + 1;
-	    for(l = 0; l < nsens; l++)   
+	    for(l = 0; l < nsens; l++)
 	      sensmat[l] = sensmat[l] + sens[l];
 	  }
 	h++;
@@ -775,10 +775,10 @@ void Sens_Cond_Gauss_ij(double corr, int *flag, double *gradcorr, int *npar,
  return;
 }
 
-void Vari_SubSamp(double *coordx, double *coordy, int *corrmod, double *data, 
-		  double *eps, int *flagcorr, int *flagnuis, int *like, 
-		  int *lonlat, int *ndata, int *npair, int *npar, int *nparc, 
-		  int *nsite, double *nuisance, double *parcorr, int *type, 
+void Vari_SubSamp(double *coordx, double *coordy, int *corrmod, double *data,
+		  double *eps, int *flagcorr, int *flagnuis, int *like,
+		  int *lonlat, int *ndata, int *npair, int *npar, int *nparc,
+		  int *nsite, double *nuisance, double *parcorr, int *type,
 		  double *varimat, double *winc)
 {
   double corr=0.0, lag=0.0, *gradcorr, *gradient, *rangex, *rangey;
@@ -831,8 +831,8 @@ void Vari_SubSamp(double *coordx, double *coordy, int *corrmod, double *data,
 	for(j = 0; j < numinty; j++)
 	  {
 	    *npts = 0;
-	    SetSampling(coordx, coordy, data, n, ndata, npts, scoordx, 
-			scoordy, sdata, nsite, xgrid[i + 1], xgrid[i], 
+	    SetSampling(coordx, coordy, data, n, ndata, npts, scoordx,
+			scoordy, sdata, nsite, xgrid[i + 1], xgrid[i],
 			ygrid[j + 1], ygrid[j]);
 	    if(*npts > 2)
 	      {
@@ -845,8 +845,8 @@ void Vari_SubSamp(double *coordx, double *coordy, int *corrmod, double *data,
 		    {
 		      if(*lonlat)
 			lag = Dist_geodesic(scoordx[l], scoordy[l], scoordx[m], scoordy[m]);
-		      else 
-			lag = pythag(scoordx[l] - scoordx[m], scoordy[l] - scoordy[m]);
+		      else
+			lag = hypot(scoordx[l] - scoordx[m], scoordy[l] - scoordy[m]);
 		      if(lag <= *dista)
 			{
 			  corr = CorrelationFct(corrmod, lag, parcorr);
