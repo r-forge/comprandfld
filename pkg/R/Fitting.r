@@ -1,20 +1,20 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: Fitting.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 23/11/2010.
+### Last change: 2011/08/03.
 ####################################################
 
 
 ### Procedures are in alphabetical order.
 
 
-### Fitting procedure: 
+### Fitting procedure:
 
 FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=FALSE, likelihood='Marginal',
                          lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead', replicates=FALSE, start=NULL,
@@ -22,9 +22,9 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
                          winconst=NULL)
 {
     call <- match.call()
-    
+
     ### Check the parameters given in input:
-    
+
     checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid,
                              likelihood, lonlat, model, optimizer, replicates,
                              start, type, varest, vartype, weighted, weights,
@@ -33,38 +33,38 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
-    
+
     ### If the case set the sub-sampling parameter to the default value
     if(varest & (vartype == 'SubSamp') & (missing(winconst) || !is.numeric(winconst)))
       winconst <- 1
 
     ### Initialization global variables:
-     
+
     FitComposite <- NULL
     clic <- parscale <- varcov <- stderr <- NULL
-  
+
     ### Initialization parameters:
 
     initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
                          lonlat, model, parscale, optimizer=='L-BFGS-B', replicates,
                          start, type, vartype, weighted)
-    
+
     if(!is.null(initparam$error))
       stop(initparam$error)
 
     ### Model fitting section
 
     # Full likelihood:
-    
+
     if(initparam$likelihood == 2)
       {
         # Fitting by log-likelihood maximization:
         fitted <- Likelihood(initparam$corrmodel, initparam$data, initparam$fixed, grid, initparam$lower,
                              initparam$model, initparam$namescorr, initparam$namesnuis, initparam$namesparam,
                              initparam$numcoord, initparam$numdata, initparam$numpairs, optimizer, initparam$param,
-                             varest, initparam$type, initparam$upper) 
+                             varest, initparam$type, initparam$upper)
       }
-    
+
     # Composite likelihood:
 
     if(initparam$likelihood == 3 || initparam$likelihood == 1)
@@ -81,7 +81,7 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
       }
 
     ### Set the output object:
-     
+
     FitComposite <- list(clic = fitted$clic,
                          coord = initparam$coord,
                          convergence = fitted$convergence,
@@ -108,12 +108,12 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
 print.FitComposite <- function(x, digits = max(3, getOption("digits") - 3), ...)
   {
     dimdata <- dim(x$data)
-    
+
     if(x$grid)
       numdata <- dimdata[3]
     else
       numdata <- dimdata[1]
-    
+
     numcoord <- nrow(x$coord)
     numparam <- length(x$param)
 
@@ -152,7 +152,7 @@ print.FitComposite <- function(x, digits = max(3, getOption("digits") - 3), ...)
         print.default(x$stderr, digits = digits, print.gap = 2,
                       quote = FALSE)
       }
-    
+
     if(!is.null(x$varcov))
       {
         cat('\nVariance-covariance matrix of the estimates:\n')
@@ -160,7 +160,7 @@ print.FitComposite <- function(x, digits = max(3, getOption("digits") - 3), ...)
                       quote = FALSE)
       }
 
-    cat('\n##############################################################\n')    
+    cat('\n##############################################################\n')
     invisible(x)
   }
 
