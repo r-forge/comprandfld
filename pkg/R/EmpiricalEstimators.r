@@ -1,24 +1,24 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: EmpiricalEstimators.r
 ### Description:
 ### This file contains a set of procedures in order
 ### to estimate the empircal covariance or the extreme
 ### dependence structures for a given dataset.
-### Last change: 26/11/2010.
+### Last change: 2011/08/03.
 ####################################################
 
 ### Procedures are in alphabetical order.
 
-  
+
 EVariogram <- function(coordx, coordy, data, cloud=FALSE, extcoeff=FALSE, grid=FALSE, gev=c(0, 1, 0),
                        lonlat=FALSE, maxdist=NULL, numbins=NULL, replicates=FALSE, type='variogram')
   {
-    
+
     call <- match.call()
-    
+
     ### Check the parameters given in input:
 
     checkinput <- CheckInput(coordx, coordy, 'gauss', data, NULL, grid, 'None',
@@ -59,9 +59,9 @@ EVariogram <- function(coordx, coordy, data, cloud=FALSE, extcoeff=FALSE, grid=F
 
     ### Initialization parameters:
     initparam <- InitParam(coordx, coordy, 'gauss', data, NULL, grid, 'None',
-                           lonlat, 'None', NULL, FALSE, replicates, NULL, 
+                           lonlat, 'None', NULL, FALSE, replicates, NULL,
                            'WLeastSquare', 'SubSamp', FALSE)
-  
+
     if(!is.null(initparam$error))
       stop(initparam$error)
 
@@ -130,6 +130,6 @@ EVariogram <- function(coordx, coordy, data, cloud=FALSE, extcoeff=FALSE, grid=F
                        type=type)
 
     structure(c(EVariogram, call = call), class = c("Variogram"))
-  
+
   }
 
