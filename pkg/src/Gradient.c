@@ -2,12 +2,12 @@
 
 /*###################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: Gradient.c
 ### Description:
 ### This file contains a set of procedures
 ### for the computation of the composite likelihood
 ### gradients.
-### Last change: 07/11/2010.
+### Last change: 2011/08/03.
 ##################################################*/
