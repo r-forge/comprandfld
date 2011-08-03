@@ -1,13 +1,13 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: Likelihood.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum likelihood fitting of
 ### random fields.
-### Last change: 29/11/2010.
+### Last change: 2011/08/03.
 ####################################################
 
 
@@ -30,7 +30,7 @@ Likelihood <- function(corrmodel, data, fixed, grid, lower, model, namescorr,
         param <- c(param, fixed)
         paramcorr <- param[namescorr]
         nuisance <- param[namesnuis]
-    
+
         stdata <- data - nuisance['mean']
         corr <- double(numpairs)
 
@@ -47,7 +47,7 @@ Likelihood <- function(corrmodel, data, fixed, grid, lower, model, namescorr,
         cholvarcov <- try(chol(varcov), silent = TRUE)
         if(!is.matrix(cholvarcov))
           return(loglik)
-    
+
         ivarcov <- chol2inv(cholvarcov)
         if(!is.matrix(ivarcov))
           return(loglik)
@@ -64,7 +64,7 @@ Likelihood <- function(corrmodel, data, fixed, grid, lower, model, namescorr,
             for(i in 1:numdata)
               loglik <- loglik + sum(LogNormDen(c(stdata[,,i]), detvarcov, ivarcov, numcoord, type))
           }
-    
+
         return(loglik)
       }
 
@@ -101,7 +101,7 @@ Likelihood <- function(corrmodel, data, fixed, grid, lower, model, namescorr,
         Likelihood$varcov <- try(solve(-Likelihood$hessian), silent = TRUE)
         Likelihood$sensmat <- NULL
         Likelihood$varimat <- NULL
-    
+
         if(!is.matrix(Likelihood$varcov))
           {
             warning("observed information matrix is singular")
@@ -137,7 +137,7 @@ LogNormDen <- function(stdata, detvarcov, ivarcov, numcoord, type)
 
     if(type == 4) # Standard log Gaussian density
       LogNormDen <- -detvarcov - .5 * (crossprod(t(crossprod(stdata, ivarcov)),stdata) + numcoord * log(2 * pi))
-    
+
     return(LogNormDen)
   }
 
