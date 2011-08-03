@@ -1,13 +1,13 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Email: simone.padoan@unibg.it.
+### Institute: University of Bergamo.
 ### File name: WeightedLeastSquare.r
 ### Description:
 ### This file contains a set of procedures in order
-### to estimate the parameters of some covariance 
+### to estimate the parameters of some covariance
 ### function models for a given dataset.
-### Last change: 28/11/2010.
+### Last change: 2011/08/03.
 ####################################################
 
 
@@ -16,12 +16,12 @@
 print.WLS <- function(x, digits = max(3, getOption("digits") - 3), ...)
   {
     dimdata <- dim(x$data)
-    
+
     if(x$grid)
       numdata <- dimdata[3]
     else
       numdata <- dimdata[1]
-    
+
     numcoord <- nrow(x$coord)
     numparam <- length(x$param)
 
@@ -43,7 +43,7 @@ print.WLS <- function(x, digits = max(3, getOption("digits") - 3), ...)
     print.default(x$param, digits = digits, print.gap = 2,
                   quote = FALSE)
 
-    cat('\n##############################################################\n')    
+    cat('\n##############################################################\n')
     invisible(x)
   }
 
@@ -51,9 +51,9 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
                     lonlat, model, parscale, paramrange, replicates, start, type,
                     vartype, weighted)
   {
-    
+
     ### Initialization parameters:
-    
+
     initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid,
                            likelihood, lonlat, model, parscale, paramrange,
                            replicates, start, 'WLeastSquare', vartype, weighted)
@@ -108,7 +108,7 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
         corrparam <- param[-match(c('mean', 'nugget', 'sill'), namesparam)]
 
         result <- .C(fun, as.double(bins), as.integer(corrmodel), as.double(corrparam),
-                     as.double(lenbins), as.double(moments), as.integer(numbins), 
+                     as.double(lenbins), as.double(moments), as.integer(numbins),
                      as.double(nuisance), res=double(1), PACKAGE='CompRandFld',
                      DUP = FALSE, NAOK=TRUE)$res
         return(result)
@@ -129,7 +129,7 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
        numbins, as.integer(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
     ###### ---------- START model fitting ----------######
-    
+
     if(initparam$model == 1) # Gaussian case:
       fname <- 'LeastSquare_G'
 
@@ -170,19 +170,19 @@ WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
           }
         initparam$param[names(fitted$par)] <- fitted$par
       }
-  
+
    return(initparam)
   }
 
-  
+
 WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE,
                          lonlat=FALSE, maxdist=NULL, model='Gaussian',
                          optimizer='Nelder-Mead', numbins=NULL, replicates=FALSE,
                          start=NULL, weighted=FALSE)
   {
-    
+
     call <- match.call()
-    
+
     ### Check the parameters given in input:
 
     checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid, 'None',
@@ -229,9 +229,9 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
         print(result)
         return(result)
       }
- 
+
     ### Initialization global variables:
-     
+
     WLeastSquare <- NULL
     fname <- NULL
 
@@ -240,7 +240,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
     initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid, 'None',
                            lonlat, model, parscale, optimizer=='L-BFGS-B',
                            replicates, start, 'WLeastSquare', 'SubSamp', FALSE)
-  
+
     if(!is.null(initparam$error))
       stop(initparam$error)
 
@@ -259,7 +259,7 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
        PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
     ###### ---------- START model fitting ----------######
-    
+
     if(initparam$model == 1) # Gaussian random field:
       {
         if(weighted)
