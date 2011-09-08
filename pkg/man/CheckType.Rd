@@ -17,7 +17,7 @@ CheckType(type)
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://people.epfl.ch/simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@unibg.it},
+  \url{http://www.unibg.it/pers/?simone.padoan}.}
 
 \keyword{Composite}

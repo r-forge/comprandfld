@@ -1,17 +1,17 @@
 \name{Likelihood}
 \alias{Likelihood}
 
-\title{Optimizes of the log-likelihood}
+\title{Optimizes the Log Likelihood}
 \description{
   Subroutine called by FitComposite.
-  The procedure estimates the model parameters by maximisation of the 
+  The procedure estimates the model parameters by maximization of the
   log-likelihood.
 }
 \usage{
 Likelihood(corrmodel, data, fixed, grid, lower, model, namescorr,
-           namesnuis, namesparam, numcoord, numdata, numpairs,
-           optimizer, param, varest, type, upper)
-} 
+           namesnuis, namesparam, numcoord, numrep, numtime,
+           optimizer, param, spacetime, varest, taper, type, upper)
+}
 \arguments{
   \item{corrmodel}{Numeric; the id of the correlation model.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
@@ -29,15 +29,18 @@ Likelihood(corrmodel, data, fixed, grid, lower, model, namescorr,
   \item{namesnuis}{String; the names of the nuisance parameters.}
   \item{namesparam}{String; the names of the parameters to be maximised.}
   \item{numcoord}{Numeric; the number of coordinates.}
-  \item{numdata}{Numeric; the number of data replications in time.}
-  \item{numpairs}{Numeric; the number of pairwise distances.}
+  \item{numrep}{Numeric; the number of iid replications.}
+  \item{numtime}{Numeric; the number of temporal observations.}
   \item{optimizer}{String; the optimization algorithm
     (see \code{\link{optim}} for details). 'Nelder-Mead' is the
     default.}
-  \item{param}{A numeric vector of parameters' values.}
+  \item{param}{A numeric vector of parameters.}
+  \item{spacetime}{Logical; if the random field is spatial
+    (\code{FALSE}) or spatial-temporal (\code{TRUE}).}
   \item{varest}{Logical; if \code{TRUE} the estimate' variances and
-    standard errors are returned. 
+    standard errors are returned.
     \code{FALSE} is the default.}
+  \item{taper}{String; the name of the taper correlation function.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods.}
@@ -46,7 +49,7 @@ Likelihood(corrmodel, data, fixed, grid, lower, model, namescorr,
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://people.epfl.ch/simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@unibg.it},
+  \url{http://www.unibg.it/pers/?simone.padoan}.}
 
 \keyword{Composite}

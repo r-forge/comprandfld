@@ -4,17 +4,17 @@
 \title{Optimizes the Composite log-likelihood}
 \description{
   Subroutine called by FitComposite.
-  The procedure estimates the model parameters by maximisation of the 
+  The procedure estimates the model parameters by maximisation of the
   composite log-likelihood.
 }
 \usage{
 CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
                flagnuis, fixed, grid, likelihood, lonlat,
                lower, model, namescorr, namesnuis, namesparam,
-               numcoord, numdata, numparam, numparamcorr,
-               optimizer, param, type, upper, varest, vartype,
-               winconst)
-} 
+               numparam, numparamcorr, optimizer, param,
+               spacetime, threshold, type, upper, varest,
+               vartype, winconst)
+}
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
     \code{d} is the number of points) assigning 2-dimensions of coordinates or a numeric vector assigning
@@ -46,32 +46,34 @@ CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
   \item{namescorr}{String; the names of the correlation parameters.}
   \item{namesnuis}{String; the names of the nuisance parameters.}
   \item{namesparam}{String; the names of the parameters to be maximised.}
-  \item{numcoord}{Numeric; the number of coordinates.}
-  \item{numdata}{Numeric; the number of data replications in time.}
   \item{numparam}{Numeric; the number of parameters to be maximised.}
   \item{numparamcorr}{Numeric; the number of correlation parameters.}
   \item{optimizer}{String; the optimization algorithm
     (see \code{\link{optim}} for details). 'Nelder-Mead' is the
     default.}
   \item{param}{A numeric vector of parameters' values.}
+  \item{spacetime}{Logical; if \code{TRUE} the random field is
+    spatial-temporal otherwise is a spatial field.}
+  \item{threshold}{Numeric; a value indicating a threshold for the
+    binary random field, see \code{\link{FitComposite}}.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods.}
   \item{upper}{A numeric vector with the upper bounds of the parameters'
     ranges.}
   \item{varest}{Logical; if \code{TRUE} the estimate' variances and
-    standard errors are returned. 
+    standard errors are returned.
     \code{FALSE} is the default.}
   \item{vartype}{String; the type of estimation method for computing
   the estimate variances, see \code{\link{FitComposite}}.}
   \item{winconst}{Numeric; a positive real value -- if
-    \code{vartype=Sub-Samp} -- that determines the window size in the sub-sampling
+    \code{vartype=SubSamp} -- that determines the window size in the sub-sampling
     estimates of the variances, see \code{\link{FitComposite}}.}
 }
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://people.epfl.ch/simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@unibg.it},
+  \url{http://www.unibg.it/pers/?simone.padoan}.}
 
 \keyword{Composite}

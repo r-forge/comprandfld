@@ -1,20 +1,19 @@
 \name{Dist2Dist}
 \alias{Dist2Dist}
-\title{Switches from an Extreme Value Distribution to Another Extreme
-  Value Distribution}
+\title{Switches from an EV to Another EV Distribution}
 \description{
-  the function transforms a sequence of values following an extreme
-  value distribution to a sequence with another desired extreme value distribution.
+  The function transforms observations belonging to the GEV class
+  from one model to another.
 }
 \usage{
 Dist2Dist(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, shape=NULL)
-} 
+}
 \arguments{
   \item{data}{A numeric vector or a matrix of extreme values.}
   \item{from}{The name of the original extreme value distribution,
     i.e. \code{Gev} (the default), see the \bold{Details} section.}
   \item{to}{The name of the desired extreme value distribution,
-    i.e. \code{sFrechet} (the default), 
+    i.e. \code{sFrechet} (the default),
     see the \bold{Details} section.}
   \item{loc}{A numeric value or vector of location parameters.}
   \item{scale}{A numeric value or vector of scale parameters.}
@@ -67,14 +66,14 @@ Dist2Dist(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, shape=NULL)
 \references{
   de Haan, L. and Ferreira, A. (2006) \emph{Extreme Value Theory An
     Introduction}. Springer Verlang, New York.
-  
+
 }
 
 \seealso{\code{\link{FitGev}}}
 
 
-\author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://people.epfl.ch/simone.padoan}}
+\author{Simone Padoan, \email{simone.padoan@unibg.it},
+  \url{http://www.unibg.it/pers/?simone.padoan}}
 
 
 \keyword{extremes}

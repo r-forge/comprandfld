@@ -1,18 +1,19 @@
 \name{CheckInput}
 \alias{CheckInput}
 
-\title{Check of the input}
+\title{Checks the Inserted Input}
 \description{
   Subroutine called by the fitting procedures.
-  The procedure controls the input passed to
+  The procedure controls the input inserted into
   the fitting procedures.
 }
 \usage{
-CheckInput(coordx, coordy, corrmodel, data, fixed,
-           grid, likelihood, lonlat, model, optimizer,
-           replicates, start, type, varest, vartype,
+CheckInput(coordx, coordy, coordt, corrmodel, data, fixed,
+           grid, likelihood, lonlat, margins, maxdist,
+           maxtime, model, optimizer, replicates, start,
+           taper, threshold, type, varest, vartype,
            weighted, weights, winconst)
-} 
+}
 \arguments{
    \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
     \code{d} is the number of points) assigning 2-dimensions of coordinates or a numeric vector assigning
@@ -20,6 +21,8 @@ CheckInput(coordx, coordy, corrmodel, data, fixed,
   \item{coordy}{A numeric vector assigning 1-dimension of
     coordinates; \code{coordy} is interpreted only if \code{coordx} is a numeric
     vector otherwise it will be ignored.}
+  \item{coordt}{A numeric vector assigning 1-dimension of
+    temporal coordinates.}
   \item{corrmodel}{String; the name of a correlation model, for the
     description see \code{\link[RandomFields]{CovarianceFct}}.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
@@ -37,6 +40,13 @@ CheckInput(coordx, coordy, corrmodel, data, fixed,
   \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
     and \code{coordy} are interpreted as Cartesian coordinates
     otherwise they are considered as longitude and latitude.}
+  \item{margins}{String; the type of the marginal distribution of the
+    max-stable field.}
+  \item{maxdist}{Numeric; an optional positive value indicating the maximum
+    spatial distance considered in the composite-likelihood
+    computation.}
+  \item{maxtime}{Numeric; an optional positive value indicating the maximum
+    temporal lag separation in the composite-likelihood.}
   \item{model}{String; the density associated to the likelihood
     objects. \code{Gaussian} is the default.}
   \item{optimizer}{String; the optimization algorithm
@@ -47,11 +57,15 @@ CheckInput(coordx, coordy, corrmodel, data, fixed,
   \item{start}{A named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure. \code{NULL} is the default.}
+  \item{taper}{String; the name of the tapered correlation
+    function.}
+  \item{threshold}{Numeric; a value indicating a threshold for the
+    binary random field.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
     default) then the marginal composite likelihood is formed by
     pairwise marginal likelihoods.}
   \item{varest}{Logical; if \code{TRUE} the estimate' variances and
-    standard errors are returned. 
+    standard errors are returned.
     \code{FALSE} is the default.}
   \item{vartype}{String; the type of estimation method for computing
   the estimate variances, see \code{\link{FitComposite}}.}
@@ -66,7 +80,7 @@ CheckInput(coordx, coordy, corrmodel, data, fixed,
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@epfl.ch},
-  \url{http://people.epfl.ch/simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@unibg.it},
+  \url{http://www.unibg.it/pers/?simone.padoan}.}
 
 \keyword{Composite}
