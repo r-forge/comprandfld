@@ -1,13 +1,13 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua
-### Email: simone.padoan@unibg.it.
-### Institute: University of Bergamo.
+### Email: simone.padoan@epfl.ch.
+### Institute: EPFL.
 ### File name: Simulation.r
 ### Description:
 ### This file contains a set of procedures
 ### for the simulation of Gaussian random fields and
 ### related functions.
-### Last change: 2011/08/03.
+### Last change: 04/06/2010.
 ####################################################
 
 

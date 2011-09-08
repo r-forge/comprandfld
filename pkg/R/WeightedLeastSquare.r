@@ -1,13 +1,14 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
 ### Email: simone.padoan@unibg.it.
-### Institute: University of Bergamo.
+### Institute: Department of Information Technology
+### and Mathematical Methods, University of Bergamo
 ### File name: WeightedLeastSquare.r
 ### Description:
 ### This file contains a set of procedures in order
 ### to estimate the parameters of some covariance
 ### function models for a given dataset.
-### Last change: 2011/08/03.
+### Last change: 08/06/2011.
 ####################################################
 
 
@@ -15,29 +16,32 @@
 
 print.WLS <- function(x, digits = max(3, getOption("digits") - 3), ...)
   {
-    dimdata <- dim(x$data)
-
-    if(x$grid)
-      numdata <- dimdata[3]
-    else
-      numdata <- dimdata[1]
-
-    numcoord <- nrow(x$coord)
-    numparam <- length(x$param)
-
+    if(x$model=='Gaussian'){process <- x$model
+                            model <- x$model}
+    if(x$model=='ExtGauss'){process <- 'Max-Stable'
+                            model <- 'Extremal Gaussian'}
+    if(x$model=='BrowResn'){process <- 'Max-Stable'
+                            model <- 'Brown-Resnick'}
+    if(x$model=='ExtT'){process <- 'Max-Stable'
+                        model <- 'Extremal T'}
     if(x$weighted)
-      method <- 'Weighted Least Square'
+      method <- 'Weighted Least Squares'
     else
-      method <- method <- 'Least Square'
+      method <- method <- 'Least Squares'
 
     cat('\n##############################################################')
-    cat('\nResults:', method,'Fitting of Random Fields.\n')
+    cat('\nResults:', method,'Fitting of', process, 'Random Fields.\n')
+    cat('\nModel used from the', method, ':', model, '\n')
     cat('\nCovariance model:', x$corrmodel, '\n')
-    cat('Number of coordinates:', numcoord, '\n')
-    cat('Number of observations per location:', numdata, '\n')
-    cat('Number of bins', length(x$bins),'\n')
-    cat('\nEmpirical variogram:\n')
-    print.default(x$variogram, digits = digits, print.gap = 1, quote = FALSE)
+    cat('Number of spatial coordinates:', x$numcoord, '\n')
+    cat('Number of dependent temporal realisations:', x$numtime, '\n')
+    cat('Number of replicates of the random field:', x$numrep, '\n')
+    cat('Number of estimated parameters:', length(x$param), '\n')
+    cat('The value of the', method, 'at the minimum:',-x$wls,'\n')
+    cat('Number of spatial bins', length(x$bins),'\n')
+    cat('Number of temporal bins', length(x$bint),'\n')
+    cat('Min and max spatial distances:', x$srange,'\n')
+    if(length(x$coordt)>1) cat('Min and max temporal interval:', x$trange,'\n')
 
     cat('\nEstimated parameters:\n')
     print.default(x$param, digits = digits, print.gap = 2,
@@ -47,254 +51,343 @@ print.WLS <- function(x, digits = max(3, getOption("digits") - 3), ...)
     invisible(x)
   }
 
-WlsInit <- function(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                    lonlat, model, parscale, paramrange, replicates, start, type,
-                    vartype, weighted)
+WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, likelihood,
+                    lonlat, margins, maxdist, maxtime, model, parscale, paramrange,
+                    replicates, start, threshold, type, varest, vartype, weighted,
+                    winconst)
   {
-
     ### Initialization parameters:
-
-    initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid,
-                           likelihood, lonlat, model, parscale, paramrange,
-                           replicates, start, 'WLeastSquare', vartype, weighted)
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, fixed, grid,
+                           likelihood, lonlat, margins, maxdist, maxtime, model,
+                           parscale, paramrange, replicates, start, threshold,
+                           'WLeastSquare', varest, vartype, weighted, winconst)
 
     if(!is.null(initparam$error))
       stop(initparam$error)
-
+    ### Set the initial type of likelihood objects:
     initparam$type <- CheckType(type)
-
-    if(initparam$numstart == initparam$numparam)
+    if(substr(model,1,6)=='Binary') return(initparam)
+    ### Checks if all the starting values have been passed by the user:
+    if(initparam$numstart==initparam$numparam)
+      {### If full or pairwise then checks the mean parameter:
+        if(model=='Gaussian' & (type %in% c('Standard','Pairwise','Tapering'))){
+          if(is.null(fixed$mean)){
+              if(is.null(start$mean)) initparam$param <- c(initparam$fixed["mean"], initparam$param)
+              else initparam$param <- c(start$mean, initparam$param)
+            initparam$namesparam <- sort(names(initparam$param))
+            initparam$param <- initparam$param[initparam$namesparam]
+            initparam$numparam <- initparam$numparam+1
+            initparam$flagnuis['mean'] <- 1
+            initparam$numfixed <- initparam$numfixed-1
+            if(initparam$numfixed > 0) initparam$fixed <- unlist(fixed)
+            else initparam$fixed <- NULL}
+          else initparam$fixed['mean'] <- fixed$mean}
+        return(initparam)}
+    ### Updates if there are some starting values passed by the user:
+    if(initparam$numstart > 0){
+      initparam$param <- initparam$param[seq(1,initparam$numparam)[-pmatch(initparam$namesstart,initparam$namesparam)]]
+      initparam$fixed <- c(initparam$fixed, initparam$start)}
+      #for(i in 1 : initparam$numstart){
+      #      initparam$param <- initparam$param[!names(initparam$param)==initparam$namesstart[i]]
+      #      initparam$fixed <- c(initparam$fixed, initparam$start[initparam$namesstart[i]])}}
+    ### Define an internal function for the model fitting by least squares method:
+    Lsquare <- function(bins, bint, corrmodel, fixed, fun, lenbins, moments,
+                        namescorr, namesnuis, numbins, numbint, param)
       {
-        if(type == 'Standard' || type == 'Pairwise')
-          {
-            if(!any(names(fixed)=='mean'))
-              {
-                initparam$param <- c(initparam$fixed['mean'], initparam$param)
-                initparam$namesparam <- sort(names(initparam$param))
-                initparam$param <- initparam$param[initparam$namesparam]
-                initparam$numparam <- length(initparam$param)
-                initparam$flagnuis['mean'] <- 1
-                initparam$numfixed <- initparam$numfixed - 1
-                if(is.null(fixed))
-                  initparam$fixed <- NULL
-                else
-                  initparam$fixed <- initparam$fixed[!names(initparam$fixed)=='mean']
-              }
-          }
-
-        return(initparam)
-      }
-    if(initparam$numstart > 0)
-      {
-        for(i in 1 : initparam$numstart)
-          {
-            initparam$param <- initparam$param[!names(initparam$param)==initparam$namesstart[i]]
-            initparam$fixed <- c(initparam$fixed, initparam$start[initparam$namesstart[i]])
-          }
-      }
-
-    ### Define the object function:
-    WLsquare <- function(bins, corrmodel, fixed, fun, lenbins, moments, numbins, param)
-      {
-        result <- -1.0e15
-        if(!CheckParamRange(param))
-          return(result)
-
-        result <- double(1)
-        param <- c(param, fixed)
-        namesparam <- sort(names(param))
-        param <- param[namesparam]
-        nuisance <- c(param['nugget'], param['sill'])
-        corrparam <- param[-match(c('mean', 'nugget', 'sill'), namesparam)]
-
-        result <- .C(fun, as.double(bins), as.integer(corrmodel), as.double(corrparam),
+        param <- c(param, fixed)#set the parameters set:
+        paramcorr <- param[namescorr]#set the correlation parameters:
+        nuisance <- param[namesnuis]#set the nuisance parameters:
+        #computes the weighted least squares:
+        result <- .C(fun, as.double(bins), as.double(bint), as.integer(corrmodel),
                      as.double(lenbins), as.double(moments), as.integer(numbins),
-                     as.double(nuisance), res=double(1), PACKAGE='CompRandFld',
-                     DUP = FALSE, NAOK=TRUE)$res
+                     as.integer(numbint), as.double(nuisance), as.double(paramcorr),
+                     res=double(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
         return(result)
       }
+    fname <- NULL ### the function name (variogram and least square)
+    ###### ----------- START Estimation of the empirical variogram ---------- #####
+    numbins <- as.integer(13) # number of spatial bins
+    bins <- double(numbins) # vector of spatial bins
+    numvario <- numbins-1
+    moments <- double(numvario) # vector of spatial moments
+    lenbins <- integer(numvario) # vector of spatial bin sizes
+    ### Checks the type of variogram
+    fname <- 'Binned_Variogram'
+    if(model=='ExtGauss' || model=='BrowResn' || model=='ExtT'){
+      fname <- 'Binned_Madogram'
+      data <- Dist2Dist(data, to='Uniform')}
+    if(initparam$spacetime){### Computes the spatial-temporal variogram:
+      numbint <- initparam$numtime-1 # number of temporal bins
+      bint <- double(numbint)        # vector temporal bins
+      momentt <- double(numbint)     # vector of temporal moments
+      lenbint <- integer(numbint)    # vector of temporal bin sizes
+      numbinst <- numvario*numbint    # number of spatial-temporal bins
+      binst <- double(numbinst)      # spatial-temporal bins
+      momentst <- double(numbinst)   # vector of spatial-temporal moments
+      lenbinst <- integer(numbinst)  # vector of spatial-temporal bin sizes
+      fname <- 'Binned_Variogram_st'
+      # Compute the spatial-temporal moments:
+      .C(fname, bins, bint, as.double(initparam$data), lenbins, lenbinst, lenbint,
+         moments, momentst, momentt, as.integer(numbins), as.integer(numbint),
+         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      indbin <- lenbins>0
+      bins <- bins[indbin]
+      moments <- moments[indbin]
+      lenbins <- lenbins[indbin]
+      numbins <- sum(indbin)
+      indbinst <- lenbinst>0
+      momentst <- momentst[indbinst]
+      lenbinst <- lenbinst[indbinst]
+      numbinst <- sum(indbinst)
+      # Set the moment vectors and their sizes:
+      moment <- matrix(momentst,nrow=numbins,ncol=numbint,byrow=TRUE)
+      lenbin <- matrix(lenbinst,nrow=numbins,ncol=numbint,byrow=TRUE)
+      moment <- rbind(momentt, moment)
+      moment <- cbind(c(0,moments),moment)
+      lenbin <- rbind(lenbint, lenbin)
+      lenbin <- cbind(c(1,lenbins),lenbin)
+      moments <- moment
+      lenbins <- lenbin
+      bins <- c(-bins[1],bins)
+      bint <- c(0,bint)
+      numbins <- numbins+1
+      numbint <- numbint+1
+    }
+    else{### Computes the spatial variogram:
+      numbint <- 1 # number of temporal bins
+      bint <- double(numbint) # vector temporal bins
+      momentt <- double(1) # vector of temporal moments
+      momentst <- double(1)   # vector of spatial-temporal moments
+      lenbint <- integer(1) # vector of temporal bin sizes
+      lenbinst <- integer(1)  # vector of spatial-temporal bin sizes
+      .C(fname, bins, as.double(data), lenbins, moments, as.integer(numbins),
+         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      indbin <- lenbins>0
+      bins <- bins[indbin]
+      moments <- moments[indbin]
+      lenbins <- lenbins[indbin]
+      numbins <- sum(indbin)
+      variogram <- moments/lenbins
+      if(!is.na(initparam$param['scale']))
+         initparam$param['scale'] <- bins[max(variogram) == variogram]}
+    ###### ----------- END Estimation of the empirical variogram ---------- #####
 
-    fname <- NULL
-
-    ### Estimation of the empirical variogram:
-    numbins <- as.integer(13)
-    maxdist <- double(1)
-
-    bins <- double(numbins)
-    moments <- double(numbins - 1)
-    lenbins <- integer(numbins - 1)
-
-    .C('Empiric_Variogram', bins, as.integer(FALSE), as.double(initparam$data), lenbins,
-       maxdist, moments, as.integer(initparam$numdata), as.integer(initparam$numcoord),
-       numbins, as.integer(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-
-    ###### ---------- START model fitting ----------######
-
-    if(initparam$model == 1) # Gaussian case:
+    ###### ---------- START model fitting by least squares method ----------######
+    if(model=='Gaussian') # Gaussian spatial or spatial-temporal case:
       fname <- 'LeastSquare_G'
-
-    fitted <- optim(initparam$param, WLsquare, bins=bins, corrmodel=initparam$codecorrmodel,
+    if(model=='ExtGauss') # max-stable case (extremal Gaussian):
+      fname <- 'LeastSquare_MEG'
+    if(model=='BrowResn') # max-stable case (Brown-Resnick):
+      fname <- 'LeastSquare_MBR'
+    if(model=='ExtT') # max-stable case (extremal-t):
+      fname <- 'LeastSquare_MET'
+    ### Fit the model:
+    fitted <- optim(initparam$param, Lsquare, bins=bins, bint=bint, corrmodel=initparam$corrmodel,
                     fixed=initparam$fixed, fun=fname, lenbins=lenbins, moments=moments,
-                    numbins=numbins, control=list(fnscale=-1, reltol=1e-14, maxit=1e8),
-                    hessian=FALSE)
-
-    ###### ---------- END model fitting ----------######
-
-    if(initparam$numstart > 0)
-      {
-        for(i in 1 : initparam$numstart)
-          {
-            initparam$param <- c(initparam$param, initparam$start[initparam$namesstart[i]])
-            initparam$fixed <- initparam$fixed[!initparam$namesfixed==initparam$namesstart[i]]
-          }
-        initparam$param <- initparam$param[initparam$namesparam]
-      }
-
-    if(fitted$convergence == 0)
-      {
-        if(type == 'Standard' || type == 'Pairwise')
-          {
-            if(!any(names(fixed)=='mean'))
-              {
-                initparam$param <- c(initparam$fixed['mean'], initparam$param)
-                initparam$namesparam <- sort(names(initparam$param))
-                initparam$param <- initparam$param[initparam$namesparam]
-                initparam$numparam <- length(initparam$param)
-                initparam$flagnuis['mean'] <- 1
-                initparam$numfixed <- initparam$numfixed - 1
-                if(is.null(fixed))
-                  initparam$fixed <- NULL
-                else
-                  initparam$fixed <- initparam$fixed[!names(initparam$fixed)=='mean']
-              }
-          }
-        initparam$param[names(fitted$par)] <- fitted$par
-      }
-
+                    namescorr=initparam$namescorr, namesnuis=initparam$namesnuis,
+                    numbins=numbins, numbint=numbint, control=list(fnscale=-1, reltol=1e-14,
+                    maxit=1e8), hessian=FALSE)
+    ###### ---------- END model fitting by least squares method ----------######
+    ### Updates the parameter estimates:
+    initparam$param <- fitted$par
+    ### Updates with the starting values passed by the user:
+    if(initparam$numstart > 0){
+      initparam$param <- c(initparam$param,initparam$start)
+      initparam$fixed <- initparam$fixed[seq(1,initparam$numstart+initparam$numfixed)[-pmatch(initparam$namesstart,names(initparam$fixed))]]
+      initparam$namesparam <- sort(names(initparam$param))
+      initparam$param <- initparam$param[initparam$namesparam]}
+    #    for(i in 1 : initparam$numstart){
+    #        initparam$param <- c(initparam$param, initparam$start[initparam$namesstart[i]])
+    #        initparam$fixed <- initparam$fixed[!initparam$namesfixed==initparam$namesstart[i]]}
+    #  initparam$param <- initparam$param[initparam$namesparam]}
+    ### If full or pairwise then checks the mean parameter:
+    if(model=='Gaussian' & (type %in% c('Standard','Pairwise','Tapering'))){
+        if(is.null(fixed$mean)){
+          if(is.null(start$mean)) initparam$param <- c(initparam$fixed['mean'], initparam$param)
+          else initparam$param <- c(unlist(start['mean']), initparam$param)
+          initparam$namesparam <- sort(names(initparam$param))
+          initparam$param <- initparam$param[initparam$namesparam]
+          initparam$numparam <- initparam$numparam + 1
+          initparam$flagnuis['mean'] <- 1
+          initparam$numfixed <- initparam$numfixed - 1
+          if(initparam$numfixed > 0) initparam$fixed <- unlist(fixed)
+          else initparam$fixed <- NULL}
+        else initparam$fixed['mean'] <- fixed$mean}
    return(initparam)
   }
 
 
-WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE,
-                         lonlat=FALSE, maxdist=NULL, model='Gaussian',
-                         optimizer='Nelder-Mead', numbins=NULL, replicates=FALSE,
-                         start=NULL, weighted=FALSE)
+WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
+                         grid=FALSE, lonlat=FALSE, maxdist=NULL, maxtime=NULL, model='Gaussian',
+                         optimizer='Nelder-Mead', numbins=NULL, replicates=1, start=NULL,
+                         weighted=FALSE)
   {
+    ### Check first if the model is not binary:
+    if(substr(model,1,6)=='Binary') stop("The weighted least squares method can not be used with binary data")
 
     call <- match.call()
-
     ### Check the parameters given in input:
-
-    checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid, 'None',
-                             lonlat, model, optimizer, replicates, start, 'WLeastSquare',
-                             FALSE, 'SubSamp', weighted, NULL, NULL)
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, fixed, grid, 'None',
+                             lonlat, "Frechet", maxdist, maxtime, model, optimizer, replicates,
+                             start, NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp', weighted, NULL, NULL)
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
-
+    # check the number of bins:
     if(!is.null(numbins) & !is.integer(numbins))
       if(numbins < 0)
         stop('insert a positive integer value for the number of bins\n')
-
+    # set the default number of spatial bins:
     if(is.null(numbins))
       numbins <- 13
-
-    if(!is.null(maxdist) & !is.numeric(maxdist))
-      if(maxdist < 0)
-        stop('insert a positive numeric value for maximum distance\n')
-
-    if(is.null(maxdist))
-      maxdist <- 0
-
-    ### Define the object function:
-
-    WLsquare <- function(bins, corrmodel, fixed, fun, lenbins, moments, numbins, param)
+    ### Define the object function for the weighted least squares method:
+    WLsquare <- function(bins, bint, corrmodel, fixed, fun, lenbins, moments,
+                         namescorr, namesnuis, numbins, numbint, param)
       {
-        result <- -1.0e15
-        print(param)
-        if(!CheckParamRange(param))
-          return(result)
-
-        result <- double(1)
-        param <- c(param, fixed)
-        namesparam <- sort(names(param))
-        param <- param[namesparam]
-        nuisance <- c(param['nugget'], param['sill'])
-        corrparam <- param[-match(c('mean', 'nugget', 'sill'), namesparam)]
-
-        result <- .C(fun, as.double(bins), as.integer(corrmodel), as.double(corrparam),
+        param <- c(param, fixed)#set the parameters set:
+        paramcorr <- param[namescorr]#set the correlation parameters:
+        nuisance <- param[namesnuis]#set the nuisance parameters:
+        #computes the weighted least squares:
+        result <- .C(fun, as.double(bins), as.double(bint), as.integer(corrmodel),
                      as.double(lenbins), as.double(moments), as.integer(numbins),
-                     as.double(nuisance), res=double(1), PACKAGE='CompRandFld',
-                     DUP = FALSE, NAOK=TRUE)$res
-        print(result)
-        return(result)
+                     as.integer(numbint), as.double(nuisance), as.double(paramcorr),
+                     res=double(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+       return(result)
       }
-
-    ### Initialization global variables:
-
+    ### Initializes global variables:
     WLeastSquare <- NULL
     fname <- NULL
-
-    ### Initialization parameters:
+    variogramt <- NULL
+    variogramst <- NULL
+    ### Initializes the parameter values:
     parscale <- NULL
-    initparam <- InitParam(coordx, coordy, corrmodel, data, fixed, grid, 'None',
-                           lonlat, model, parscale, optimizer=='L-BFGS-B',
-                           replicates, start, 'WLeastSquare', 'SubSamp', FALSE)
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, fixed, grid, 'None',
+                           lonlat, "Frechet", maxdist, maxtime, model, parscale, optimizer=='L-BFGS-B',
+                           replicates, start, NULL, 'WLeastSquare', FALSE, 'SubSamp', FALSE, 1)
 
     if(!is.null(initparam$error))
       stop(initparam$error)
-
-    ### Estimation of the empirical variogram:
-
-    bins <- double(numbins)
-    moments <- double(numbins - 1)
-    lenbins <- integer(numbins - 1)
-
-    if(initparam$model > 1)
+    ###### ----------- START Estimation of the empirical variogram ---------- #####
+    numvario <- numbins-1
+    bins <- double(numbins) # vector of spatial bins
+    moments <- double(numvario) # vector of spatial moments
+    lenbins <- integer(numvario) # vector of spatial bin sizes
+    ### Checks the type of variogram:
+    fname <- 'Binned_Variogram'
+    if(model=='ExtGauss' || model=='BrowResn' || model=='ExtT'){
       initparam$data <- Dist2Dist(initparam$data, to='Uniform')
+      fname <- 'Binned_Madogram'}
+    if(initparam$spacetime){### Computes the spatial-temporal variogram:
+      numbint <- initparam$numtime-1 # number of temporal bins
+      bint <- double(numbint)        # vector temporal bins
+      momentt <- double(numbint)     # vector of temporal moments
+      lenbint <- integer(numbint)    # vector of temporal bin sizes
+      numbinst <- numvario*numbint    # number of spatial-temporal bins
+      binst <- double(numbinst)      # spatial-temporal bins
+      momentst <- double(numbinst)   # vector of spatial-temporal moments
+      lenbinst <- integer(numbinst)  # vector of spatial-temporal bin sizes
+      fname <- 'Binned_Variogram_st'
+      # Compute the spatial-temporal moments:
+      .C(fname, bins, bint, as.double(initparam$data), lenbins, lenbinst, lenbint,
+         moments, momentst, momentt, as.integer(numbins), as.integer(numbint),
+         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      indbin <- lenbins>0
+      centers <- bins[1:numvario]+diff(bins)/2
+      bins <- bins[indbin]
+      centers <- centers[indbin]
+      moments <- moments[indbin]
+      lenbins <- lenbins[indbin]
+      # Computes the spatial marginal variogram:
+      variograms <- moments/lenbins
+      numbins <- sum(indbin)
+      indbint <- lenbint>0
+      bint <- bint[indbint]
+      momentt <- momentt[indbint]
+      lenbint <- lenbint[indbint]
+      numbint <- sum(indbint)
+      # Computes the temporal marginal variogram:
+      variogramt <- momentt/lenbint
+      indbinst <- lenbinst>0
+      momentst <- momentst[indbinst]
+      lenbinst <- lenbinst[indbinst]
+      numbinst <- sum(indbinst)
+      # Computes the spatial-temporal variogram:
+      variogramst <- momentst/lenbinst
+      # Set the moment vectors and their sizes:
+      moment <- matrix(momentst,nrow=numbins,ncol=numbint,byrow=TRUE)
+      lenbin <- matrix(lenbinst,nrow=numbins,ncol=numbint,byrow=TRUE)
+      moment <- rbind(momentt, moment)
+      moment <- cbind(c(0,moments),moment)
+      lenbin <- rbind(lenbint, lenbin)
+      lenbin <- cbind(c(1,lenbins),lenbin)
+      moments <- moment
+      lenbins <- lenbin
+      bins <- c(-bins[1],bins)
+      bint <- c(0,bint)
+      numbins <- numbins+1
+      numbint <- numbint+1}
+      # Set an initial value for the scale parameter:
+    #if(!is.null(initparam$param['scale_s']))
+          #initparam$param['scale_s'] <- bins[max(variograms)==variograms]}
+    else{### Computes the spatial variogram:
+      numbint <- 1 # number of temporal bins
+      bint <- double(numbint) # vector temporal bins
+      momentt <- double(1) # vector of temporal moments
+      momentst <- double(1)   # vector of spatial-temporal moments
+      lenbint <- integer(1) # vector of temporal bin sizes
+      lenbinst <- integer(1)  # vector of spatial-temporal bin sizes
+      .C(fname, bins, as.double(initparam$data), lenbins, moments, as.integer(numbins),
+         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      indbin <- lenbins>0
+      centers <- bins[1:numvario]+diff(bins)/2
+      bins <- bins[indbin]
+      centers <- centers[indbin]
+      moments <- moments[indbin]
+      lenbins <- lenbins[indbin]
+      numbins <- sum(indbin)
+      variograms <- moments/lenbins
+      # Set an initial value for the scale parameter:
+      if(!is.null(initparam$param['scale']))
+        initparam$param['scale'] <- bins[max(variograms)==variograms]}
+    ###### ----------- END Estimation of the empirical variogram ---------- #####
 
-    .C('Empiric_Variogram', bins, as.integer(FALSE), as.double(initparam$data),
-       lenbins, as.double(maxdist), moments, as.integer(initparam$numdata),
-       as.integer(initparam$numcoord), as.integer(numbins), as.integer(initparam$model),
-       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-
-    ###### ---------- START model fitting ----------######
-
-    if(initparam$model == 1) # Gaussian random field:
-      {
-        if(weighted)
-          fname <- 'WLeastSquare_G'
-        else
-          fname <- 'LeastSquare_G'
-      }
-
-    if(initparam$model == 3) # Max-stable random field (extremal Gaussian):
-      {
-        if(weighted)
-          fname <- 'WLeastSquare_M_EG'
-        else
-          fname <- 'LeastSquare_M_EG'
-      }
-    print(initparam$model)
-
+    ###### ---------- START model fitting by weighted least squares method ----------######
+    if(model=='Gaussian') # Gaussian random field:
+      if(weighted) fname <- 'WLeastSquare_G'
+      else fname <- 'LeastSquare_G'
+    # Max-stable random field (extremal Gaussian):
+    if(model=='ExtGauss')
+      if(weighted) fname <- 'WLeastSquare_MEG'
+      else fname <- 'LeastSquare_MEG'
+    if(model=='BrowResn')
+      if(weighted) fname <- 'WLeastSquare_MBR'
+      else fname <- 'LeastSquare_MBR'
+    if(model=='ExtT')
+      if(weighted) fname <- 'WLeastSquare_MET'
+      else fname <- 'LeastSquare_MET'
+    ### Computes estimates by the weighted least squares method:
     if(optimizer=='L-BFGS-B')
-      fitted <- optim(initparam$param, WLsquare, bins=bins, corrmodel=initparam$codecorrmodel,
+      fitted <- optim(initparam$param, WLsquare, bins=bins, bint=bint, corrmodel=initparam$corrmodel,
                       fixed=initparam$fixed, fun=fname, lenbins=lenbins, method=optimizer,
-                      moments=moments, numbins=numbins, control=list(fnscale=-1, factr=1,
-                      pgtol=1e-14, maxit = 1e8), lower=initparam$lower, upper=initparam$upper,
-                      hessian=FALSE)
+                      moments=moments, namescorr=initparam$namescorr, namesnuis=initparam$namesnuis,
+                      numbins=numbins, numbint=numbint, control=list(fnscale=-1, factr=1, pgtol=1e-14,
+                      maxit = 1e8), lower=initparam$lower, upper=initparam$upper, hessian=FALSE)
     else
-      fitted <- optim(initparam$param, WLsquare, bins=bins, corrmodel=initparam$codecorrmodel,
+      fitted <- optim(initparam$param, WLsquare, bins=bins, bint=bint, corrmodel=initparam$corrmodel,
                       fixed=initparam$fixed, fun=fname, lenbins=lenbins, method=optimizer,
-                      moments=moments, numbins=numbins, control=list(fnscale=-1, reltol=1e-14,
-                      maxit=1e8), hessian=FALSE)
-
-    ###### ---------- END model fitting ----------######
-
-    .C('DelDistances', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-
+                      moments=moments, namescorr=initparam$namescorr, namesnuis=initparam$namesnuis,
+                      numbins=numbins, numbint=numbint, control=list(fnscale=-1, reltol=1e-14, maxit=1e8),
+                      hessian=FALSE)
+    ###### ---------- END model fitting by weighted least squares method ----------######
+    ### Removes the global variobales:
+    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    ### Set the output:
     WLeastSquare <- list(bins=bins,
-                         coord = initparam$coord,
+                         bint=bint,
+                         centers=centers,
+                         coordx = initparam$coordx,
+                         coordy = initparam$coordy,
+                         coordt = initparam$coordt,
                          convergence = fitted$convergence,
                          corrmodel = corrmodel,
                          data = initparam$data,
@@ -302,9 +395,17 @@ WLeastSquare <- function(coordx, coordy, corrmodel, data, fixed=NULL, grid=FALSE
                          grid = grid,
                          iterations = fitted$counts,
                          message = fitted$message,
+                         model=model,
+                         numcoord=initparam$numcoord,
+                         numrep=initparam$numrep,
+                         numtime=initparam$numtime,
                          param = fitted$par,
-                         variogram = moments / lenbins,
-                         weighted = weighted)
-
+                         srange=initparam$srange,
+                         trange=initparam$trange,
+                         variograms = variograms,
+                         variogramt = variogramt,
+                         variogramst = variogramst,
+                         weighted = weighted,
+                         wls = fitted$value)
     structure(c(WLeastSquare, call = call), class = c("WLS"))
   }

@@ -1,132 +1,163 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
 ### Email: simone.padoan@unibg.it.
-### Institute: University of Bergamo.
+### Institute: Department of Information Technology
+### and Mathematical Methods, University of Bergamo
 ### File name: EmpiricalEstimators.r
 ### Description:
 ### This file contains a set of procedures in order
 ### to estimate the empircal covariance or the extreme
 ### dependence structures for a given dataset.
-### Last change: 2011/08/03.
+### Last change: 06/09/2011.
 ####################################################
 
 ### Procedures are in alphabetical order.
 
-
-EVariogram <- function(coordx, coordy, data, cloud=FALSE, extcoeff=FALSE, grid=FALSE, gev=c(0, 1, 0),
-                       lonlat=FALSE, maxdist=NULL, numbins=NULL, replicates=FALSE, type='variogram')
+EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, grid=FALSE,
+                       gev=c(0,1,0), lonlat=FALSE, maxdist=NULL, maxtime=NULL,
+                       numbins=NULL, replicates=1, type='variogram')
   {
-
     call <- match.call()
-
+    corrmodel <- 'gauss'
     ### Check the parameters given in input:
-
-    checkinput <- CheckInput(coordx, coordy, 'gauss', data, NULL, grid, 'None',
-                             lonlat, 'None', 'Nelder-Mead', replicates, NULL,
-                             'WLeastSquare', FALSE, 'SubSamp', FALSE, NULL, NULL)
-
+    if(is.null(type))
+      type <- 'variogram'
+    # Checks if its a variogram or a madogram
+    if(!is.null(type) & all(type!='variogram', type!='madogram', type!='Fmadogram'))
+      stop('the admitted types are: variogram or madogram\n')
+    # Set the type of model:
+    if(type=='variogram') model <- 'Gaussian'
+    else model <- 'ExtGauss'
+    # Checks if its a spatial or spatial-temporal random field:
+    if(!is.null(coordt))
+      if(is.numeric(coordt))
+        if(length(coordt)>1) corrmodel <- 'gneiting'
+    # Checks the input:
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, NULL, grid, 'None',
+                             lonlat, "Frechet", maxdist, maxtime, model, 'Nelder-Mead',
+                             replicates, NULL, NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp',
+                             FALSE, NULL, NULL)
+    # Checks if there are errors in the input:
     if(!is.null(checkinput$error))
       stop(checkinput$error)
-
+    ### START -- Specific checks of the Empirical Variogram:
     if(!is.null(cloud) & !is.logical(cloud))
       stop('insert a logical value (TRUE/FALSE) for the cloud parameter\n')
-
-    if(!is.null(extcoeff) & !is.logical(extcoeff))
-      stop('insert a logical value (TRUE/FALSE) for the extcoeff parameter\n')
-
-    if(extcoeff & (!is.numeric(gev) || is.null(gev) || !length(gev)==3))
+    if(type=='madogram' & (!is.numeric(gev) || is.null(gev) || !length(gev)==3))
       stop('insert a numeric vector with the three GEV parameters\n')
-
     if(!is.null(numbins) & !is.integer(numbins))
       if(numbins < 0)
         stop('insert a positive integer value for the number of bins\n')
-
     if(is.null(numbins))
       numbins <- 13
-
-    if(!is.null(maxdist) & !is.numeric(maxdist))
-      if(maxdist < 0)
-        stop('insert a positive numeric value for maximum distance\n')
-
-    if(is.null(maxdist))
-      maxdist <- double(1)
-
-    if(is.null(type))
-      type <- 'variogram'
-
-    if(!is.null(type) & all(type!='variogram', type!='madogram', type!='Fmadogram'))
-      stop('the admitted types are: variogram or madogram\n')
+    ### END -- Specific checks of the Empirical Variogram
 
     ### Initialization parameters:
-    initparam <- InitParam(coordx, coordy, 'gauss', data, NULL, grid, 'None',
-                           lonlat, 'None', NULL, FALSE, replicates, NULL,
-                           'WLeastSquare', 'SubSamp', FALSE)
-
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, NULL, grid, 'None',
+                           lonlat, "Frechet", maxdist, maxtime, model, NULL, FALSE,
+                           replicates, NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp', FALSE, 1)
+    # Checks if there are inconsistences:
     if(!is.null(initparam$error))
       stop(initparam$error)
 
-    numvario <- numbins - 1
-    if(cloud)
-      {
+    numvario <- numbins-1
+    fname <- 'Binned_Variogram'
+    if(cloud){
         numbins <- numvario <- initparam$numpairs
-        maxdist <- double(1)
-      }
-
-    ### Estimation of the empirical variogram:
-
-    bins <- double(numbins)
-    moments <- double(numvario)
-    lenbins <- integer(numvario)
-    vtype <- as.integer(1)
-    if(type=='madogram') # Trasform to GEV margins:
-      {
+        fname <- 'Cloud_Variogram'}
+    ### Estimation of the empirical spatial or spatial-temporal variogram:
+    bins <- double(numbins) # spatial bins
+    moments <- double(numvario) # vector of spatial moments
+    lenbins <- integer(numvario) # vector of spatial bin sizes
+    bint <- NULL
+    lenbinst <- NULL
+    lenbint <- NULL
+    variogramst <- NULL
+    variogramt <- NULL
+    if(type=='madogram'){ # Trasform to GEV margins:
+      if(cloud) fname <- 'Cloud_Madogram' else fname <- 'Binned_Madogram'
         if(gev[3]>=1)
           stop('the shape parameter can not be greater or equal to 1')
-        vtype <- as.integer(2)
         initparam$data <- Dist2Dist(initparam$data, to='Gev',
                                     loc=rep(gev[1], initparam$numcoord),
                                     scale=rep(gev[2], initparam$numcoord),
-                                    shape=rep(gev[3], initparam$numcoord))
-      }
-    if(type=='Fmadogram') # Transform to Uniform margins:
-      {
-        vtype <- as.integer(2)
-        initparam$data <- Dist2Dist(initparam$data, to='Uniform')
-      }
-    # Compute the variogram:
-    .C('Empiric_Variogram', bins, as.integer(cloud), as.double(initparam$data),
-       lenbins, as.double(maxdist), moments, as.integer(initparam$numdata),
-       as.integer(initparam$numcoord), as.integer(numbins), vtype,
-       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+                                    shape=rep(gev[3], initparam$numcoord))}
+    if(type=='Fmadogram'){ # Transform to Uniform margins:
+      if(cloud) fname <- 'Cloud_Madogram' else fname <- 'Binned_Madogram'
+      initparam$data <- Dist2Dist(initparam$data, to='Uniform')}
+    if(initparam$spacetime){
+      numbint <- initparam$numtime-1 # number of temporal bins
+      bint <- double(numbint)        # temporal bins
+      momentt <- double(numbint)     # vector of temporal moments
+      lenbint <- integer(numbint)    # vector of temporal bin sizes
+      numbinst <- numvario*numbint   # number of spatial-temporal bins
+      binst <- double(numbinst)      # spatial-temporal bins
+      momentst <- double(numbinst)   # vector of spatial-temporal moments
+      lenbinst <- integer(numbinst)  # vector of spatial-temporal bin sizes
+      if(cloud) fname <- 'Cloud_Variogram_st' else fname <- 'Binned_Variogram_st'
+      # Compute the spatial-temporal moments:
+      .C(fname, bins, bint, as.double(initparam$data), lenbins, lenbinst, lenbint,
+         moments, momentst, momentt, as.integer(numbins), as.integer(numbint),
+         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      indbin <- lenbins>0
+      indbint <- lenbint>0
+      indbinst <- lenbinst>0
+      centers <- bins[1:numvario]+diff(bins)/2
+      bins <- bins[indbin]
+      bint <- bint[indbint]
+      centers <- centers[indbin]
+      moments <- moments[indbin]
+      lenbins <- lenbins[indbin]
+      momentt <- momentt[indbint]
+      lenbint <- lenbint[indbint]
+      momentst <- momentst[indbinst]
+      lenbinst <- lenbinst[indbinst]
+      # Computes the spatial marginal variogram:
+      variograms <- moments/lenbins
+      # Computes the temporal marginal variogram:
+      variogramt <- momentt/lenbint
+      # Computes the spatial-temporal variogram:
+      variogramst <- momentst/lenbinst}
+    else{# Computes the spatial moments
+      .C(fname, bins, as.double(initparam$data), lenbins, moments, as.integer(numbins),
+         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      # Computes the spatial variogram:
+      indbin <- lenbins>0
+      bins <- bins[indbin]
+      numbins <- length(bins)
+      # check if cloud or binned variogram:
+      if(cloud) centers <- bins else centers <- bins[1:(numbins-1)]+diff(bins)/2
+      centers <- centers[indbin]
+      moments <- moments[indbin]
+      lenbins <- lenbins[indbin]
+      variograms <- moments/lenbins}
+    # Start --- compute the extremal coefficient
+    extcoeff <- NULL
+    if(type == 'madogram'){ # Check if its a madogram:
+      if(gev[3] == 0)
+        extcoeff <- exp(variograms / gev[2])
+      else
+        extcoeff <- Dist2Dist(gev[1] + variograms / gamma(1 - gev[3]))
+      extcoeff[extcoeff>2] <- NA}
+    if(type == 'Fmadogram'){ # Check if its a Fmadogram:
+      extcoeff <- (1 + 2 * variograms) / (1 - 2 * variograms)
+      extcoeff[extcoeff>2] <- NA}
 
-    variogram <- moments / lenbins
-
-    if(cloud)
-      centers <- bins
-    else
-      centers <- bins[1:numvario] + diff(bins) / 2
-
-    extremalcoeff <- NULL
-    if(extcoeff)
-      {
-        if(type == 'madogram') # Check if its a madogram:
-          if(gev[3] == 0)
-            extremalcoeff <- exp(variogram / gev[2])
-          else
-            extremalcoeff <- Dist2Dist(gev[1] + variogram / gamma(1 - gev[3]))
-        if(type == 'Fmadogram') # Check if its a Fmadogram:
-          extremalcoeff <- (1 + 2 * variogram) / (1 - 2 * variogram)
-      }
-
-    .C('DelDistances', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
     EVariogram <- list(bins=bins,
+                       bint=bint,
                        cloud=cloud,
                        centers=centers,
-                       extremalcoeff=extremalcoeff,
+                       extcoeff=extcoeff,
                        lenbins=lenbins,
-                       maxdist=maxdist,
-                       variogram=variogram,
+                       lenbinst=lenbinst,
+                       lenbint=lenbint,
+                       srange=initparam$srange,
+                       variograms=variograms,
+                       variogramst=variogramst,
+                       variogramt=variogramt,
+                       trange=initparam$trange,
                        type=type)
 
     structure(c(EVariogram, call = call), class = c("Variogram"))

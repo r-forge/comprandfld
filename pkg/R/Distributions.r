@@ -1,13 +1,13 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@unibg.it.
-### Institute: University of Bergamo.
+### Email: simone.padoan@epfl.ch.
+### Institute: EPFL.
 ### File name: Distribution.r
 ### Description:
 ### This file contains a set of procedures
 ### that define several distributions and
 ### related functions.
-### Last change: 2011/08/03.
+### Last change: 24/11/2010.
 ####################################################
 
 
@@ -19,10 +19,10 @@ FitGev <- function(data, method='Nelder-Mead', start, varest=FALSE)
     varcov <- NULL
     stderr <- NULL
     numdata <- length(data)
-
+    
     if(missing(data) || numdata == 0 || !is.numeric(data))
       stop('insert a numeric vector of data')
-
+    
     ### Starting values:
     momest <- MomEst(data, numdata)
     location <- momest$location
@@ -44,11 +44,11 @@ FitGev <- function(data, method='Nelder-Mead', start, varest=FALSE)
             namestart <- names(start[i])
             if(!any(namestart == parnames))
               stop('insert location, scale and shape as a named list')
-
+            
             param[namestart] <- start[namestart]
 
           }
-
+        
         if(param$scale < 0)
           param$scale <- scale
       }
@@ -76,17 +76,17 @@ FitGev <- function(data, method='Nelder-Mead', start, varest=FALSE)
               stderr <- sqrt(stderr)
           }
       }
-
+    
     return(list(param=fitted$par, varcov=varcov, stderr=stderr))
   }
 
 Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, shape=NULL)
   {
     Dist2Dist <- NULL
-
+    
     if(missing(data) || !is.numeric(data))
       stop('insert a numeric vector of data')
-
+    
     dimdata <- dim(data)
     if(is.null(dimdata))
       {
@@ -136,7 +136,7 @@ Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, sha
         if(is.null(type))
           stop('insert a valid distribution name\n')
         param <- apply(data, 2, Mle) # ML estimates
-        # Margins transformation:
+        # Margins transformation: 
         Dist2Dist <- .C('Dist2Dist', as.double(data), as.double(param[1,]), as.double(param[2,]),
                         as.double(param[3,]), as.integer(numdata), as.integer(numcoord),
                         as.double(loc), as.double(scale), as.double(shape), as.integer(type),
@@ -149,7 +149,7 @@ Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, sha
         if(is.null(type))
           stop('insert a valid distribution name\n')
         param <- rep(1, 3)
-        # Margins transformation:
+        # Margins transformation: 
         Dist2Dist <- .C('Dist2Dist', as.double(data), as.double(param[1]), as.double(param[2]),
                         as.double(param[3]), as.integer(numdata), as.integer(numcoord),
                         as.double(loc), as.double(scale), as.double(shape), as.integer(type),
@@ -162,7 +162,7 @@ Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, sha
         if(is.null(type))
           stop('insert a valid distribution name\n')
         param <- rep(1, 3)
-        # Margins transformation:
+        # Margins transformation: 
         Dist2Dist <- .C('Dist2Dist', as.double(data), as.double(param[1]), as.double(param[2]),
                         as.double(param[3]), as.integer(numdata), as.integer(numcoord),
                         as.double(loc), as.double(scale), as.double(shape), as.integer(type),
@@ -174,7 +174,7 @@ Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, sha
         if(is.null(type))
           stop('insert a valid distribution name\n')
         param <- rep(1, 3)
-        # Margins transformation:
+        # Margins transformation: 
         Dist2Dist <- .C('Dist2Dist', as.double(data), as.double(param[1]), as.double(param[2]),
                         as.double(param[3]), as.integer(numdata), as.integer(numcoord),
                         as.double(loc), as.double(scale), as.double(shape), as.integer(type),
@@ -200,7 +200,7 @@ MomEst <- function(data, n)
     scale <- sqrt(6 * var(data)) / pi
     # Location estimate:
     location <- mean(data) - 0.58 * scale
-
+    
     k <- round(.5 * n)
     mind <- min(data)
     if(mind < 0) data <- data - mind

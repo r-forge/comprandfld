@@ -1,89 +1,84 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
 ### Email: simone.padoan@unibg.it.
-### Institute: University of Bergamo.
+### Institute: Department of Information Technology
+### and Mathematical Methods, University of Bergamo
 ### File name: Fitting.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 2011/08/03.
+### Last change: 07/09/2011.
 ####################################################
 
 
 ### Procedures are in alphabetical order.
 
-
 ### Fitting procedure:
 
-FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=FALSE, likelihood='Marginal',
-                         lonlat=FALSE, model='Gaussian', optimizer='Nelder-Mead', replicates=FALSE, start=NULL,
-                         type='Pairwise', varest=FALSE, vartype='SubSamp', weighted=FALSE, weights=NULL,
-                         winconst=NULL)
+FitComposite <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
+                         grid=FALSE, likelihood='Marginal', lonlat=FALSE, margins='Gev',
+                         maxdist=NULL, maxtime=NULL, model='Gaussian', optimizer='Nelder-Mead',
+                         replicates=1, start=NULL, taper=NULL, threshold=NULL, type='Pairwise',
+                         varest=FALSE, vartype='SubSamp', weighted=FALSE, weights=NULL, winconst=NULL)
 {
     call <- match.call()
-
     ### Check the parameters given in input:
-
-    checkinput <- CheckInput(coordx, coordy, corrmodel, data, fixed, grid,
-                             likelihood, lonlat, model, optimizer, replicates,
-                             start, type, varest, vartype, weighted, weights,
-                             winconst)
-
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, fixed, grid,
+                             likelihood, lonlat, margins, maxdist, maxtime, model,
+                             optimizer, replicates, start, taper, threshold, type,
+                             varest, vartype, weighted, weights, winconst)
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
 
     ### If the case set the sub-sampling parameter to the default value
-    if(varest & (vartype == 'SubSamp') & (missing(winconst) || !is.numeric(winconst)))
-      winconst <- 1
+    #if(varest & (vartype=='SubSamp') & (missing(winconst) || !is.numeric(winconst)))
+    #  winconst <- 1
 
     ### Initialization global variables:
-
     FitComposite <- NULL
     clic <- parscale <- varcov <- stderr <- NULL
 
     ### Initialization parameters:
-
-    initparam <- WlsInit(coordx, coordy, corrmodel, data, fixed, grid, likelihood,
-                         lonlat, model, parscale, optimizer=='L-BFGS-B', replicates,
-                         start, type, vartype, weighted)
+    initparam <- WlsInit(coordx, coordy, coordt, corrmodel, data, fixed, grid, likelihood,
+                         lonlat, margins, maxdist, maxtime, model, parscale, optimizer=='L-BFGS-B',
+                         replicates, start, threshold, type, varest, vartype, weighted, winconst)
 
     if(!is.null(initparam$error))
       stop(initparam$error)
 
     ### Model fitting section
-
     # Full likelihood:
-
-    if(initparam$likelihood == 2)
+    if(likelihood=='Full')
       {
         # Fitting by log-likelihood maximization:
         fitted <- Likelihood(initparam$corrmodel, initparam$data, initparam$fixed, grid, initparam$lower,
                              initparam$model, initparam$namescorr, initparam$namesnuis, initparam$namesparam,
-                             initparam$numcoord, initparam$numdata, initparam$numpairs, optimizer, initparam$param,
-                             varest, initparam$type, initparam$upper)
+                             initparam$numcoord, initparam$numrep, initparam$numtime, optimizer, initparam$param,
+                             initparam$spacetime, varest, taper, initparam$type, initparam$upper)
       }
 
     # Composite likelihood:
-
-    if(initparam$likelihood == 3 || initparam$likelihood == 1)
+    if(likelihood=='Marginal' || likelihood=='Conditional')
       {
         vartype <- CheckVarType(vartype)
-        fitted <- CompLikelihood(initparam$coord[,1], initparam$coord[,2], initparam$corrmodel, initparam$data,
+        fitted <- CompLikelihood(initparam$coordx, initparam$coordy, initparam$corrmodel, initparam$data,
                                  initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, initparam$likelihood,
                                  lonlat, initparam$lower, initparam$model, initparam$namescorr, initparam$namesnuis,
-                                 initparam$namesparam, initparam$numcoord, initparam$numdata, initparam$numparam,
-                                 initparam$numparamcorr, optimizer, initparam$param, initparam$type, initparam$upper,
-                                 varest, vartype, winconst)
-
-        .C('DelDistances', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+                                 initparam$namesparam, initparam$numparam, initparam$numparamcorr, optimizer,
+                                 initparam$param, initparam$spacetime, initparam$threshold, initparam$type,
+                                 initparam$upper, varest, vartype, initparam$winconst)
       }
 
-    ### Set the output object:
+    # Delete the global variables:
+    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
 
+    ### Set the output object:
     FitComposite <- list(clic = fitted$clic,
-                         coord = initparam$coord,
+                         coordx = initparam$coordx,
+                         coordy = initparam$coordy,
+                         coordt = initparam$coordt,
                          convergence = fitted$convergence,
                          corrmodel = corrmodel,
                          data = initparam$data,
@@ -95,11 +90,16 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
                          lonlat = lonlat,
                          message = fitted$message,
                          model = model,
+                         numcoord=initparam$numcoord,
+                         numrep=initparam$numrep,
+                         numtime=initparam$numtime,
                          param = fitted$par,
+                         srange = initparam$srange,
                          stderr = fitted$stderr,
                          sensmat = fitted$sensmat,
                          varcov = fitted$varcov,
                          varimat = fitted$varimat,
+                         trange = initparam$trange,
                          type = type)
 
     structure(c(FitComposite, call = call), class = c("FitComposite"))
@@ -107,17 +107,7 @@ FitComposite <- function(coordx, coordy=NULL, corrmodel, data, fixed=NULL, grid=
 
 print.FitComposite <- function(x, digits = max(3, getOption("digits") - 3), ...)
   {
-    dimdata <- dim(x$data)
-
-    if(x$grid)
-      numdata <- dimdata[3]
-    else
-      numdata <- dimdata[1]
-
-    numcoord <- nrow(x$coord)
-    numparam <- length(x$param)
-
-    if(x$likelihood == 'Full')
+    if(x$likelihood=='Full')
       {
         method <- 'Likelihood'
         clic <- 'AIC'
@@ -127,15 +117,27 @@ print.FitComposite <- function(x, digits = max(3, getOption("digits") - 3), ...)
         method <- 'Composite-Likelihood'
         clic <- 'CLIC'
       }
+    if(x$model=='Gaussian'){ process <- x$model
+                             model <- x$model}
+     if(x$model=='BinaryGaussian'){ process <- 'Binary'
+                             model <- 'Binary Gaussian'}
+    if(x$model=='ExtGauss'){ process <- 'Max-Stable'
+                             model <- 'Extremal Gaussian'}
+    if(x$model=='BrowResn'){ process <- 'Max-Stable'
+                             model <- 'Brown-Resnick'}
+    if(x$model=='ExtT'){ process <- 'Max-Stable'
+                             model <- 'Extremal T'}
 
-    cat('\n##############################################################')
-    cat('\nResults: Maximum', method,'Fitting of Random Fields.\n')
-    cat('\nSettings:', x$likelihood, method, '\n')
-    cat('\nThe density associated to the likelihood objects:', x$model, '\n')
+    cat('\n##################################################################')
+    cat('\nMaximum', method, 'Fitting of', process, 'Random Fields\n')
+    cat('\nSetting:', x$likelihood, method, '\n')
+    cat('\nModel associated to the likelihood objects:', model, '\n')
     cat('\nType of the likelihood objects:', x$type, x$method,'\n')
     cat('\nCovariance model:', x$corrmodel, '\n')
-    cat('Number of coordinates:', numcoord, '\n')
-    cat('Number of observations per location:', numdata, '\n')
+    cat('Number of spatial coordinates:', x$numcoord, '\n')
+    cat('Number of dependent temporal realisations:', x$numtime, '\n')
+    cat('Number of replicates of the random field:', x$numrep, '\n')
+    cat('Number of estimated parameters:', length(x$param), '\n')
     cat('\nMaximum log-', method, ' value: ',
         format(x$logCompLik, digits = digits, nsmall = 2), '\n', sep='')
 
@@ -160,7 +162,7 @@ print.FitComposite <- function(x, digits = max(3, getOption("digits") - 3), ...)
                       quote = FALSE)
       }
 
-    cat('\n##############################################################\n')
+    cat('\n##################################################################\n')
     invisible(x)
   }
 
