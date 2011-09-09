@@ -114,7 +114,7 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
     \item If \code{data} is a numeric (\eqn{d \times d}{d x d})-matrix, \code{coordx} and \code{coordy} are two
     numeric \eqn{d}{d}-dimensional vectors, \code{coordt=NULL}, \code{grid=TRUE} and \code{replicates=1}, then the data are interpreted as
     a single spatial random field realisation observed on \code{d} equispaced spatial sites (named regular grid).
-    \item If \code{data} is a numeric (\eqn{d \times d \time n}{d x d x n})-array, \code{coordx} and \code{coordy} are two
+    \item If \code{data} is a numeric (\eqn{d \times d \times n}{d x d x n})-array, \code{coordx} and \code{coordy} are two
     numeric \eqn{d}{d}-dimensional vectors, \code{coordt=NULL}, \code{grid=TRUE} and \code{replicates=n}, then the data are interpreted as
     \code{n} iid realisations of a spatial random field observed on \code{d} equispaced spatial sites.
     \item If \code{data} is a numeric (\eqn{t \times d}{t x d})-matrix, \code{coordx} and \code{coordy} are two
