@@ -1,15 +1,15 @@
 \name{CheckCorrModel}
 \alias{CheckCorrModel}
 
-\title{Check of the Correlation Model}
+\title{Checking Correlation Model}
 \description{
   Subroutine called by InitParam.
   The procedure controls if the correlation model
-  inserted has been implemented.
+  inserted is correct.
 }
 \usage{
 CheckCorrModel(corrmodel)
-} 
+}
 \arguments{
   \item{corrmodel}{String; the name of a correlation model, for the
     description see \code{\link[RandomFields]{CovarianceFct}}.}
@@ -17,7 +17,10 @@ CheckCorrModel(corrmodel)
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
+   \url{www.unibg.it/pers/?moreno.bevilacqua}.
+  }
 
 \keyword{Composite}
