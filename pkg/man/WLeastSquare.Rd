@@ -110,55 +110,56 @@ WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 }
 
 \references{
+  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
+  Spring Verlang, New York.
+
+  Barry, J. T., Crowder, M. J. and Diggle, P. J. (1997)
+  \emph{Parametric estimation of the variogram}. Tech. Report, Dept Maths &
+  Stats, Lancaster University.
 
   Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York:
   Wiley.
 
   Smith, R. L. (1990) Max-Stable Processes and Spatial Extremes.
   \emph{Unpublished manuscript}, University of North California.
-
-  Barry, J. T., Crowder, M. J. and Diggle, P. J. (1997)
-  \emph{Parametric estimation of the variogram}. Tech. Report, Dept Maths &
-  Stats, Lancaster University.
-
-  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
-  Spring Verlang, New York.
 }
 
 \seealso{\code{\link{FitComposite}}, \code{\link{optim}}}
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan};
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
+  \url{www.unibg.it/pers/?moreno.bevilacqua}.}
+
 
 \examples{
 library(RandomFields)
 set.seed(2111)
 
 # Set the coordinates of the sites:
-x <- runif(100, 0, 20)
-y <- runif(100, 0, 20)
+x <- runif(100, 0, 10)
+y <- runif(100, 0, 10)
 
 
 ################################################################
 ###
-### Example 1. Least square fitting of Gaussian random fields
-### with stable correlation function. One spatial realization.
-### Unweighted version (all weights equals to 1)
+### Example 1. Least square fitting of a Gaussian random field
+### with exponential correlation.
+### One spatial replication is simulated.
+### Unweighted version (all weights equals to 1).
 ###
 ###############################################################
 
 # Set the model's parameters:
-corrmodel <- "stable"
+corrmodel <- "exponential"
 mean <- 0
-variance <- 1
+sill <- 1
 nugget <- 0
-scale <- 10
-power <- 1.2
+scale <- 3
 
-# Simulation of the Gaussian random field in the specified points:
-data <- GaussRF(x=x, y=y, model=corrmodel, grid=FALSE,
-                param=c(mean, variance, nugget, scale, power))
+# Simulation of the Gaussian random field:
+data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
+              sill=sill, nugget=nugget, scale=scale))$data
 
 # Least square fitting of the random field:
 fit <- WLeastSquare(data, x, y, corrmodel=corrmodel)
@@ -169,38 +170,48 @@ print(fit)
 
 ################################################################
 ###
-### Example 2. Least square fitting of Gaussian random fields
-### with stable correlation function. One spatial realization
-### Weighted version.
-###
-###############################################################
-
-# Least square fitting of the random field:
-fit <- WLeastSquare(data, x, y, corrmode=corrmodel, weighted=TRUE)
-
-# Results:
-print(fit)
-
-################################################################
-###
-### Example 3. Least square fitting of max-stable random fields
-### Extremal Gaussian model with stable correlation function
-### n iid spatial replications. Unweighted version.
+### Example 2. Least square fitting of a max-stable random field
+### (Extremal Gaussian model) with exponential correlation
+### n iid spatial replications.
+### Unweighted version (all weights equals to 1).
 ###
 ###############################################################
 
 
-# Simulation of a max-stable random field in the specified points:
-data <- MaxStableRF(x=x, y=y, model=corrmodel, grid=FALSE, maxstable="extr",
-                    param=c(mean, variance, nugget, scale, power),
-                    n=40,pch='')
-data <- t(data)
+# Simulation of the max-stable random field:
+data <- RFsim(x, y, corrmodel=corrmodel, model="ExtGauss",
+              param=list(mean=mean, sill=sill, nugget=nugget,
+              scale=scale), replicates=40)$data
 
 # Least square fitting of the random field:
 fit <- WLeastSquare(data, x, y, corrmodel=corrmodel, model="ExtGauss",
                     replicates=40)
 
 # Results:
+print(fit)
+
+################################################################
+###
+### Example 3. Least square fitting of a spatio-temporal
+### Gaussian random field with double exponential correlation.
+### One replication is simulated.
+### Weighted version (all weights equals to 1).
+###
+###############################################################
+
+# Define the temporal sequence:
+time <- seq(1, 30, 1)
+
+# Simulation of the Gaussian random field:
+data <- RFsim(x, y, time, corrmodel="exp_exp", param=list(mean=mean,
+             scale_s=scale,scale_t=1,sill=sill,nugget=nugget))$data
+
+# Weighted least square estimation:
+fit <- WLeastSquare(data, x, y, time, corrmodel="exp_exp", maxdist=5,
+                    maxtime=5, fixed=list(nugget=nugget),
+                    start=list(scale_s=0.1,scale_t=0.1,sill=1))
+
+# Results
 print(fit)
 }
 
