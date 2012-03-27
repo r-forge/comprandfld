@@ -5,6 +5,7 @@
 #include <R_ext/Applic.h>
 
 #define LOW -1.0e15
+#define MAXERR 1e-6
 
 //---------START GLOBAL VARIABLES-----------
 double *lags;// vector of spatial distances
@@ -24,7 +25,7 @@ int *ncoordy;// number of the second spatial coordinates
 int *npairs;// numner of spatial pairs
 int *npairt;// number of temporal times
 int *nrep;// number of iid replicates of the random field
-int *ntime; // number of times
+int *ntime;// number of times
 //---------END GLOBAL VARIABLES-------------
 //void indx(double *ind, int *n);
 
@@ -62,6 +63,12 @@ double CorFunWend3(double lag);
 void CorrelationMat(double *rho, int *cormod, double *nuis, double *par);
 
 void CorrelationMat_st(double *rho, int *cormod, double *nuis, double *par);
+
+void DCorrelationMat(int *cormod,double *drho,double *eps,int *flagcor,
+		     int *nparcor, double *parcor,double *rho);
+
+void DCorrelationMat_st(int *cormod,double *drho,double *eps,int *flagcor,
+			int *nparcor, double *parcor,double *rho);
 
 double DCauchyPow(double power2, double scale, double rho);
 
@@ -160,14 +167,18 @@ void GradCorrFct(double rho, int *cormod, double *eps, int *flag,
 void GradVarioFct(double vario, int *cormod, double *eps, int *flag,
 		  double *grad, double lag, double *par);
 
+void TapVectCorrelation(double *rho,int *cormod,double *tdists,int *ntdists,double *nuis,double *par);
+
 double Variogram(int *cormod, double h, double u, double *nuis, double *par);
 
 double VarioFct(int *cormod, double lag, double *par);
 
 double VarioStable(double lag, double power, double scale);
 
-void VectCorrelation(double *rho, int *cormod, double *lag,
-		     int *nlags, double *par);
+double VarioGCauchy(double lag, double power1, double power2, double scale);
+
+void VectCorrelation(double *rho, int *cormod, double *h, int *nlags,
+		     int *nlagt, double *par, double *u);
 
 /*----------------------------------------------------------------
 File name: CorrelationFunction.c
@@ -212,8 +223,6 @@ void Comp_Ext_Gauss(int *cormod, double *data, double *nuis, double *par, double
 
 void Comp_Ext_T(int *cormod, double *data, double *nuis, double *par, double *thr, double *res);
 
-double pbnorm(int *cormod, double h, double u, double *nuis, double *par, double thr);
-
 /*----------------------------------------------------------------
 File name: CompositeLikelihood.c
 Description: functions for composite log-likelihood evaluation
@@ -253,9 +262,14 @@ double int_pt(double x, double df);
 
 void integr_pt(double *x, int n, void *ex);
 
+double pbnorm(int *cormod, double h, double u, double *nuis, double *par, double thr);
+
 double pgev(double x, double loc, double scale, double shape);
 
 double qgev(double x, double loc, double scale, double shape);
+
+void vpbnorm(int *cormod, double *h, double *u, int *nlags, int *nlagt,
+	     double *nuis, double *par, double *rho, double *thr);
 
 /*----------------------------------------------------------------
 File name: Distributions.c
@@ -272,55 +286,61 @@ Start
 
 void GodambeMat_emp(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
 		    int *like, int *model, int *npar, int *nparc, double *parcor,
-		    double *nuis, double *sensmat, double *varimat, int *type);
+		    double *nuis, double *score, double *sensmat, double *varimat,
+		    int *type);
 
 void GodambeMat(double *coordx, double *coordy, int *cormod, double *data, double *eps,
-		int *flagcor, int *flagnuis, int *like, int *lonlat, int *model, int *npar,
-		int *nparc, double *parcor, double *nuis, double *sensmat, int *spt,
-		double *thr, int *type, double *varimat, int *vartype, double *winc);
+		int *flagcor, int *flagnuis, int *grid, int *like, int *lonlat, int *model,
+		int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		double *sensmat, int *spt, double *thr, int *type, double *varimat,
+		int *vartype, double *winc, double *winstp);
 
 void GodambeMat_Diff(double *coordx, double *coordy, int *cormod, double *eps, int *flagcor,
 		     int *flagnuis, int *model, int *npar, int *nparc, double *parcor,
 		     double *nuis, double *sensmat, double *varimat);
 
-void Sens_Cond_Gauss(int *cormod, double *eps, int *flagcor, int *flagnuis, double *nuis,
-		     int *npair, int *npar, int *nparc, double *parcor, double *sensmat);
+void Sens_Cond_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis,
+		     int *npair, int *npar, int *nparc, double *parcor, double *score, double *sensmat);
 
-void Sens_Cond_Gauss_st(int *cormod, double *eps, int *flagcor, int *flagnuis, double *nuis,
-			int *npair, int *npar, int *nparc, double *parcor, double *sensmat);
+void Sens_Cond_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis,
+			int *npair, int *npar, int *nparc, double *parcor, double *score, double *sensmat);
 
 void Sens_Cond_Gauss_ij(double rho, int *flag, double *gradcor, int *npar,
 			int *nparc, double *par, double *sensmat);
 
-void Sens_Diff_Gauss(int *cormod, double *eps, int *flagcor, int *flagnuis, double *nuis,
-		     int *npair, int *npar, int *nparc, double *parcor, double *sensmat);
+void Sens_Diff_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		     double *nuis, int *npair, int *npar, int *nparc, double *parcor,
+		     double *score, double *sensmat);
 
-void Sens_Diff_Gauss_st(int *cormod, double *eps, int *flagcor, int *flagnuis, double *nuis,
-		        int *npair, int *npar, int *nparc, double *parcor, double *sensmat);
+void Sens_Diff_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+			double *nuis, int *npair, int *npar, int *nparc, double *parcor,
+			double *score, double *sensmat);
 
 void Sens_Diff_Gauss_ij(double *gradient, int *npar, double *sensmat);
 
-void Sens_Pair_Gauss(int *cormod, double *eps, int *flagcor, int *flagnuis, double *nuis,
-		     int *npair, int *npar, int *nparc, double *parcor, double *sensmat);
+void Sens_Pair_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		     double *nuis, int *npair, int *npar, int *nparc, double *parcor,
+		     double *score, double *sensmat);
 
-void Sens_Pair_Gauss_st(int *cormod, double *eps, int *flagcor, int *flagnuis, double *nuis,
-			int *npair, int *npar, int *nparc, double *parcor, double *sensmat);
+void Sens_Pair_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis,
+			int *npair, int *npar, int *nparc, double *parcor, double *score, double *sensmat);
 
 void Sens_Pair_Gauss_ij(double rho, int *flag, double *gradcor, int *npar,
 			int *nparc, double *par, double *sensmat);
 
-void Sensitivity(int *cormod, double *eps, int *flagcor, int *flagnuis, int *like,
-		 int *model, int *npair, int *npar, int *nparc, double *parcor,
-		 double *nuis, double *sensmat, int *spt, int *type);
+void Sensitivity(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		 int *like, int *model, int *npair, int *npar, int *nparc, double *parcor,
+		 double *nuis, double *score, double *sensmat, int *spt, int *type);
 
 void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
-		  double *eps, int *flagcor, int *flagnuis, int *like,
-		  int *lonlat, int *model, int *npair, int *npar, int *nparc, double *nuis,
-		  double *parcor, double *thr, int *type, double *varimat, double *winc);
+		  double *eps, int *flagcor, int *flagnuis, int *grid, int *like,
+		  int *lonlat, int *model, int *npair, int *npar, int *nparc,
+		  double *nuis, double *parcor, double *thr, int *type, double *varimat,
+		  double *winc, double *winstp);
 
 void Vari_SubSamp_st(int *cormod, double *data, double *eps, int *flagcor,
 		     int *flagnuis, int *like, int *npair, int *npar, int *nparc,
-		     double *nuis, double *parcor, int *type, double *varimat, double *winc);
+		     double *nuis, double *parcor, int *type, double *varimat, double *winc, double *winstp);
 
 /*----------------------------------------------------------------
 File name: Godambe.c
@@ -398,6 +418,11 @@ Description: procedures for the estimation of the model parameters
 via the weighted least square method.
 Start
  ---------------------------------------------------------------*/
+void Binned_Lorelogram(double *bins, double *data, int *lbins, double *moms,int *nbins);
+
+void Binned_Lorelogram_st(double *bins, double *bint, double *data, int *lbins,
+			  int *lbinst, int *lbint, double *moms,double *momst,
+			  double *momt, int *nbins, int *nbint);
 
 void Binned_Madogram(double *bins, double *data, int *lbins, double *moments, int *nbins);
 
@@ -449,6 +474,13 @@ void RangeDist(double *max, double *min);
 
 double Dist_geodesic(double lonx, double latx, double lony, double laty);
 
+void GeoDist(double *coordx, double *coordy, int *ncoord, double *res);
+
+void ComputeMaxima(double *df, double *maxima, int *model,
+		   int *nblock, int *nsite, double *sim);
+
+int is_equal(double val1, double val2);
+
 double Maxima(double *x, int *size);
 
 double Minima(double *x, int *size);
@@ -457,6 +489,8 @@ void Range(double *x, double *ran, int *size);
 
 void Seq(double *x, int len, double *res);
 
+void SeqStep(double *x, int len, double step, double *res);
+
 void SetSampling(double *coordx, double *coordy, double *data, int n, int *npts,
 		 double *scoordx, double *scoordy, double *sdata, double xmax,
 		 double xmin, double ymax, double ymin);
@@ -464,12 +498,13 @@ void SetSampling(double *coordx, double *coordy, double *data, int n, int *npts,
 void SetSampling_st(double *data,double *sdata,int *ncoord,int *ntime,
 		    int wint,int k,int n,int *nrep);
 
-void SetGlobalVar(double *coordx, double *coordy, double *coordt, int *grid,
-		  int *ismal, int *nsite, int *nsitex, int *nsitey, int *replic,
-		  int *spatim, double *srange, int *times, double * trange,
-		  int *type, int *weighted);
+void SetGlobalVar(double *coordx,double *coordy,double *coordt,int *grid,int *ia,
+		  int *idx,int *ismal,int *ja,int *nsite,int *nsitex,int *nsitey,
+		  int *npair,int *replic,int *spatim,double *srange,int *times,
+		  double *trange,int *tap,int *type,int *weighted);
 
-void Space_Dist(double *coordx, double *coordy, int *grid, int *type);
+void Space_Dist(double *coordx,double *coordy,int grid,int *ia,int *idx,
+		int *ja,double tapran,int tap,int type);
 
 void SpaceTime_Dist(double *coordx, double *coordy, double *coordt, int *grid, int *type);
 
