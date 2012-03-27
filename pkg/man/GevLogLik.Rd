@@ -21,7 +21,7 @@ GevLogLik(data, numdata, param)
     Introduction}. Springer Verlang, New York.
 }
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan}.}
 
 \keyword{extremes}
