@@ -1,61 +1,98 @@
-#include "header.h"
-
 /*###################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Emails: simone.padoan@stat.unipd.it,
+### moreno.bevilacqua@unibg.it
+### Institutions: Department of Statistical Science,
+### University of Padua and Department of Information
+### Technology and Mathematical Methods, University
+### of Bergamo.
 ### File name: Gradient.c
 ### Description:
 ### This file contains a set of procedures
 ### for the computation of the composite likelihood
 ### gradients.
-### Last change: 05/12/2010.
+### Last change: 03/02/2012.
 ##################################################*/
 
-// Compute the gradient vector of the conditional pairwise log likelihood for a Gaussian model:
+#include "header.h"
+
+// Compute the gradient vector of the conditional pairwise log likelihood for a
 void Grad_Cond_Gauss(double rho, int *flag, double *gradcor, double *grad,
+                     int *npar, double *par, double u, double v)
+{
+  // Initialization variables:
+  double mean=par[0],nugget=par[1],sill=par[2];
+  double a=nugget+sill,b=sill*rho,pa=a*a,pb=b*b;
+  double c=-pa+pb,d=pa+pb,da=2*a,k=1/(c*c);
+  double pn=nugget*nugget,ps=sill*sill;
+  double C=0.0,L=0.0,R=0.0;
+  double pu=0.0,pv=0.0,su=0.0,sv=0.0,suv=0.0;
+  int h=0,i=0,j=0;
+  //defines useful quantities:
+  u=u-mean;
+  v=v-mean;
+  pu=u*u;
+  pv=v*v;
+  R=pu+pv;L=u*v;
+  su=(-1+pu/a)/da;
+  sv=(-1+pv/a)/da;
+  suv=su+sv;
+  // Derivatives of the conditional respect with the mean
+  if(flag[0]==1){grad[i]=2*(u+v)/(a+b)-(u/a+v/a);i++;}
+  // Derivative of the conditional respect with the nugget
+   if(flag[1]==1){grad[i]=k*(R*d-L*4*b*a-2*a*(pa-pb))-suv;i++;}
+  // Derivative of the conditional respect with the sill
+   if(flag[2]==1){grad[i]=-k*(2*(pa*a-pb*(2*sill+3*nugget)+
+				 rho*b*(pb-pn))+R*(c+2*nugget*b*rho)+
+			      2*L*rho*(ps-pn-pb))-suv;i++;}
+  // Derivatives with respect to the correlation parameters
+  h=0;
+  C=-2*k*sill*(R*a*b-L*d+b*c);
+  for(j=i;j<*npar;j++){grad[j]=C*gradcor[h];h++;}
+  return;
+}
+// Compute the gradient vector of the conditional pairwise log likelihood for a Gaussian model:
+/*void Grad_Cond_Gauss(double rho, int *flag, double *gradcor, double *grad,
 		     int *npar, double *par, double u, double v)
 {
   // Initialization variables:
   double mean=par[0], nugget=par[1], sill=par[2];
-  double C=0.0, L=0.0, M=0.0, Q=0.0, R=0.0, S=0.0;
-  double a=0.0, b=0.0, c=0.0, d=0.0, da=0.0, e=0.0;
-  double pu=0.0, pv=0.0, su=0.0, sv=0.0;
-  double suv=0.0, uv=0.0;
-  int h=0, i=0, j=0;
+  double a=nugget+sill,b=sill*rho;
+  double pa=a*a,pb=b*b,ppa=pa*a,ps=sill*sill,pr=rho*rho;
+  double c=pa+pb,d=pa+pb,da=2*a,k=-c*-c;
+  double pu=0.0, pv=0.0, su=0.0, sv=0.0, suv=0;
+  double C=0.0,L=0.0,R=0.0;
+  int h=0,i=0,j=0;
   //defines useful quantities:
-  a=nugget+sill;
-  b=sill*rho;
-  c=pow(a,2)-pow(b,2);
-  d=a/c;
-  da=2*a;
-  e=b/c;
+  //defines useful quantities:
   u=u-mean;
   v=v-mean;
-  uv=u+v;
-  pu=pow(u,2);
-  pv=pow(v,2);
+  pu=u*u;
+  pv=v*v;
   R=pu+pv;
-  S=0.5*R/c;
   L=u*v;
-  M=L/c;
-  Q=d*R-2*e*L-1;
-  su=(-1+pu/a)/da; //first statistics: first component
-  sv=(-1+pv/a)/da; //second statistics: second component
+  su=(-1+pu/a)*pow(da,-1); //first statistics: first component
+  sv=(-1+pv/a)*pow(da,-1); //second statistics: second component
   suv=su+sv;
   // Derivatives of the conditional respect with the mean
-  if(flag[0]==1){ grad[i]=uv*(2/(a+b)-1/a); i++; }
+  if(flag[0]==1){grad[i]=2*((u+v)/(a+b))-(u/a+v/a);i++;}
+
   // Derivative of the conditional respect with the nugget
-  if(flag[1]==1){ grad[i]=2*(d*Q-S)-suv; i++; }
+  if(flag[1]==1){grad[i]=k*(R*d-L*4*b*a-2*(ppa-pb*a))-suv;i++;}
+
   // Derivative of the conditional respect with the sill
-  if(flag[2]==1){ grad[i]=2*((d-e)*Q-S-rho*M)-suv; i++; }
+  if(flag[2]==1){ grad[i]=-k*(R*(-pa+b*rho*(a+nugget))+
+                           2*rho*L*(ps*(1-pr)-pow(nugget,2))+
+                           2*(ppa-b*rho*(ps*(2-pr+nugget*
+                           (nugget+3*sill)))))-suv;i++;}
+
+
   // Derivatives with respect to the correlation parameters
   h=0;
-  C=sill*(M-e*Q);
-  for(j=i;j<*npar;j++) { grad[j]=2*C*gradcor[h]; h++; }
+  C=-2*k*(R*a*b-L*d-b*c);
+  for(j=i;j<*npar;j++) {grad[j]=C*gradcor[h];h++;}
   return;
-}
-
+  }*/
 // Compute the gradient vector of the conditional log likelihood for a Gaussian-Binary model :
 void Grad_Cond_Bin(double rho,double pij, double p,int *flag, double *gradcor, double *grad,
 		   int *npar, double *nuis, double *thr, double u, double v)
@@ -202,41 +239,71 @@ void Grad_Pair_Bin(double rho,double pij, double p,int *flag, double *gradcor, d
                                                 (u*v)*2*(pij-2*pow(p,2)+p)/(vario*pij)))*sh; h++; }
   return;
 }
-
-
-// Compute the gradient vector of the pairwise log likelihood for a Gaussian model:
-void Grad_Pair_Gauss(double rho, int *flag, double *gradcor, double *grad, int *npar,
-		      double *par, double u, double v)
+void Grad_Pair_Gauss(double rho, int *flag, double *gradcor, double *grad,
+                     int *npar, double *par, double u, double v)
 {
   // Initialization variables:
-  double mean=par[0], nugget=par[1], sill=par[2];
-  double C=0.0, L=0.0, M=0.0, Q=0.0, R=0.0, S=0.0;
-  double a=0.0, b=0.0, c=0.0, d=0.0, e=0.0;
+  double mean=par[0],nugget=par[1],sill=par[2];
+  double a=nugget+sill,b=sill*rho,pa=a*a,pb=b*b;
+  double c=-pa+pb,d=pa+pb,k=1/(c*c);
+  double C=0.0,L=0.0,R=0.0;
+  double pn=nugget*nugget,ps=sill*sill,pu=0.0, pv=0.0;
   int h=0, i=0, j=0;
-  // defines useful quantities:
-  a=nugget+sill;
-  b=sill*rho;
-  c=pow(a,2)-pow(b,2);
-  d=a/c;
-  e=b/c;
+  //defines useful quantities:
   u=u-mean;
   v=v-mean;
-  R=pow(u,2)+pow(v,2);
-  S=0.5*R/c;
-  L=u*v;
-  M=L/c;
-  Q=d*R-2*e*L-1;
-  // Derivative of the pairwise respect with the mean
-  if(flag[0]==1) { grad[i]=(u+v)/(a+b); i++; }
-  // Derivative of the pairwise respect with the nugget
-  if(flag[1]==1) { grad[i]=d*Q-S; i++; }
-  // Derivative of the pairwise respect with the sill
-  if(flag[2]==1) { grad[i]=(d-e)*Q-S-rho*M; i++; }
+  pu=pow(u,2);
+  pv=pow(v,2);
+  R=pu+pv;L=u*v;
+  // Derivatives of the conditional respect with the mean
+  if(flag[0]==1){grad[i]=(u+v)/(a+b);i++;}
+  // Derivative of the conditional respect with the nugget
+   if(flag[1]==1){grad[i]=0.5*k*(R*d-L*4*b*a-2*a*(pa-pb));i++;}
+  // Derivative of the conditional respect with the sill
+   if(flag[2]==1){grad[i]=-0.5*k*(2*(pa*a-pb*(2*sill+3*nugget)+
+				     rho*b*(pb-pn))+R*(c+2*nugget*b*rho)+
+				  2*L*rho*(ps-pn-pb));i++;}
+
   // Derivatives with respect to the correlation parameters
-  C=sill*(M-e*Q);
-  for(j=i;j<*npar;j++) { grad[j]=C*gradcor[h]; h++;}
+  h=0;
+  C=-k*sill*(R*a*b-L*d+b*c);
+  for(j=i;j<*npar;j++){grad[j]=C*gradcor[h];h++;}
   return;
 }
+// Compute the gradient vector of the pairwise log likelihood for a Gaussian model:
+/*void Grad_Pair_Gauss(double rho, int *flag, double *gradcor, double *grad,
+		     int *npar, double *par, double u, double v)
+{
+  // Initialization variables:
+  double mean=par[0],nugget=par[1],sill=par[2];
+  double a=nugget+sill,b=sill*rho;
+  double pa=a*a,pb=b*b,ppa=pa*a,ps=sill*sill,pr=rho*rho;
+  double c=pa-pb,d=pa+pb,k=-c*-c;
+  double pu=0.0,pv=0.0;
+  double C=0.0,L=0.0,R=0.0;
+  int h=0,i=0,j=0;
+  //defines useful quantities:
+  u=u-mean;
+  v=v-mean;
+  pu=u*u;
+  pv=v*v;
+  R=pu+pv;
+  L=u*v;
+  // Derivatives of the conditional respect with the mean
+  if(flag[0]==1){grad[i]=(u+v)/(a+b);i++;}
+  // Derivative of the conditional respect with the nugget
+  if(flag[1]==1){ grad[i]=0.5*k*(R*d-L*4*b*a-2*(ppa-pb*a));i++;}
+  // Derivative of the conditional respect with the sill
+  if(flag[2]==1){ grad[i]=-0.5*k*(R*(-pa+b*rho*(a+nugget))+
+                           2*rho*L*(ps*(1-pr)-
+                           pow(nugget,2))+2*(ppa-b*rho*(ps*
+                           (2-pr+nugget*(nugget+3*sill)))));i++;}
+  // Derivatives with respect to the correlation parameters
+  h=0;
+  C=-k*(R*a*b-L*d-b*c);
+  for(j=i;j<*npar;j++) {grad[j]=C*gradcor[h];h++;}
+  return;
+  }*/
 // Gradient of the max-stable Extremal Gaussian model:
 void Grad_Ext_Gauss(double rho, int *flag, double *gradcor, double *grad,
 		    int *npar, double *par, double u, double v)
@@ -247,25 +314,25 @@ void Grad_Ext_Gauss(double rho, int *flag, double *gradcor, double *grad,
   double u2=0.0, v2=0.0;
   int h=0, i=0, j=0;
   // defines useful quantities:
-  u2=pow(u,2);
-  v2=pow(v,2);
+  u2=u*u;
+  v2=v*v;
   rho=par[0]*rho;//rho=sill*corr
-  omr2=1-pow(rho,2);
+  omr2=1-rho*rho;
   //sqrt of the quadratic form
   a=sqrt(u2+v2-2*rho*u*v);
-  a3=pow(a,3);
+  a3=a*a*a;
   duV=-0.5*(u*rho-a-v)/(u2*a);
   dvV=-0.5*(v*rho-a-u)/(v2*a);
   d2V=0.5*omr2/a3;
   drV=0.5/a;
   drduV=-0.5*(u-v*rho)/a3;
   drdvV=-0.5*(v-u*rho)/a3;
-  drd2V=-rho/a3+(3*u*v*omr2)/pow(a,5);
+  drd2V=-rho/a3+(1.5*u*v*omr2)/(a3*a*a);
   C=drV+(drd2V+drduV*dvV+duV*drdvV)/(d2V+duV*dvV);
   // Derivative of the pairwise respect with the sill
-  if(flag[0]==1) { grad[i]=C*rho/par[0]; i++; }
+  if(flag[0]==1) {grad[i]=C*rho/par[0]; i++;}
   // Derivatives with respect to the correlation parameters
-  for(j=i;j<*npar;j++) { grad[j]=C*par[0]*gradcor[h]; h++;}
+  for(j=i;j<*npar;j++) {grad[j]=C*par[0]*gradcor[h]; h++;}
   return;
 }
 // Gradient of the max-stable extremal-t model:
