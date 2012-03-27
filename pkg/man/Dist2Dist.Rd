@@ -71,9 +71,7 @@ Dist2Dist(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, shape=NULL)
 
 \seealso{\code{\link{FitGev}}}
 
-
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}}
-
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan}.}
 
 \keyword{extremes}
