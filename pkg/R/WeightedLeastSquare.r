@@ -1,14 +1,17 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@unibg.it.
-### Institute: Department of Information Technology
-### and Mathematical Methods, University of Bergamo
+### Emails: simone.padoan@stat.unipd.it,
+### moreno.bevilacqua@unibg.it
+### Institutions: Department of Statistical Science,
+### University of Padua and Department of Information
+### Technology and Mathematical Methods, University
+### of Bergamo.
 ### File name: WeightedLeastSquare.r
 ### Description:
 ### This file contains a set of procedures in order
 ### to estimate the parameters of some covariance
 ### function models for a given dataset.
-### Last change: 08/06/2011.
+### Last change: 08/01/2012.
 ####################################################
 
 
@@ -51,37 +54,40 @@ print.WLS <- function(x, digits = max(3, getOption("digits") - 3), ...)
     invisible(x)
   }
 
-WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, likelihood,
-                    lonlat, margins, maxdist, maxtime, model, parscale, paramrange,
-                    replicates, start, threshold, type, varest, vartype, weighted,
-                    winconst)
+WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
+                    likelihood, lonlat, margins, maxdist, maxtime, model, numblock,
+                    param, parscale, paramrange, replicates, start, threshold, type,
+                    varest, vartype, weighted, winconst, winstp)
   {
     ### Initialization parameters:
-    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, fixed, grid,
-                           likelihood, lonlat, margins, maxdist, maxtime, model,
-                           parscale, paramrange, replicates, start, threshold,
-                           'WLeastSquare', varest, vartype, weighted, winconst)
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, fcall, fixed,
+                           grid, likelihood, lonlat, margins, maxdist, maxtime,
+                           model, numblock, param, parscale, paramrange, replicates,
+                           start, threshold, "WLeastSquare", type, varest, vartype,
+                           weighted, winconst, winstp)
 
     if(!is.null(initparam$error))
       stop(initparam$error)
     ### Set the initial type of likelihood objects:
     initparam$type <- CheckType(type)
     if(substr(model,1,6)=='Binary') return(initparam)
+    if(is.null(start)) start <- NA else start <- unlist(start)
+    if(is.null(fixed)) fixed <- NA else fixed <- unlist(fixed)
     ### Checks if all the starting values have been passed by the user:
     if(initparam$numstart==initparam$numparam)
       {### If full or pairwise then checks the mean parameter:
         if(model=='Gaussian' & (type %in% c('Standard','Pairwise','Tapering'))){
-          if(is.null(fixed$mean)){
-              if(is.null(start$mean)) initparam$param <- c(initparam$fixed["mean"], initparam$param)
-              else initparam$param <- c(start$mean, initparam$param)
+          if(is.na(fixed["mean"])){
+              if(is.na(start["mean"])) initparam$param <- c(initparam$fixed["mean"], initparam$param)
+              else initparam$param <- c(start["mean"], initparam$param)
             initparam$namesparam <- sort(names(initparam$param))
             initparam$param <- initparam$param[initparam$namesparam]
             initparam$numparam <- initparam$numparam+1
             initparam$flagnuis['mean'] <- 1
             initparam$numfixed <- initparam$numfixed-1
-            if(initparam$numfixed > 0) initparam$fixed <- unlist(fixed)
+            if(initparam$numfixed > 0) initparam$fixed <- fixed
             else initparam$fixed <- NULL}
-          else initparam$fixed['mean'] <- fixed$mean}
+          else initparam$fixed['mean'] <- fixed["mean"]}
         return(initparam)}
     ### Updates if there are some starting values passed by the user:
     if(initparam$numstart > 0){
@@ -162,14 +168,16 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, likeli
       lenbinst <- integer(1)  # vector of spatial-temporal bin sizes
       .C(fname, bins, as.double(data), lenbins, moments, as.integer(numbins),
          PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      centers <- bins[1:numvario]+diff(bins)/2
       indbin <- lenbins>0
       bins <- bins[indbin]
+      centers <- centers[indbin]
       moments <- moments[indbin]
       lenbins <- lenbins[indbin]
       numbins <- sum(indbin)
       variogram <- moments/lenbins
       if(!is.na(initparam$param['scale']))
-         initparam$param['scale'] <- bins[max(variogram) == variogram]}
+         initparam$param['scale'] <- centers[max(variogram) == variogram]}
     ###### ----------- END Estimation of the empirical variogram ---------- #####
 
     ###### ---------- START model fitting by least squares method ----------######
@@ -202,17 +210,17 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, likeli
     #  initparam$param <- initparam$param[initparam$namesparam]}
     ### If full or pairwise then checks the mean parameter:
     if(model=='Gaussian' & (type %in% c('Standard','Pairwise','Tapering'))){
-        if(is.null(fixed$mean)){
-          if(is.null(start$mean)) initparam$param <- c(initparam$fixed['mean'], initparam$param)
-          else initparam$param <- c(unlist(start['mean']), initparam$param)
+        if(is.na(fixed["mean"])){
+          if(is.na(start["mean"])) initparam$param <- c(initparam$fixed["mean"], initparam$param)
+          else initparam$param <- c(start["mean"], initparam$param)
           initparam$namesparam <- sort(names(initparam$param))
           initparam$param <- initparam$param[initparam$namesparam]
           initparam$numparam <- initparam$numparam + 1
-          initparam$flagnuis['mean'] <- 1
+          initparam$flagnuis["mean"] <- 1
           initparam$numfixed <- initparam$numfixed - 1
-          if(initparam$numfixed > 0) initparam$fixed <- unlist(fixed)
+          if(initparam$numfixed > 0) initparam$fixed <- fixed
           else initparam$fixed <- NULL}
-        else initparam$fixed['mean'] <- fixed$mean}
+        else initparam$fixed["mean"] <- fixed["mean"]}
    return(initparam)
   }
 
@@ -227,9 +235,9 @@ WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixe
 
     call <- match.call()
     ### Check the parameters given in input:
-    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, fixed, grid, 'None',
-                             lonlat, "Frechet", maxdist, maxtime, model, optimizer, replicates,
-                             start, NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp', weighted, NULL, NULL)
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, "Fitting", fixed, grid, 'None',
+                             lonlat, "Frechet", maxdist, maxtime, model, NULL, optimizer, NULL,
+                             replicates, start, NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp', weighted)
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
@@ -261,9 +269,10 @@ WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixe
     variogramst <- NULL
     ### Initializes the parameter values:
     parscale <- NULL
-    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, fixed, grid, 'None',
-                           lonlat, "Frechet", maxdist, maxtime, model, parscale, optimizer=='L-BFGS-B',
-                           replicates, start, NULL, 'WLeastSquare', FALSE, 'SubSamp', FALSE, 1)
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, "Fitting", fixed, grid,
+                           'None', lonlat, "Frechet", maxdist, maxtime, model, NULL, NULL,
+                           parscale, optimizer=='L-BFGS-B', replicates, start, NULL,
+                           'WLeastSquare', 'WLeastSquare', FALSE, 'SubSamp', FALSE, 1, 1)
 
     if(!is.null(initparam$error))
       stop(initparam$error)
