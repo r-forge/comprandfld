@@ -1,14 +1,17 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@unibg.it.
-### Institute: Department of Information Technology
-### and Mathematical Methods, University of Bergamo
+### Emails: simone.padoan@stat.unipd.it,
+### moreno.bevilacqua@unibg.it
+### Institutions: Department of Statistical Science,
+### University of Padua and Department of Information
+### Technology and Mathematical Methods, University
+### of Bergamo.
 ### File name: CompositeLikelihood.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 06/09/2011.
+### Last change: 02/03/2012.
 ####################################################
 
 
@@ -19,7 +22,7 @@
 CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
                            likelihood, lonlat, lower, model, namescorr, namesnuis, namesparam,
                            numparam, numparamcorr, optimizer, param, spacetime, threshold, type,
-                           upper, varest, vartype, winconst)
+                           upper, varest, vartype, winconst, winstp)
   {
     ### Define the object function:
     comploglik <- function(corrmodel, data, fixed, fun, namescorr, namesnuis, param, threshold)
@@ -86,7 +89,7 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
                               reltol=1e-14, maxit=1e8), data=data, fixed=fixed, fun=fname,
                               hessian=hessian, method=optimizer, threshold=threshold,
                               namescorr=namescorr, namesnuis=namesnuis)
-
+    # check the optimisation outcome
     if(CompLikelihood$convergence == 0)
       CompLikelihood$convergence <- 'Successful'
     else
@@ -94,45 +97,47 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
         CompLikelihood$convergence <- 'Iteration limit reached'
       else
         CompLikelihood$convergence <- "Optimization may have failed"
-
+    # Compute the nugget in the binnary case:
+    if(model==2) fixed["nugget"] <- 1-CompLikelihood$par["sill"]
         ### Computation of the variance-covariance matrix:
-
         if(varest)
           {
             # The sensitivity (H) and the variability (J) matrices
             # are estimated by the sample estimators contro-parts:
-
             dimmat <- numparam^2
             dmat <- numparam*(numparam+1)/2
             eps <- (.Machine$double.eps)^(1/3)
             param <- c(CompLikelihood$par, fixed)
+            score <- double(numparam)
 
             paramcorr <- param[namescorr]
             nuisance <- param[namesnuis]
-
-            if(hessian) sensmat <- as.double(CompLikelihood$hessian[lower.tri(CompLikelihood$hessian, diag=TRUE)])
+            if(hessian) sensmat <- -as.double(CompLikelihood$hessian[lower.tri(CompLikelihood$hessian, diag=TRUE)])
             else sensmat <- double(dmat)
             varimat <- double(dmat)
             # Set the window parameter:
-            .C('GodambeMat', as.double(coordx), as.double(coordy), as.integer(corrmodel),
-               as.double(data), as.double(eps), as.integer(flagcorr), as.integer(flagnuis),
-               as.integer(likelihood), as.integer(lonlat), as.integer(model), as.integer(numparam),
-               as.integer(numparamcorr), as.double(paramcorr), as.double(nuisance), sensmat,
-               as.integer(spacetime), as.double(threshold), as.integer(type), varimat,
-               as.integer(vartype), as.double(winconst), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-
+            .C('GodambeMat',as.double(coordx),as.double(coordy),as.integer(corrmodel),
+               as.double(data),as.double(eps),as.integer(flagcorr),as.integer(flagnuis),
+               as.integer(grid),as.integer(likelihood),as.integer(lonlat),as.integer(model),
+               as.integer(numparam),as.integer(numparamcorr),as.double(paramcorr),as.double(nuisance),
+               score,sensmat,as.integer(spacetime),as.double(threshold),as.integer(type),varimat,
+               as.integer(vartype),as.double(winconst),as.double(winstp),
+               PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+            # Set score vectore:
+            CompLikelihood$score <- score
             # Set sensitivity matrix:
-            CompLikelihood$sensmat <- matrix(double(dimmat), ncol=numparam)
+            CompLikelihood$sensmat <- matrix(rep(0,dimmat),ncol=numparam)
             # Set variability matrix:
-            CompLikelihood$varimat <- matrix(double(dimmat), ncol=numparam)
+            CompLikelihood$varimat <- matrix(rep(0,dimmat),ncol=numparam)
             namesgod <- c(namesnuis[as.logical(flagnuis)], namescorr[as.logical(flagcorr)])
+            names(CompLikelihood$score) <- namesgod
+            CompLikelihood$score <- CompLikelihood$score[namesparam]
             dimnames(CompLikelihood$sensmat) <- list(namesgod, namesgod)
             dimnames(CompLikelihood$varimat) <- list(namesgod, namesgod)
             if(numparam>1){
               CompLikelihood$sensmat[lower.tri(CompLikelihood$sensmat, diag=TRUE)] <- sensmat
               CompLikelihood$sensmat <- t(CompLikelihood$sensmat)
               CompLikelihood$sensmat[lower.tri(CompLikelihood$sensmat, diag=TRUE)] <- sensmat
-
               CompLikelihood$varimat[lower.tri(CompLikelihood$varimat, diag=TRUE)] <- varimat
               CompLikelihood$varimat <- t(CompLikelihood$varimat)
               CompLikelihood$varimat[lower.tri(CompLikelihood$varimat, diag=TRUE)] <- varimat
