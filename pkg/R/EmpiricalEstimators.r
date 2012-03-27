@@ -1,14 +1,17 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@unibg.it.
-### Institute: Department of Information Technology
-### and Mathematical Methods, University of Bergamo
+### Emails: simone.padoan@stat.unipd.it,
+### moreno.bevilacqua@unibg.it
+### Institutions: Department of Statistical Science,
+### University of Padua and Department of Information
+### Technology and Mathematical Methods, University
+### of Bergamo.
 ### File name: EmpiricalEstimators.r
 ### Description:
 ### This file contains a set of procedures in order
 ### to estimate the empircal covariance or the extreme
 ### dependence structures for a given dataset.
-### Last change: 06/09/2011.
+### Last change: 12/03/2012.
 ####################################################
 
 ### Procedures are in alphabetical order.
@@ -23,20 +26,27 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, grid
     if(is.null(type))
       type <- 'variogram'
     # Checks if its a variogram or a madogram
-    if(!is.null(type) & all(type!='variogram', type!='madogram', type!='Fmadogram'))
-      stop('the admitted types are: variogram or madogram\n')
+    if(!is.null(type) & all(type!="lorelogram", type!='variogram', type!='madogram', type!='Fmadogram'))
+      stop('the admitted types are: variogram, madogram (Fmadogram) or lorelogram\n')
+    if(type=="lorelogram" & cloud)
+        stop("there is not cloud version of lorelogram\n")
     # Set the type of model:
-    if(type=='variogram') model <- 'Gaussian'
-    else model <- 'ExtGauss'
+    if(type=='variogram'){
+        model <- 'Gaussian'
+        fname <- 'Binned_Variogram'}
+    if(type=="lorelogram"){
+        model <- "BinaryGauss"
+        fname <- "Binned_Lorelogram"}
+    if(type=="madogram" || type=="Fmadogram") model <- 'ExtGauss'
     # Checks if its a spatial or spatial-temporal random field:
     if(!is.null(coordt))
       if(is.numeric(coordt))
         if(length(coordt)>1) corrmodel <- 'gneiting'
     # Checks the input:
-    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, NULL, grid, 'None',
-                             lonlat, "Frechet", maxdist, maxtime, model, 'Nelder-Mead',
-                             replicates, NULL, NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp',
-                             FALSE, NULL, NULL)
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, "Fitting", NULL, grid,
+                             'None', lonlat, "Frechet", maxdist, maxtime, model, NULL,
+                             'Nelder-Mead', NULL, replicates, NULL, NULL, 0, 'WLeastSquare',
+                             FALSE, 'SubSamp', FALSE)
     # Checks if there are errors in the input:
     if(!is.null(checkinput$error))
       stop(checkinput$error)
@@ -53,15 +63,15 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, grid
     ### END -- Specific checks of the Empirical Variogram
 
     ### Initialization parameters:
-    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, NULL, grid, 'None',
-                           lonlat, "Frechet", maxdist, maxtime, model, NULL, FALSE,
-                           replicates, NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp', FALSE, 1)
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, "Fitting",
+                           NULL, grid, 'None', lonlat, "Frechet", maxdist,
+                           maxtime, model, NULL, NULL, FALSE, FALSE, replicates,
+                           NULL, 0, 'WLeastSquare', 'WLeastSquare', FALSE,
+                           'SubSamp', FALSE, 1, 1)
     # Checks if there are inconsistences:
     if(!is.null(initparam$error))
       stop(initparam$error)
-
     numvario <- numbins-1
-    fname <- 'Binned_Variogram'
     if(cloud){
         numbins <- numvario <- initparam$numpairs
         fname <- 'Cloud_Variogram'}
@@ -95,14 +105,37 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, grid
       momentst <- double(numbinst)   # vector of spatial-temporal moments
       lenbinst <- integer(numbinst)  # vector of spatial-temporal bin sizes
       if(cloud) fname <- 'Cloud_Variogram_st' else fname <- 'Binned_Variogram_st'
+      if(type=="lorelogram") fname <- "Binned_Lorelogram_st"
       # Compute the spatial-temporal moments:
       .C(fname, bins, bint, as.double(initparam$data), lenbins, lenbinst, lenbint,
          moments, momentst, momentt, as.integer(numbins), as.integer(numbint),
          PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      centers <- bins[1:numvario]+diff(bins)/2
+      if(type=="lorelogram"){
+      elorel <- matrix(momentst,nrow=numvario,ncol=numbint,byrow=TRUE)
+      elorel <- rbind(c(0,momentt),cbind(moments,elorel))
+      a <- rowSums(elorel)==0
+      b <- colSums(elorel)==0
+      d <- rowSums(elorel)!=0
+      f <- colSums(elorel)!=0
+      if(sum(a)){
+          elorel <- elorel[-which(a),]
+          centers <- c(0,centers)[which(d)]
+          centers <- centers[-1]}
+      if(sum(b)){
+          elorel <- elorel[,-which(b)]
+          bint <- c(0,bint)[which(f)]
+          bint <- bint[-1]}
+      elorel[elorel==0] <- NA
+      moments <- as.vector(elorel[,1][-1])
+      momentt <- as.vector(elorel[1,][-1])
+      momentst <- c(t(elorel[-1,-1]))
+      lenbins <- rep(1,length(moments))
+      lenbint <- rep(1,length(momentt))
+      lenbinst <- rep(1,length(momentst))}
       indbin <- lenbins>0
       indbint <- lenbint>0
       indbinst <- lenbinst>0
-      centers <- bins[1:numvario]+diff(bins)/2
       bins <- bins[indbin]
       bint <- bint[indbint]
       centers <- centers[indbin]
