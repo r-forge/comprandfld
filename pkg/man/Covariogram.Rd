@@ -11,16 +11,17 @@
   the empirical estimates.
 }
 \usage{
-Covariogram(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
-            answer.extc=FALSE, answer.range=FALSE, show.cov=FALSE,
-            show.vario=FALSE, show.extc=FALSE, show.range=FALSE,
-            add.cov=FALSE, add.vario=FALSE, add.extc=FALSE,
-            pract.range=95, vario, \dots)
+Covariogram(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.vario=FALSE,
+            answer.extc=FALSE, answer.range=FALSE, fix.lags=NULL, fix.lagt=NULL,
+            show.cov=FALSE, show.vario=FALSE, show.extc=FALSE, show.range=FALSE,
+            add.cov=FALSE, add.vario=FALSE, add.extc=FALSE, pract.range=95,
+            vario, \dots)
 }
 \arguments{
   \item{fitted}{A fitted object obtained from the
     \code{\link{FitComposite}} or \code{\link{WLeastSquare}} procedures.}
   \item{lags}{A numeric vector of distances.}
+  \item{lagt}{A numeric vector of temporal separations.}
   \item{answer.cov}{Logical; if \code{TRUE} a vector with the
     estimated covariance function is returned; if \code{FALSE} (the
     default) the covariance is not returned.}
@@ -33,6 +34,10 @@ Covariogram(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
   \item{answer.range}{Logical; if \code{TRUE} the estimated
     pratical range is returned; if \code{FALSE} (the
     default) the pratical range is not returned.}
+  \item{fix.lags}{Integer; a positive value denoting the spatial lag to
+    consider for the plot of the temporal profile.}
+  \item{fix.lagt}{Integer; a positive value denoting the temporal lag to
+    consider for the plot of the spatial profile.}
   \item{show.cov}{Logical; if \code{TRUE} the estimated
     covariance function is plotted; if \code{FALSE} (the
     default) the covariance function is not plotted.}
@@ -76,43 +81,50 @@ Covariogram(fitted, lags=NULL, answer.cov=FALSE, answer.vario=FALSE,
 
 \seealso{\code{\link{FitComposite}}, \code{\link{WLeastSquare}}}
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
+   \url{www.unibg.it/pers/?moreno.bevilacqua}}
 
 \examples{
+library(CompRandFld)
 library(RandomFields)
-set.seed(32378)
+library(scatterplot3d)
+set.seed(31231)
 
 # Set the coordinates of the points:
-x <- runif(100, 0, 20)
-y <- runif(100, 0, 20)
+x <- runif(100, 0, 10)
+y <- runif(100, 0, 10)
 
 
 ################################################################
 ###
-### Example 1. Plot of the covariance and variogram functions.
-### One spatial realisation of a Gaussian random field.
+### Example 1. Plot of covariance and variogram functions
+### estimated from a Gaussian random field with exponent 
+### correlation. One spatial replication is simulated.
 ###
 ###
 ###############################################################
 
 # Set the model's parameters:
-corrmodel <- "stable"
+corrmodel <- "exponential"
 mean <- 0
-variance <- 1
+sill <- 1
 nugget <- 0
-scale <- 10
-power <- 0.8
+scale <- 3
 
-# Simulation of the Gaussian random field in the specified points:
-data <- GaussRF(x=x, y=y, model=corrmodel, grid=FALSE,
-                param=c(mean, variance, nugget, scale, power))
+# Simulation of the Gaussian random field:
+data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
+              sill=sill, nugget=nugget, scale=scale))$data
 
-# Maximum composite-likelihood fitting of the random field:
+# Maximum composite-likelihood fitting of the Gaussian random field:
 fit <- FitComposite(data, x, y, corrmodel=corrmodel,
                     type='Difference')
+
+# Empirical estimation of the madogram:
 vario <- EVariogram(data, x, y)
-# Plot of the covariance and variogram functions:
+
+# Plot of covariance and variogram functions:
 par(mfrow=c(1,2))
 Covariogram(fit, show.cov=TRUE, show.range=TRUE,
             show.vario=TRUE, vario=vario)
@@ -120,34 +132,101 @@ Covariogram(fit, show.cov=TRUE, show.range=TRUE,
 
 ################################################################
 ##
-### Example 2. Plot of the covariance and extremal coefficient
-### functions.
-### n idd spatial realisations of a max-stable random field.
-###
+### Example 2. Plot of covariance and extremal coefficient
+### functions estimated from a max-stable random field with
+### exponential correlation. n idd spatial replications are
+### simulated.
 ###
 ###############################################################
 
-set.seed(179922)
-# Simulation of a max-stable random field in the specified points:
-data <- MaxStableRF(x=x, y=y, model=corrmodel, grid=FALSE, maxstable="extr",
-                    param=c(mean, variance, nugget, scale, power), n=20, pch='')
-data <- t(data)
+set.seed(1126)
+# Simulation of the max-stable random field:
+data <- RFsim(x, y, corrmodel=corrmodel, model="ExtGauss", replicates=20,
+              param=list(mean=mean,sill=sill,nugget=nugget,scale=scale))$data
 
-# Maximum composite-likelihood fitting of the random field:
+# Maximum composite-likelihood fitting of the max-stable random field:
 fit <- FitComposite(data, x, y, corrmodel=corrmodel, model='ExtGauss',
                     replicates=20, varest=TRUE, vartype='Sampling',
                     margins="Frechet")
 
 data <- Dist2Dist(data, to='sGumbel')
 
-# Empirical madogram estimation:
+# Empirical estimation of the madogram:
 vario <- EVariogram(data, x, y, type='madogram', replicates=20)
 
-# Plot of the correlation and extremal coefficient functions:
+# Plot of correlation and extremal coefficient functions:
 par(mfrow=c(1,2))
-Covariogram(fit, show.cov=TRUE, show.range=TRUE,
-            show.extc=TRUE, vario=vario, pract.range=84)
+Covariogram(fit, show.cov=TRUE, show.range=TRUE, show.extc=TRUE,
+            vario=vario, pract.range=84)
 
+
+################################################################
+###
+### Example 3. Plot of covariance and variogram functions
+### estimated from a Gaussian spatio-temporal random field with
+### double-exp correlation.
+### One spatio-temporal replication is simulated.
+###
+###############################################################
+
+# Define the spatial-coordinates of the points:
+x <- runif(20, 0, 1)
+y <- runif(20, 0, 1)
+# Define the temporal sequence:
+time <- seq(0, 50, 1)
+
+# Simulation of the spatio-temporal Gaussian random field:
+data <- RFsim(x, y, time, corrmodel="exp_exp",param=list(mean=mean,
+              nugget=nugget,scale_s=0.5,scale_t=1,sill=sill))$data
+
+# Maximum composite-likelihood fitting of the space-time Gaussian random field:
+fit <- FitComposite(data, x, y, time, corrmodel="exp_exp", maxtime=5,
+                    likelihood="Marginal",type="Pairwise", fixed=list(
+                    nugget=nugget, mean=mean),start=list(scale_s=0.2,
+                    scale_t=1, sill=sill))
+
+# Empirical estimation of spatio-temporal covariance:
+vario <- EVariogram(data, x, y, time, maxtime=10)
+
+# Plot of the fitted space-time covariace
+Covariogram(fit,show.cov=TRUE)
+
+# Plot of the fitted space-time variogram
+Covariogram(fit,vario=vario,show.vario=TRUE)
+
+# Plot of covariance, variogram and spatio and temporal profiles:
+Covariogram(fit,vario=vario,fix.lagt=1,fix.lags=1,show.vario=TRUE)
+
+################################################################
+###
+### Example 4. Plot of parametric and empirical lorelograms
+### estimated from a Binary Gaussian random fields with 
+### exponential correlation. One spatial replication is
+### simulated.
+###
+###############################################################
+
+set.seed(1240)
+
+# Define the spatial-coordinates of the points:
+x <- seq(0,3, 0.1)
+y <- seq(0,3, 0.1)
+
+# Simulation of the Binary Gaussian random field:
+data <- RFsim(x, y, corrmodel=corrmodel, model="BinaryGauss",
+              threshold=0,param=list(nugget=nugget,mean=mean,
+              scale=.6,sill=0.8))$data
+
+# Maximum composite-likelihood fitting of the Binary Gaussian random field:
+fit <- FitComposite(data, x, y, corrmodel=corrmodel, model="BinaryGauss",
+                    maxdist=0.8, likelihood="Marginal", type="Pairwise",
+                    start=list(mean=mean,scale=0.1,sill=0.1))
+
+# Empirical estimation of the lorelogram:
+vario <- EVariogram(data, x, y, type="lorelogram", maxdist=2)
+
+# Plot of fitted and empirical lorelograms:
+Covariogram(fit, vario=vario, show.vario=TRUE, lags=seq(0.1,2,0.1))
 }
 
 \keyword{Composite}
