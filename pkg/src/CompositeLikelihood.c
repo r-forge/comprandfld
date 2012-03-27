@@ -48,7 +48,7 @@ void Comp_Cond_Gauss_st(int *cormod, double *data, double *nuis, double *par, do
      for(j=i;j<*ncoord;j++){
        if(i==j){// marginal temporal log-likelihood:
 	 for(v=t+1;v<*ntime;v++){
-	   if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	   if(mlagt[t][v]<=*maxtime){
 	     s12=nuis[2]*CorFct(cormod,0,mlagt[t][v],par);
 	     det=pow(s1,2)-pow(s12,2);
 	     for(n=0;n<*nrep;n++){
@@ -85,8 +85,9 @@ void Comp_Cond_BinGauss(int *cormod, double *data, double *nuis, double *par, do
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr):
-  if(nuis[1]<0 || nuis[2]<=0 || CheckCor(cormod,par)==-2){
+  if(nuis[1]<0 || nuis[2]<=0 || nuis[2]>1 || CheckCor(cormod,par)==-2){
     *res=LOW; return;}
+  nuis[1]=1-nuis[2];// define the nugget
   //compute the composite-likelihood:
   for(i=0; i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
@@ -95,8 +96,8 @@ void Comp_Cond_BinGauss(int *cormod, double *data, double *nuis, double *par, do
 	psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	for(n=0;n<*nrep;n++){
 	  u=data[(n+i * *nrep)];v=data[(n+j * *nrep)];
-	  *res+= ((u*v)*log(psj)+(1-u)*(1-v)*log(1-2*psm+psj)+(u*(1-v)+(1-u)*v)*log(psm-psj))-
-	    2*(u*log(psm)+v*log(1-psm));}}
+	  *res+=2*(((u*v)*log(psj)+(1-u)*(1-v)*log(1-2*psm+psj)+(u*(1-v)+(1-u)*v)*log(psm-psj)))-
+	    ((u+v)*log(psm)+log(1-psm)*(2-u-v));}}
       h++;}
   return;
 }
@@ -108,31 +109,33 @@ void Comp_Cond_BinGauss_st( int *cormod, double *data, double *nuis, double *par
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr)
-  if(nuis[1]<0 || nuis[2]<=0 || CheckCor(cormod,par)==-2){
+  if(nuis[1]<0 || nuis[2]<=0 || nuis[2]>1 || CheckCor(cormod,par)==-2){
     *res=LOW; return;}
+  nuis[1]=1-nuis[2];// define the nugget
   // Computes the log-likelihood:
   for(i=0;i<*ncoord;i++){
     for(t=0;t<*ntime;t++){
       for(j=i;j<*ncoord;j++){
 	if(i==j){
 	  for(v=t+1;v<*ntime;v++){
-	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	    if(mlagt[t][v]<=*maxtime){
 	      psj=pbnorm(cormod,0,mlagt[t][v],nuis,par,*thr);
 	      psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	      for(n=0;n<*nrep;n++){
 		u=data[(t+*ntime*i)+n* *nrep];w=data[(v+*ntime*j)+n* *nrep];
-		*res+=((u*w)*log(psj)+(1-u)*(1-w)*log(1-2*psm+psj)+(u*(1-w)+(1-u)*w)*log(psm-psj))-
-		  2*(u*log(psm)+v*log(1-psm));}}}}
+		*res+=2*((u*w)*log(psj)+(1-u)*(1-w)*log(1-2*psm+psj)+(u*(1-w)+(1-u)*w)*log(psm-psj))-
+		  ((u+w)*log(psm)+log(1-psm)*(2-u-w));}}}}
 	else{
 	  for(v=0;v<*ntime;v++){
 	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
 	      psj=pbnorm(cormod,mlags[i][j],mlagt[t][v],nuis,par,*thr);
 	      psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	      for(n=0;n<*nrep;n++){
-		u=data[(t+*ntime*i)+n* *nrep];w=data[(v+*ntime*j)+n* *nrep];
-		*res+=((u*w)*log(psj)+(1-u)*(1-w)*log(1-2*psm+psj)+(u*(1-w)+(1-u)*w)*log(psm-psj))-
-		  2*(u*log(psm)+v*log(1-psm));}}}}
- }}}
+		u=data[(t+*ntime*i)+n* *nrep];
+		w=data[(v+*ntime*j)+n* *nrep];
+		*res+=2*((u*w)*log(psj)+(1-u)*(1-w)*log(1-2*psm+psj)+
+			 (u*(1-w)+(1-u)*w)*log(psm-psj))-
+		  ((u+w)*log(psm)+log(1-psm)*(2-u-w));}}}}}}}
  if(!R_FINITE(*res))
     *res = LOW;
  return;
@@ -176,7 +179,7 @@ void Comp_Diff_Gauss_st(int *cormod, double *data, double *nuis, double *par, do
       for(j=i;j<*ncoord;j++){
 	if(i==j){// marginal temporal log-likelihood:
 	  for(v=t+1;v<*ntime;v++){
-	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	    if(mlagt[t][v]<=*maxtime){
 	      vario=Variogram(cormod,0,mlagt[t][v],nuis,par);
 	      for(n=0;n<*nrep;n++)
 		*res+= -0.5*(log(2*M_PI)+log(vario)+
@@ -204,8 +207,9 @@ void Comp_Diff_BinGauss( int *cormod, double *data, double *nuis, double *par, d
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr):
-  if(nuis[1]<0 || nuis[2]<=0 || CheckCor(cormod,par)==-2){
+  if(nuis[1]<0 || nuis[2]<=0 || nuis[2]>1 || CheckCor(cormod,par)==-2){
     *res=LOW; return;}
+  nuis[1]=1-nuis[2];// define the nugget
   // Computes the compostite log-likelihood:
   for(i=0; i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
@@ -214,7 +218,7 @@ void Comp_Diff_BinGauss( int *cormod, double *data, double *nuis, double *par, d
 	psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	for(n=0;n<*nrep;n++){
 	  diff=data[(n+i * *nrep)]-data[(n+j * *nrep)];
-	  *res+= -(1-R_pow(diff,2))*log(1-2*(psm-psj))+R_pow(diff,2)*log(psm-psj);}}
+	  *res+= (1-R_pow(diff,2))*log(1-2*(psm-psj))+R_pow(diff,2)*log(psm-psj);}}
       h++;}
   return;
 }
@@ -226,15 +230,16 @@ void Comp_Diff_BinGauss_st(int *cormod, double *data, double *nuis, double *par,
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr)
-  if(nuis[1]<0 || nuis[2]<=0 || CheckCor(cormod,par)==-2){
+  if(nuis[1]<0 || nuis[2]<=0 || nuis[2]>1 || CheckCor(cormod,par)==-2){
     *res=LOW; return;}
+  nuis[1]=1-nuis[2];// define the nugget
   // Computes the log-likelihood:
   for(i=0;i<*ncoord;i++){
     for(t=0;t<*ntime;t++){
       for(j=i;j<*ncoord;j++){
 	if(i==j){
 	  for(v=t+1;v<*ntime;v++){
-	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	    if(mlagt[t][v]<=*maxtime){
 	      psj=pbnorm(cormod,0,mlagt[t][v],nuis,par,*thr);
 	      psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	      for(n=0;n<*nrep;n++){
@@ -301,7 +306,7 @@ void Comp_Pair_Gauss_st(int *cormod, double *data, double *nuis, double *par, do
       for(j=i;j<*ncoord;j++){
 	if(i==j){
 	  for(v=t+1;v<*ntime;v++){
-	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	    if(mlagt[t][v]<=*maxtime){
 	      s12=nuis[2]*CorFct(cormod,0, mlagt[t][v],par);
 	      det=pow(s1,2)-pow(s12,2);
 	      for(n=0;n<*nrep;n++){
@@ -337,8 +342,9 @@ void Comp_Pair_BinGauss( int *cormod, double *data, double *nuis, double *par, d
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr):
-  if(nuis[1]<0 || nuis[2]<=0 || CheckCor(cormod,par)==-2){
+  if(nuis[1]<0 || nuis[2]<=0 || nuis[2]>1 || CheckCor(cormod,par)==-2){
     *res=LOW; return;}
+  nuis[1]=1-nuis[2];// define the nugget
   //compute the composite log-likelihood:
   for(i=0; i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
@@ -359,15 +365,16 @@ void Comp_Pair_BinGauss_st(int *cormod, double *data, double *nuis, double *par,
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr)
-  if(nuis[1]<0 || nuis[2]<=0 || CheckCor(cormod,par)==-2){
+  if(nuis[1]<0 || nuis[2]<=0 || nuis[2]>1 || CheckCor(cormod,par)==-2){
     *res=LOW; return;}
+  nuis[1]=1-nuis[2];// define the nugget
   // Computes the log-likelihood:
   for(i=0;i<*ncoord;i++){
     for(t=0;t<*ntime;t++){
       for(j=i;j<*ncoord;j++){
 	if(i==j){
 	  for(v=t+1;v<*ntime;v++){
-	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	    if(mlagt[t][v]<=*maxtime){
 	      psj=pbnorm(cormod,0,mlagt[t][v],nuis,par,*thr);
 	      psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	      for(n=0;n<*nrep;n++){
@@ -390,13 +397,12 @@ void Comp_Pair_BinGauss_st(int *cormod, double *data, double *nuis, double *par,
 void Comp_Ext_Gauss(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
   int i=0, h=0, j=0, n=0;
-  double a=0.0, rho=0.0, d2V=0.0, duV=0.0, dvV=0.0;
-  double u=0.0, u2=0.0, uv2=0, v=0.0, v2=0.0, V=0.0;
+  double a=0.0, rho=0.0, d2V=0.0, dxV=0.0, dyV=0.0;
+  double x=0.0, x2=0.0, xy2=0, y=0.0, y2=0.0, V=0.0;
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr):
   if(nuis[0]<=0 || nuis[0]>1 || CheckCor(cormod,par)==-2){
     *res=LOW; return;}
   // Computes the log-likelihood:
-
   for(i=0;i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
       // Pairwise distances
@@ -404,23 +410,23 @@ void Comp_Ext_Gauss(int *cormod, double *data, double *nuis, double *par, double
 	rho=nuis[0]*CorFct(cormod,lags[h],0,par);//rho=sill*corr
 	if(rho>.99999996){
 	  for(n=0;n<*nrep;n++){
-	    u=data[(n+i * *nrep)]; //data[si]
-	    v=data[(n+j * *nrep)]; //data[sj]
-	    if(u>=v) *res+=-2*log(v)-1/v;
-	    else *res+=-2*log(u)-1/u;}}
+	    x=data[(n+i * *nrep)]; //data[si]
+	    y=data[(n+j * *nrep)]; //data[sj]
+	    if(x>=y) *res+=-2*log(y)-1/y;
+	    else *res+=-2*log(x)-1/x;}}
 	else{
 	  for(n=0;n<*nrep;n++){
-	    u=data[(n+i * *nrep)]; //data[si]
-	    v=data[(n+j * *nrep)]; //data[sj]
-            u2=u*u;//pow(u,2);
-	    v2=v*v;//pow(v,2);
-	    uv2=2*u*v;
-	    a=sqrt(u2+v2-uv2*rho);//sqrt of the quadratic form
-	    V=-(u+v+a)/uv2;
-	    duV=-0.5*(u*rho-a-v)/(u2*a);
-	    dvV=-0.5*(v*rho-a-u)/(v2*a);
-	    d2V=0.5*(1-rho*rho)/(a*a*a);//0.5*(1-pow(rho,2))/pow(a,3);
-	    *res+=V+log(d2V+duV*dvV);}}}
+	    x=data[(n+i * *nrep)]; //data[si]
+	    y=data[(n+j * *nrep)]; //data[sj]
+            x2=x*x;//pow(u,2);
+	    y2=y*y;//pow(v,2);
+	    xy2=2*x*y;
+	    a=sqrt(x2+y2-xy2*rho);//sqrt of the quadratic form
+	    V=-(x+y+a)/xy2;
+	    dxV=-0.5*(x*rho-a-y)/(x2*a);
+	    dyV=-0.5*(y*rho-a-x)/(y2*a);
+	    d2V=0.5*(1-rho*rho)/(a*a*a);
+	    *res+=V+log(d2V+dxV*dyV);}}}
       h++;}
   // Checks the return values
   if(!R_FINITE(*res))
@@ -525,92 +531,4 @@ void Comp_Brow_Resn(int *cormod, double *data, double *nuis, double *par, double
     *res = LOW;
   return;
 }
-// compute the bivariate normal cdf:
-double pbnorm(int *cormod, double h, double u, double *nuis, double *par, double thr)
-{
-  double res=0;
-  double lim_inf[2]={0,0};//lower bound for the integration
-  double lim_sup[2]={(nuis[0]-thr)/(sqrt(nuis[2]+nuis[1])),(nuis[0]-thr)/(sqrt(nuis[2]+nuis[1]))};
-  int infin[2]={0,0};//set the bounds for the integration
-  double corr[1]={CorFct(cormod,h,u,par)};
-  res=F77_CALL(bvnmvn)(lim_inf,lim_sup,infin,corr);
-  return(res);
-}
 
-// Composite log-likelihood for Gaussian models:
-/*
-void CompLikelihood(double *coordx, double *coordy, int *corrmod, double *data,
-		    int *like, int *model, double *nuisance, int *ndata, int *nsite,
-		    double *par, double *res, int *type)
-{
-  int i=0, h=0, j=0, n=0;
-  double corr=0.0, s1=0.0, s12=0.0, s1s=0.0;
-
-  s1 = nuisance[1] + nuisance[2];//set nugget + sill
-  s1s = pow(s1, 2);
-
-  for(i = 0; i < (*nsite - 1); i++)
-    for(j = (i + 1); j < *nsite; j++)
-      {
-	//pairwise Euclidean distance
-	if(lags[h] <= *dista)
-	  {
-	    corr = CorFct(corrmod, lags[h], par); // pairwise correlation
-	    for(n = 0; n < *ndata; n++)
-	      *res += PairLikelihood(corr, like, nuisance, s1, s1s,
-				     data[(n + i * *ndata)], data[(n + j * *ndata)], type);
-	  }
-	h++;
-      }
-
-  if(!R_FINITE(*res))
-    *res = LOW;
-
-  return;
-}
-
-// Pairwise log-likelihood for Gaussian model:
-
-double PairLikelihood(double corr, int *like, double *nuisance,
-		      double s1, double s1s, double u, double v, int *type)
-{
-  double det=0.0, res=0.0, s12=0.0, vario=0.0;
-  double u2=0.0, v2=0.0;
-
-  switch(*like)
-    {
-    case 1:// Conditional likelihood:
-      switch(*type)
-      	{
-      	case 2: // Conditional Pairwise likelihood for a given pair
-	  s12 = nuisance[2] * corr; //sill*corr
-	  det = s1s - R_pow(s12, 2);
-	  u = u - nuisance[0]; //u-mean
-	  v = v - nuisance[0]; //v-mean
-	  u2 = R_pow(u, 2);
-	  v2 = R_pow(v, 2);
-	  res =  - log(2 * M_PI) - log(det) + log(s1) +
-	    (u2 + v2) * (0.5 / s1 - s1 / det) + 2 * s12 * u * v / det;
-	  break;
-	}
-      break;
-    case 3: // Marginal likelihood:
-      switch(*type)
-	{
-	case 1:// Difference likelihood for given pair
-	  vario = nuisance[1] + nuisance[2] * (1 - corr); //nugget+sill*(1-corr)
-	  res = -.5 * (log(2 * M_PI) + log(vario) + pow(u - v ,2) / (2 * vario));
-	  break;
-	case 2: // Pairwise likelihood for given pair
-	  s12 = nuisance[2] * corr; //sill*corr
-	  det = s1s - pow(s12, 2);
-	  u = u - nuisance[0]; //u-mean
-	  v = v - nuisance[0]; //v-mean
-	  res = -.5 * (2 * log(2 * M_PI) + log(det) +
-		       (s1 * (pow(u, 2) + pow(v, 2)) - 2 * s12 * u * v) / det);
-	  break;
-	}
-      break;
-    }
-  return res;
-}*/
