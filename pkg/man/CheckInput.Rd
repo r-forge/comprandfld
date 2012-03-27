@@ -1,18 +1,16 @@
 \name{CheckInput}
 \alias{CheckInput}
 
-\title{Checks the Inserted Input}
+\title{Checking Input}
 \description{
   Subroutine called by the fitting procedures.
-  The procedure controls the input inserted into
-  the fitting procedures.
+  The procedure controls the the validity of the input inserted by the users.
 }
 \usage{
-CheckInput(coordx, coordy, coordt, corrmodel, data, fixed,
-           grid, likelihood, lonlat, margins, maxdist,
-           maxtime, model, optimizer, replicates, start,
-           taper, threshold, type, varest, vartype,
-           weighted, weights, winconst)
+CheckInput(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
+           likelihood, lonlat, margins, maxdist, maxtime, model, numblock,
+           optimizer, param, replicates, start, taper, threshold, type,
+           varest, vartype, weighted)
 }
 \arguments{
    \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -24,9 +22,11 @@ CheckInput(coordx, coordy, coordt, corrmodel, data, fixed,
   \item{coordt}{A numeric vector assigning 1-dimension of
     temporal coordinates.}
   \item{corrmodel}{String; the name of a correlation model, for the
-    description see \code{\link[RandomFields]{CovarianceFct}}.}
+    description see \code{\link{FitComposite}}.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
       \times n}{d x d x n})-matrix of observations.}
+  \item{fcall}{String; \code{Fitting} to call the fitting procedure and
+    \code{simulation} to call the simulation.}
   \item{fixed}{A named list giving the values of the parameters that
     will be considered as known values. The listed parameters for a
     given correlation function will be not estimated, i.e. if
@@ -49,9 +49,14 @@ CheckInput(coordx, coordy, coordt, corrmodel, data, fixed,
     temporal lag separation in the composite-likelihood.}
   \item{model}{String; the density associated to the likelihood
     objects. \code{Gaussian} is the default.}
+  \item{numblock}{Numeric; the number of observation of the underlying
+    randfom field (only for max-stable simulations). See
+    \code{\link{RFsim}}.}
   \item{optimizer}{String; the optimization algorithm
     (see \code{\link{optim}} for details). 'Nelder-Mead' is the
     default.}
+  \item{param}{A numeric vector of parameters, needed only in
+    simulation. See \code{\link{RFsim}}.}
   \item{replicates}{Logical; if \code{FALSE} (the default) one spatial random field is
     considered, instead if \code{TRUE} the data are considered as iid replicates of a field.}
   \item{start}{A named list with the initial values of the
@@ -72,15 +77,14 @@ CheckInput(coordx, coordy, coordt, corrmodel, data, fixed,
   \item{weighted}{Logical; if \code{TRUE} the likelihood objects are
     weighted. If \code{FALSE} (the
     default) the composite likelihood is not weighted.}
-  \item{weights}{A numeric vector of weights.}
-  \item{winconst}{Numeric; a positive real value -- if
-    \code{vartype=Sub-Samp} -- that determines the window size in the sub-sampling
-    estimates of the variances, see \code{\link{FitComposite}}.}
 }
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
+   \url{www.unibg.it/pers/?moreno.bevilacqua}.
+  }
 
 \keyword{Composite}
