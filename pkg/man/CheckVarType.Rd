@@ -1,14 +1,14 @@
 \name{CheckVarType}
 \alias{CheckVarType}
 
-\title{Check of the method for the computation of the estimates' variances}
+\title{Checking Variance Estimates Type}
 \description{
   Subroutine called by InitParam.
   The procedure controls the method used to compute the estimates' variances.
 }
 \usage{
 CheckVarType(type)
-} 
+}
 \arguments{
   \item{type}{String; the method used to compute the estimates'
     variances. If \code{SubSamp} (the default) the estimates' variances
@@ -17,7 +17,7 @@ CheckVarType(type)
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan}.}
 
 \keyword{Composite}
