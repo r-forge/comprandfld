@@ -47,9 +47,7 @@ If \code{start} is omitted the routine is computing the
 
 \seealso{\code{\link{GevLogLik}}, \code{\link{optim}}}
 
-
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}}
-
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan}.}
 
 \keyword{extremes}
