@@ -1,10 +1,10 @@
 \name{EVariogram}
 \alias{EVariogram}
 
-\title{Empirical Variogram of Gaussian and Max-Stable Random Fields}
+\title{Empirical Variogram(variants) of Gaussian, Binary and Max-Stable Fields}
 \description{
-  The function returns empirical estimates of the variogram of a Gaussian
-  or a max-stable random field.
+  The function returns an empirical estimate of the variogram (or its variants) for Gaussian,
+  Binary and max-stable random field.
 }
 \usage{
 EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, grid=FALSE,
@@ -46,9 +46,12 @@ EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, grid=FALSE,
   \item{replicates}{Numeric; a positive integer denoting the number of independent and identically distributed (iid)
     replications of a spatial or spatial-temporal random field. Optional argument, the default value is \eqn{1} then
     a single realisation is considered.}
-  \item{type}{A String denoting the type of variogram. Three options
-    are available, \code{variogram} which return the standard variogram
-    and for extreme values the \code{madogram} or \code{Fmadogram}.}
+  \item{type}{A String denoting the type of variogram. Four options
+    are available: \code{variogram}, \code{madogram}, \code{Fmadogram}
+    and \code{lorelogram}. It is returned respectively,
+    the standard variogram with the first (Gaussian responses),
+    the madogram with the second and third (extreme values), the
+    lorelogram with the fourth (Binary data).}
 }
 
 \details{
@@ -111,83 +114,228 @@ EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, grid=FALSE,
 }
 
 \references{
-
-  Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York: Wiley.
-
   Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
   Spring Verlang, New York.
 
   Cooley, D., Naveau, P. and Poncet, P. (2006) \emph{Variograms for spatial
   max-stable random fields}. Dependence in Probability and
   Statistics, p. 373--390.
+
+  Heagerty, P. J., and Zeger, S. L. (1998). Lorelogram: A Regression
+  Approach to Exploring Dependence in Longitudinal Categorical
+  Responses.
+  \emph{Journal of the American Statistical Association}, \bold{93}(441), 150--162
+
+  Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York: Wiley.
 }
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://people.epfl.ch/simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
+   \url{www.unibg.it/pers/?moreno.bevilacqua}.}
 
 \examples{
 library(RandomFields)
-set.seed(2111)
+set.seed(514)
 
 # Set the coordinates of the sites:
-x <- runif(100, 0, 20)
-y <- runif(100, 0, 20)
+x <- runif(200, 0, 10)
+y <- runif(200, 0, 10)
 
 
 ################################################################
 ###
-### Example 1. Empirical variogram of Gaussian random fields
-### with stable correlation function.
-### One single replication is considered.
+### Example 1. Empirical estimation of the variogram from a
+### Gaussian random field with exponential correlation.
+### One spatial replication is simulated.
+###
 ###
 ###############################################################
 
 # Set the model's parameters:
-corrmodel <- "stable"
+corrmodel <- "exponential"
 mean <- 0
-variance <- 1
+sill <- 1
 nugget <- 0
-scale <- 10
-power <- 1.2
+scale <- 3
 
-# Simulation of a Gaussian random field in the specified points:
-data <- GaussRF(x=x, y=y, model=corrmodel, grid=FALSE,
-                param=c(mean, variance, nugget, scale, power))
+# Simulation of the spatial Gaussian random field:
+data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
+              sill=sill, nugget=nugget, scale=scale))$data
 
-# Empirical variogram estimation:
+# Empirical spatial variogram estimation:
 fit <- EVariogram(data, x, y)
 
 # Results:
 plot(fit$centers, fit$variograms, xlab='h', ylab=expression(gamma(h)),
-     ylim=c(0, max(fit$variograms)), xlim=c(0, fit$srange[2]), pch=20)
+     ylim=c(0, max(fit$variograms)), xlim=c(0, fit$srange[2]), pch=20,
+     main="variogram")
 
 
 ################################################################
 ###
-### Example 2. Empirical mandogram of max-stable random fields.
-### Extremal Gaussian model with stable correlation function.
-### n iid spatial replications are considered.
+### Example 2. Empirical estimation of the variogram from a
+### spatio-temporal Gaussian random fields with Gneiting
+### correlation function.
+### One spatial replication is simulated
 ###
 ###############################################################
 
-# Simulation of a max-stable random field in the specified points:
-data <- MaxStableRF(x=x, y=y, model=corrmodel, grid=FALSE, maxstable="extr",
-                    param=c(mean, variance, nugget, scale, power), n=40, pch='')
-data <- t(data)
+set.seed(331)
+# Define the temporal sequence:
+times <- seq(1,15,1)
+
+# Simulation of a spatio-temporal Gaussian random field:
+data <- RFsim(x, y, times, corrmodel="gneiting",
+              param=list(mean=0,scale_s=3,scale_t=3,sill=sill,
+              nugget=0,power_s=1,power_t=1,sep=0.2))$data
+
+# Empirical spatio-temporal variogram estimation:
+fit <- EVariogram(data, x, y, times, maxtime=10)
+
+# Results: Marginal spatial empirical  variogram
+par(mfrow=c(2,2), mai=c(.5,.5,.3,.3), mgp=c(1.4,.5, 0))
+plot(fit$centers, fit$variograms, xlab='h', ylab=expression(gamma(h)),
+     ylim=c(0, max(fit$variograms)), xlim=c(0, max(fit$centers)),
+     pch=20,main="Marginal spatial Variogram",cex.axis=.8)
+
+# Results: Marginal temporal empirical  variogram
+plot(fit$bint, fit$variogramt, xlab='t', ylab=expression(gamma(t)),
+     ylim=c(0, max(fit$variograms)),xlim=c(0,max(fit$bint)),
+     pch=20,main="Marginal temporal Variogram",cex.axis=.8)
+
+# Building space-time variogram
+st.vario <- matrix(fit$variogramst,length(fit$centers),length(fit$bint))
+st.vario <- cbind(c(0,fit$variograms), rbind(fit$variogramt,st.vario))
+
+# Results: 3d Spatio-temporal variogram
+require(scatterplot3d)
+st.grid <- expand.grid(c(0,fit$centers),c(0,fit$bint))
+scatterplot3d(st.grid[,1], st.grid[,2], c(st.vario),
+              highlight.3d=TRUE, xlab="h",ylab="t",
+              zlab=expression(gamma(h,t)), pch=20,
+              main="Space-time variogram",cex.axis=.7,
+              mar=c(2,2,2,2), mgp=c(0,0,0),
+              cex.lab=.7)
+
+# A smoothed version
+par(mai=c(.2,.2,.2,.2),mgp=c(1,.3, 0))
+persp(c(0,fit$centers), c(0,fit$bint), st.vario,
+      xlab="h", ylab="u", zlab=expression(gamma(h,u)),
+      ltheta=90, shade=0.75, ticktype="detailed", phi=30,
+      theta=30,main="Space-time variogram",cex.axis=.8,
+      cex.lab=.8)
+
+
+################################################################
+###
+### Example 3. Empirical estimation of the mandogram from a
+### max-stable random field (Extremal Gaussian model) with
+### exponential correlation.
+### n iid spatial replications are simulated.
+###
+###############################################################
+
+set.seed(7273)
+# Simulation of the max-stable random field:
+data <- RFsim(x, y, corrmodel=corrmodel, model="ExtGauss",
+              param=list(mean=mean, sill=sill, nugget=nugget,
+              scale=scale), replicates=40)$data
+# Tranform data from from common unit Frechet to standard Gumbel margins:
 data <- Dist2Dist(data, to='sGumbel')
 
 # Empirical madogram estimation:
-fit <- EVariogram(data, x, y, type='madogram', replicates=40, cloud=TRUE)
+fit <- EVariogram(data, x, y, type='madogram', replicates=40, cloud=FALSE)
 
 # Results:
-par(mfrow=c(1,2))
+par(mfrow=c(1,2), mai=c(.6,.6,.3,.3), mgp=c(1.6,.6, 0))
 plot(fit$centers, fit$variograms, xlab='h', ylab=expression(nu(h)),
-     ylim=c(0, max(fit$variograms)), xlim=c(0, fit$srange[2]), pch=20)
+     ylim=c(0, max(fit$variograms)), xlim=c(0, fit$srange[2]), pch=20,
+     main="madogram")
 plot(fit$centers, fit$extcoeff, xlab='h', ylab=expression(theta(h)),
-     ylim=c(1, 2), xlim=c(0, fit$srange[2]), pch=20)
+     ylim=c(1, 2), xlim=c(0, fit$srange[2]), pch=20,
+     main="extremal coefficient")
 
+################################################################
+###
+### Example 4. Empirical estimation of the lorelogram from a
+### Binary-Gaussian random field with exponential correlation.
+### One spatial replication is simulated.
+###
+###
+###############################################################
+
+set.seed(1221)
+# Simulation of the Binary-Gaussian random field:
+data <- RFsim(x, y, corrmodel="exponential", model="BinaryGauss",
+              param=list(mean=mean,sill=sill,scale=scale,nugget=nugget),
+              threshold=0)$data
+
+# Empirical lorelogram estimation:
+fit <- EVariogram(data, x, y, numbins=20, maxdist=7, type="lorelogram")
+
+# Results:
+plot(fit$centers, fit$variograms, xlab='Distance', ylab="Lorelogram",
+     ylim=c(min(fit$variograms), max(fit$variograms)),
+     xlim=c(0, max(fit$centers)), pch=20, main="Spatial Lorelogram")
+
+
+################################################################
+###
+### Example 5. Empirical estimation of the lorelogram from a
+### spatio-temporal Binary-Gaussian random field with double
+### exponential correlation.
+### One spatial replication is simulated.
+###
+###############################################################
+
+#set.seed(5351)
+# Define the temporal sequence:
+#times <- seq(1,15,1)
+
+# Simulation of othe space-time Binary Gaussian random field:
+
+#data <- RFsim(x, y, times, corrmodel="exp_exp", model="BinaryGauss",
+#        threshold=0, param=list(nugget=nugget,mean=mean,scale_t=1.5,
+#        scale_s=1.5,sill=0.8))$data
+
+# Empirical lorelogram estimation:
+#fit <- EVariogram(data, x, y, times, type="lorelogram", maxtime=8)
+
+# Building space-time lorelogram
+#st.vario <- matrix(fit$variogramst,length(fit$centers),length(fit$bint))
+#tempvario <- rbind(fit$variogramt,st.vario)
+#st.vario <- cbind(c(NA,fit$variograms),tempvario)
+
+#par(mfrow=c(2,2))
+
+# Results:
+# Marginal spatial empirical lorelogram
+#plot(fit$centers, fit$variograms, xlab='h', ylab="lorelogram",
+#     xlim=c(0, max(fit$centers)), pch=20,main="Marginal spatial lorelgram")
+
+# Marginal temporal empirical  lorelogram
+#plot(fit$bint, fit$variogramt, xlab='t', ylab="lorelogram",
+#     xlim=c(0,max(fit$bint)), pch=20,main="Marginal temporal lorelogram")
+
+# 3d Spatio-temporal lorelogram:
+#require(scatterplot3d)
+#st.grid <- expand.grid(c(0,fit$centers), c(0,fit$bint))
+
+#scatterplot3d(st.grid[,1], st.grid[,2], c(st.vario),
+#              highlight.3d=TRUE, xlab = "h", ylab = "t",
+#              zlab="Lorelogram",pch=20, main="Space-time lorelogram",
+#              cex.axis=.7, mar=c(2,2,2,2), mgp=c(0,0,0),cex.lab=.7)
+
+# smoothed version:
+#par(mai=c(.2,.2,.2,.2),mgp=c(1.2,.5, 0))
+#persp(c(0,fit$centers),c(0,fit$bint),st.vario,
+#      xlab = "h", ylab = "t", zlab ="Lorelogram",
+#      ltheta=90, shade=0.75, ticktype="detailed",
+#      phi=30,theta=30, main="Space-time lorelogram",
+#      cex.axis=.8, cex.lab=.8)
 }
 
 \keyword{Variogram}
