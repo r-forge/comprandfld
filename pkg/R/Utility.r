@@ -1,13 +1,16 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@unibg.it.
-### Institute: Department of Information Technology
-### and Mathematical Methods, University of Bergamo
+### Emails: simone.padoan@stat.unipd.it,
+### moreno.bevilacqua@unibg.it
+### Institutions: Department of Statistical Science,
+### University of Padua and Department of Information
+### Technology and Mathematical Methods, University
+### of Bergamo.
 ### File name: Utility.r
 ### Description:
 ### This file contains a set of procedures
-### for supporting all the other functions.
-### Last change: 08/09/2011.
+### for the set up of all the package routines.
+### Last change: 08/03/2012.
 ####################################################
 
 ### Procedures are in alphabetical order.
@@ -24,7 +27,7 @@ CheckCorrModel <- function(corrmodel)
                              gencauchy=4,
                              spherical=5,
                              stable=6,
-                             whittlematern=7,
+                             matern=7,
                              # spatial-temporal non-separable correlations
                              gneiting=21,
                              iacocesare=22,
@@ -37,15 +40,12 @@ CheckCorrModel <- function(corrmodel)
                              gauss_gauss=44,##not implemented
                              matern_cauchy=45,
                              matern_exp=46)
-
-
     return(CheckCorrModel)
   }
 
-CheckInput <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, likelihood,
-                       lonlat, margins, maxdist, maxtime, model, optimizer, replicates,
-                       start, taper, threshold, type, varest, vartype, weighted, weights,
-                       winconst)
+CheckInput <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid, likelihood,
+                       lonlat, margins, maxdist, maxtime, model, numblock, optimizer, param,
+                       replicates, start, taper, threshold, type, varest, vartype, weighted)
   {
     error <- NULL
     # START Include internal functions:
@@ -77,254 +77,180 @@ CheckInput <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, lik
         return(CheckSpaceTime)
     }
     # END Include internal functions
-    # Check if the input is inserted correctly
-
-    if(missing(coordx) || !is.numeric(coordx))
-      {
+    ### START Checks inserted input
+    # START common check fitting and simulation
+    if(missing(coordx) || !is.numeric(coordx)){
         error <- 'insert a suitable set of numeric coordinates\n'
-        return(list(error=error))
-      }
+        return(list(error=error))}
 
-    if(!is.null(coordy) & !is.numeric(coordy))
-      {
+    if(!is.null(coordy) & !is.numeric(coordy)){
         error <- 'insert a suitable set of numeric coordinates\n'
-        return(list(error=error))
-      }
+        return(list(error=error))}
 
-    if(missing(corrmodel) || !is.character(corrmodel))
-      {
+    if(missing(corrmodel) || !is.character(corrmodel)){
         error <- 'insert the correlation model\n'
-        return(list(error=error))
-      }
+        return(list(error=error))}
 
-    if(missing(data) || !is.numeric(data))
-      {
-        error <- 'insert a numeric vector or matrix of data\n'
-        return(list(error=error))
-      }
-
-    if(!is.null(fixed) & !is.list(fixed))
-      {
-        error <- 'insert fixed values as a list of parameters\n'
-        return(list(error=error))
-      }
-
-    if(!is.null(grid) & !is.logical(grid))
-      {
+    if(!is.null(grid) & !is.logical(grid)){
         error <- 'the parameter grid need to be a logic value\n'
-        return(list(error=error))
-      }
+        return(list(error=error))}
 
-    if(!is.null(likelihood) & !is.character(likelihood))
-      {
-        error <- 'insert the type of likelihood objects\n'
-        return(list(error=error))
-      }
-
-    if(!is.null(maxdist))
-      {
-        error <- "insert a positive numeric value for the maximum spatial distance\n"
-        if(!is.numeric(maxdist))
-          return(list(error=error))
-        else
-          if(maxdist<0)
-            return(list(error=error))
-      }
-
-    if(!is.null(maxtime))
-      {
-        error <- "insert a positive numeric value for the maximum time interval\n"
-        if(!is.numeric(maxtime))
-          return(list(error=error))
-        else
-          if(maxtime<0)
-            return(list(error=error))
-      }
-
-    if(!is.null(model) & !is.character(model))
-      {
+    if(!is.null(model) & !is.character(model)){
         error <- 'insert the name of the random field\n'
-        return(list(error=error))
-      }
+        return(list(error=error))}
 
-     if(is.null(CheckModel(model)))
-      {
+    if(is.null(CheckModel(model))){
         error <- 'the model name of the random field is not correct\n'
-        return(list(error=error))
-      }
+        return(list(error=error))}
 
-    if(model=="BinaryGauss" || model=="BinaryExt"){
-      # check the threshold
-      error <- 'insert a numeric value for the threshold'
-      if(is.null(threshold)) return(list(error=error))
-      else if(!is.numeric(threshold)) return(list(error=error))
-      # check the data
-      if(length(unique(c(data)))!=2){
-        error <- 'the data are not binary'
-        return(list(error=error))}}
+#    if(model=="BinaryGauss"){
+#        error <- 'insert a numeric value for the threshold'
+#        if(is.null(threshold)) return(list(error=error))
+#        else if(!is.numeric(threshold)) return(list(error=error))}
 
-    if(model %in% c("BrownResn","ExtGauss","ExtT"))
-        if(!margins %in% c("Frechet","Gev")){
-            error <- 'insert the correct type of marginal distributions\n'
+    if(is.null(replicates) || (abs(replicates-round(replicates))>0) || replicates<1){
+        error <- 'the parameter replicates need to be a positive integer\n'
+        return(list(error=error))}
+
+    if(is.null(CheckCorrModel(corrmodel))){
+        error <- 'the name of the correlation model is not correct\n'
+        return(list(error=error))}
+
+    # END common check fitting and simulation
+    # START check fitting
+    if(fcall=="Fitting"){
+        if(missing(data) || !is.numeric(data)){
+            error <- 'insert a numeric vector or matrix of data\n'
             return(list(error=error))}
 
-    if(!is.null(optimizer) & !is.character(optimizer))
-      {
-        error <- 'insert the type of maximising algorithm\n'
-        return(list(error=error))
-      }
+        if(!is.null(fixed) & !is.list(fixed)){
+            error <- 'insert fixed values as a list of parameters\n'
+            return(list(error=error))}
 
-    if(!is.null(varest) & !is.logical(varest))
-      {
-        error <- 'the parameter std.err need to be a logical value\n'
-        return(list(error=error))
-      }
+        if(!is.null(fixed)){
+            namfixed <- names(fixed)
+            if(!all(namfixed %in% c(NuisanceParam(model), CorrelationParam(corrmodel)))){
+                error <- 'some names of the fixed parameters is/are not correct\n'
+                return(list(error=error))}
 
-    if(is.null(replicates) || (abs(replicates-round(replicates))>0) || replicates<1)
-      {
-        error <- 'the parameter replicates need to be a positive integer\n'
-        return(list(error=error))
-      }
+        if(!CheckParamRange(unlist(fixed))){
+            error <- 'some fixed values are out of the range\n'
+            return(list(error=error))}}
 
-    if(type=="Tapering"){
+        if(!is.null(likelihood) & !is.character(likelihood)){
+            error <- 'insert the type of likelihood objects\n'
+            return(list(error=error))}
+
+        if(!is.null(maxdist)){
+            error <- "insert a positive numeric value for the maximum spatial distance\n"
+            if(!is.numeric(maxdist)) return(list(error=error))
+            else if(maxdist<0) return(list(error=error))}
+
+        if(!is.null(maxtime)){
+            error <- "insert a positive numeric value for the maximum time interval\n"
+            if(!is.numeric(maxtime)) return(list(error=error))
+            else if(maxtime<0) return(list(error=error))}
+
+        if(model=="BinaryGauss"){
+            if(length(unique(c(data)))!=2){error <- 'the data are not binary'
+            return(list(error=error))}
+            if(!is.null(start$sill)) if(start$sill>1){error <- 'some starting values are out of the range\n'
+                                                     return(list(error=error))}
+            if(!is.null(fixed$sill)) if(fixed$sill>1){error <- 'some starting values are out of the range\n'
+                                                     return(list(error=error))}}
+
+        if(model %in% c("BrownResn","ExtGauss","ExtT"))
+            if(!margins %in% c("Frechet","Gev")){
+                error <- 'insert the correct type of marginal distributions\n'
+                return(list(error=error))}
+
+        if(!is.null(optimizer) & !is.character(optimizer)){
+            error <- 'insert the type of maximising algorithm\n'
+            return(list(error=error))}
+
+        if(!is.null(varest) & !is.logical(varest)){
+            error <- 'the parameter std.err need to be a logical value\n'
+            return(list(error=error))}
+
+        if(type=="Tapering"){
         if(is.null(taper) || is.null(maxdist)){
           error <- 'tapering need a taper correlation model and/or a compact support\n'
           return(list(error=error))}
         if(!taper %in% c("Wendland1","Wendland2","Wendland3")){
-           error <- 'insert a correct name for the taper correlation model\n'
+            error <- 'insert a correct name for the taper correlation model\n'
+            return(list(error=error))}}
+
+        if(!is.null(type) & !is.character(type)){
+            error <- 'insert the configuration of the likelihood objects\n'
+            return(list(error=error))}
+
+        if(is.null(CheckType(type))){
+            error <- 'the type name of the likelihood objects is not correct\n'
+            return(list(error=error))}
+
+        if(is.null(CheckLikelihood(likelihood))){
+           error <- 'the setting name of the likelihood objects is not correct\n'
            return(list(error=error))}
-    }
 
-    if(!is.null(type) & !is.character(type))
-      {
-        error <- 'insert the configuration of the likelihood objects\n'
-        return(list(error=error))
-      }
+        if(likelihood == "Full"){
+            if(!any(type == c("Restricted", "Standard", "Tapering"))){
+                error <- 'insert a type name of the likelihood objects compatible with the full likelihood\n'
+                return(list(error=error))}}
 
-    if(!is.null(lonlat) & !is.logical(lonlat))
-      {
-        error <- 'insert the type of coordinates'
-        return(list(error=error))
-      }
+        if(likelihood == "Marginal"){
+            if(!any(type == c("Difference", "Pairwise"))){
+                error <- 'insert a type name of the likelihood objects compatible with the composite-likelihood\n'
+                return(list(error=error))}}
 
-    if(!is.null(weighted) & !is.logical(weighted))
-      {
-        error <- 'insert if the composite likelihood need to be weighted'
-        return(list(error=error))
-      }
+        if(varest & (likelihood == "Conditional" || likelihood == "Marginal") & (!is.null(vartype) & !is.character(vartype))){
+            error <- 'insert the type of estimation method for the variances\n'
+            return(list(error=error))}
 
-    if(!is.null(weights) & !is.numeric(weights))
-      {
-        error <- 'insert a numeric vector or matrix of weights'
-        return(list(error=error))
-      }
+        if(varest & is.null(CheckVarType(vartype)) & (likelihood == "Conditional" || likelihood == "Marginal")){
+            error <- 'the name of the estimation type for the variances is not correct\n'
+            return(list(error=error))}
 
-    # Check the correctness of the inserted input
-    codcorr <- CheckCorrModel(corrmodel)
-    if(is.null(corrmodel))
-      {
-        error <- 'the name of the correlation model is not correct\n'
-        return(list(error=error))
-      }
+        if(!is.null(start)){
+            if(!is.list(start)){
+                error <- 'insert starting values as a list of parameters\n'
+                return(list(error=error))}
 
-    if(!is.null(fixed))
-      {
-        if(!all(names(fixed) %in% c(NuisanceParam(model), CorrelationParam(corrmodel))))
-          {
-            error <- 'some names of the fixed parameters is/are not correct\n'
-            return(list(error=error))
-          }
+            namstart <- names(start)
 
-        if(!CheckParamRange(unlist(fixed)))
-          {
-            error <- 'some fixed values are out of the range\n'
-            return(list(error=error))
-          }
-      }
+            if(!all(namstart %in% c(NuisanceParam(model), CorrelationParam(corrmodel)))){
+                error <- 'some names of the starting parameters is/are not correct\n'
+                return(list(error=error))}
 
-    checklik <- CheckLikelihood(likelihood)
+            if(any(namstart=='mean') & (type=='Difference' || type=='Restricted')){
+                error <- 'the mean parameter is not allow with the difference composite likelihood\n'
+                return(list(error=error))}
 
-    if(is.null(checklik))
-      {
-        error <- 'the setting name of the likelihood objects is not correct\n'
-        return(list(error=error))
-      }
+            if(any(namstart=='sill') & (model=='BrowResn')){
+                error <- 'the sill parameter is not allow with Brown-Renick model\n'
+                return(list(error=error))}
 
-    if(!is.null(start))
-      {
-        if(!is.list(start))
-          {
-            error <- 'insert starting values as a list of parameters\n'
-            return(list(error=error))
-          }
-        namesstart <- names(start)
-        if(!all(namesstart %in% c(NuisanceParam(model), CorrelationParam(corrmodel))))
-          {
-            error <- 'some names of the starting parameters is/are not correct\n'
-            return(list(error=error))
-          }
-        if(any(namesstart=='mean') & (type=='Difference' || type=='Restricted'))
-          {
-            error <- 'the mean parameter is not allow with the difference composite likelihood\n'
-            return(list(error=error))
-          }
-        if(any(namesstart=='sill') & (model=='BrowResn'))
-          {
-            error <- 'the sill parameter is not allow with Brown-Renick model\n'
-            return(list(error=error))
-          }
-        if(!CheckParamRange(unlist(start)))
-          {
-            error <- 'some starting values are out of the range\n'
-            return(list(error=error))
-          }
-      }
+            if(!CheckParamRange(unlist(start))){
+                error <- 'some starting values are out of the range\n'
+                return(list(error=error))}
 
-    checktype <- CheckType(type)
+            if(!is.null(fixed))
+                if(any(namstart %in% namfixed)){
+                    error <- 'some fixed parameter name/s is/are matching with starting parameter name/s\n'
+                    return(list(error=error))}}
 
-    if(is.null(checktype))
-      {
-        error <- 'the type name of the likelihood objects is not correct\n'
-        return(list(error=error))
-      }
+        if(!is.null(lonlat) & !is.logical(lonlat)){
+            error <- 'insert the type of coordinates'
+            return(list(error=error))}
 
-    if(checklik == 2)
-      {
-        if(!any(checktype == c(3, 4, 5)))
-          {
-            error <- 'insert a type name of the likelihood objects compatible with the full likelihood\n'
-            return(list(error=error))
-          }
-      }
+        if(!is.null(weighted) & !is.logical(weighted)){
+            error <- 'insert if the composite likelihood need to be weighted'
+            return(list(error=error))}
 
-    if(checklik == 3)
-      {
-        if(!any(checktype == c(1, 2)))
-          {
-            error <- 'insert a type name of the likelihood objects compatible with the composite-likelihood\n'
-            return(list(error=error))
-          }
-      }
-
-    if(varest & (checklik == 1 || checklik == 3)  & (!is.null(vartype) & !is.character(vartype)))
-      {
-        error <- 'insert the type of estimation method for the variances\n'
-        return(list(error=error))
-      }
-
-    vartp <- CheckVarType(vartype)
-
-    if(varest & is.null(vartp) & (checklik == 1 || checklik == 3))
-      {
-        error <- 'the name of the estimation type for the variances is not correct\n'
-        return(list(error=error))
-      }
-
-    # START - check the format of the inserted coordinates and dataset
+        # START - checks the format of the coordinates and dataset
     dimdata <- dim(data) # set the data dimension
     if(is.null(coordt)) # START 1) spatial random field
       {
-        if(CheckSpaceTime(codcorr))
+        if(CheckSpaceTime(CheckCorrModel(corrmodel)))
           {
             error <- 'temporal coordinates are missing\n'
             return(list(error=error))
@@ -606,30 +532,41 @@ CheckInput <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, lik
               } # END irregular grid
           } # END b) one realisation of a spatial-temporal random field
       }
-    # END - check the format of the inserted coordinates and dataset
-    # Check the range of validity for the sub-sampling parameter:
-    if(!CheckSpaceTime(codcorr))
-    if(varest & (vartp==2) & is.numeric(winconst))
-      {
-        if(!grid)
-          {
-            rcoordx <- range(coordx[, 1])
-            rcoordy <- range(coordx[, 2])
-          }
-        else
-          {
-            rcoordx <- range(coordx)
-            rcoordy <- range(coordy)
-          }
-         delta <- min(rcoordx[2] - rcoordx[1], rcoordy[2] - rcoordy[1])
-         wincup <- delta / sqrt(delta)
+      # END - check the format of the inserted coordinates and dataset
+    }
+    # END check fitting
+    # START check simulation
+    if(fcall=="Simulation"){
+        if(is.null(param) || !is.list(param)){
+            error <- 'insert the parameters as a list\n'
+            return(list(error=error))}
 
-         if(winconst < 0 || winconst > wincup)
-           {
-             error <- paste('for the sub-sampling constant insert a positive real value less or equal than:', wincup,'\n')
-             return(list(error=error))
-           }
-       }
+        if(length(param)!=length(c(unique(c(NuisanceParam("Gaussian"),NuisanceParam(model))),CorrelationParam(corrmodel)))){
+            error <- "some parameters are missing or does not match with the declared model\n"
+            return(list(error=error))}
+
+        if(!all(names(param) %in% c(unique(c(NuisanceParam("Gaussian"),NuisanceParam(model))), CorrelationParam(corrmodel)))){
+            error <- 'some names of the parameters are not correct\n'
+            return(list(error=error))}
+
+        if(!CheckParamRange(unlist(param))){
+            error <- 'some parameters are out of the range\n'
+            return(list(error=error))}
+
+        if(model %in% c("BrowResn","ExtT") && !is.null(numblock)){
+            error <- "insert the number of observation in each block\n"
+            if(!is.numeric(numblock)) return(list(error=error))
+            else if(numblock<0) return(list(error=error))}
+
+        if(model=="BrowRen"){
+            if(!corrmodel %in% c("exponential","gauss","gencauchy","stable")){
+                error <- "the correlation model is not adequate for the Brown-Resnick process\n"
+                 return(list(error=error))}
+            if(corrmodel=="gencauchy" && param["power1"]!=2){
+                error <- "the parameter power1 need to be equal to 2 for the Brown-Resnick process\n"
+                 return(list(error=error))}}
+    }
+    # END check simulation
   }
 
 CheckLikelihood <- function(likelihood)
@@ -695,7 +632,7 @@ CorrelationParam <- function(corrmodel)
       param <- c('power', 'scale')
       return(param)}
     # Whittle-Matern correlation model:
-    if(corrmodel=='whittlematern'){
+    if(corrmodel=='matern'){
       param <- c('scale', 'smooth')
       return(param)}
     # Non-separable spatial-temporal correlations:
@@ -758,10 +695,10 @@ NuisanceParam <- function(model)
   return(param)
 }
 
-InitParam <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, likelihood,
-                      lonlat, margins, maxdist, maxtime, model, parscale, paramrange,
-                      replicates, start, threshold, type, varest, vartype, weighted,
-                      winconst)
+InitParam <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
+                      likelihood, lonlat, margins, maxdist, maxtime, model, numblock,
+                      param, parscale, paramrange, replicates, start, threshold, type,
+                      typereal, varest, vartype, weighted, winconst, winstp)
 {
     ### START Includes internal functions:
     # Check if the correlation is spatial or spatial-temporal
@@ -789,6 +726,12 @@ InitParam <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, like
             if(namesparam[i]=='power'){
                 lower <- c(lower, low)
                 upper <- c(upper, 2)}
+            if(namesparam[i]=='power_s'){
+                lower <- c(lower, low)
+                upper <- c(upper, 2)}
+            if(namesparam[i]=='power_t'){
+                lower <- c(lower, low)
+                upper <- c(upper, 2)}
             if(namesparam[i]=='power1'){
                 lower <- c(lower, low)
                 upper <- c(upper, 2)}
@@ -798,6 +741,15 @@ InitParam <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, like
             if(namesparam[i]=='scale'){
                 lower <- c(lower, low)
                 upper <- c(upper, Inf)}
+            if(namesparam[i]=='scale_s'){
+                lower <- c(lower, low)
+                upper <- c(upper, Inf)}
+            if(namesparam[i]=='scale_t'){
+                lower <- c(lower, low)
+                upper <- c(upper, Inf)}
+            if(namesparam[i]=='sep'){
+                lower <- c(lower, low)
+                upper <- c(upper, 1)}
             if(namesparam[i]=='sill'){
                 lower <- c(lower, low)
                 upper <- c(upper, Inf)}
@@ -808,123 +760,23 @@ InitParam <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, like
     }
     ### END Includes internal functions
     ### Set returning variables and initialize the model parameters:
-    namesnuis <- NuisanceParam(model)
-    likelihood <- CheckLikelihood(likelihood)
-    model <- CheckModel(model)
-    vartype <- CheckVarType(vartype)
-    type <- CheckType(type)
     # Initialises the starting and fixed parameters' names
     error <- NULL
-    namesfixed <- NULL
-    namesstart <- NULL
+    namesfixed <- namesstart <- namessim <- NULL
     numfixed <- numstart <- 0
-    # Set the correlation and the nuisance parameters:
+    # Set the model, likelihood, correlation and the nuisance parameters:
+    namesnuis <- NuisanceParam(model)
+    model <- CheckModel(model)
+    flagnuis <- NULL
     namescorr <- CorrelationParam(corrmodel)
     numparamcorr <- length(namescorr)
     paramcorr <- rep(1, numparamcorr)
     names(paramcorr) <- namescorr
-    nuisance <- NULL
-    # Set the if the correlation is space-time:
+    flagcorr <- NULL
+    #paramrange <- list(lower=NULL, upper=NULL)
+    # Set the correlation and if is a space-time random field:
     corrmodel <- CheckCorrModel(corrmodel)
     spacetime <- CheckSpaceTime(corrmodel)
-    ### Parameters' settings:
-    if(model==1){ # Gaussian or Binary Gaussian random field:
-        mu <- mean(data)
-        if(any(type==c(1, 3, 6)))# Checks the type of likelihood
-          if(is.list(fixed)) fixed$mean <- mu# Fixs the mean
-          else fixed <- list(mean=mu)
-        nuisance <- c(mu, 0, var(c(data)))}
-    if(model==2){ # Binary Gaussian random field:
-        p <- mean(data)
-        mu <- threshold+qnorm(p)
-        nuisance <- c(mu, 0, 1)
-        if(!is.null(start$nugget))
-            if(length(start)>1) start<-start[!names(start)%in%"nugget"]
-            else start<-NULL
-        if(is.list(fixed)) fixed$nugget<-0# Fixs the nugget
-          else fixed<-list(nugget=0)}
-    if(model>2){ # Max-stable random field:
-        if(model==3)# Checks if its the Brown-Resnick model
-          if(is.list(fixed)) fixed$sill <- 1 # Fixs the sill
-          else fixed <- list(sill=1)
-        # Cheks if its the Extremal-t model
-        if(model==5) nuisance <- c(nuisance,1)
-        nuisance <- c(nuisance,0.5)
-        if(margins=="Gev") data <- Dist2Dist(data)}
-    names(nuisance) <- namesnuis
-    namesparam <- sort(c(namescorr, namesnuis))
-    param <- c(nuisance, paramcorr)
-    param <- param[namesparam]
-    namessim <- c('mean', 'sill', 'nugget', 'scale', namescorr[!namescorr == 'scale'])
-    numparam <- length(param)
-    flag <- rep(1, numparam)
-    namesflag <- namesparam
-    names(flag) <- namesflag
-    ### Update the parameters with fixed values:
-    if(!is.null(fixed))
-      {
-        fixed <- unlist(fixed)
-        namesfixed <- names(fixed)
-        numfixed <- length(namesfixed)
-
-        if(numfixed==numparam)
-          {
-            error <- 'the are not parameters left to estimate\n'
-            return(list(error=error))
-          }
-
-        for(i in 1:numfixed)
-          {
-            flag[namesflag==namesfixed[i]] <- 0
-            param <- param[!namesparam==namesfixed[i]]
-            if(any(namescorr==namesfixed[i]))
-              numparamcorr <- numparamcorr - 1
-            namesparam <- names(param)
-          }
-        numparam <- length(param)
-      }
-    flagcorr <- flag[namescorr]
-    flagnuis <- flag[namesnuis]
-    ### Update the parameters with starting values:
-    if(!is.null(start))
-      {
-        start <- unlist(start)
-        namesstart <- names(start)
-
-        if(any(type == c(1, 3, 5)))
-          if(any(namesstart == 'mean'))
-            start <- start[!namesstart == 'mean']
-
-        namesstart <- names(start)
-        numstart <- length(start)
-
-        for(i in 1 : numstart)
-          param[namesstart[i]] <- start[namesstart[i]]
-      }
-
-    ### Check the consistency between fixed and starting values:
-    if(numstart > 0 && numfixed > 0)
-      for(i in 1 : numstart)
-        for(j in 1 : numfixed)
-          if(namesstart[i]==namesfixed[j])
-            {
-              error <- ('some fixed parameter name/s is/are matching with starting parameter name/s\n')
-              return(list(error=error))
-            }
-
-    ### set the scale of the parameters:
-
-    # Insert here!
-
-    ### set the range of the parameters if its the case
-    if(paramrange)
-      paramrange <- SetRangeParam(namesparam, numparam)
-    else
-      paramrange <- list(lower=NULL, upper=NULL)
-    ### If the case set the sub-sampling parameter to the default value
-    if(varest & (vartype==2) & (missing(winconst) || !is.numeric(winconst)))
-      if(spacetime) winconst <- 0
-      else winconst <- 1
     ### START settings the data structure:
     # set the coordinates sizes:
     if(is.null(coordy)){coordy <- coordx[,2]
@@ -934,43 +786,148 @@ InitParam <- function(coordx, coordy, coordt, corrmodel, data, fixed, grid, like
               numcoordy <- length(coordy)
               numcoord <- numcoordx*numcoordy}
     else numcoord <- numcoordx <- numcoordy <- length(coordx)
-
-    if(spacetime)
-      { # set the number of temporal realisations:
-        numtime <- length(coordt)
-        if(grid) # if the data are in regular grid:
-          if(replicates>1){ # checks if there are iid replicates:
-              dim(data) <- c(numcoord, numtime, replicates)
-              data <- aperm(data, c(2,1,3))}
-          else # if there are not iid replicates:
-            data <- matrix(data, ncol=numcoord, nrow=numtime, byrow=T)}
-    else{numtime <- 1
-         coordt <- 0
-         if(grid)
-           data <- matrix(data, ncol=numcoord, nrow=replicates, byrow=T)
-         else
-           data <- matrix(data, ncol=numcoord, nrow=replicates)}
+    # initialize tapering variables:
+    tapering<-ia<-idx<-ja<-integer(1)
     ### END settings the data structure
-
-    ### Compute distances:
-    numpairs=.5*numcoord*(numcoord-1)
+    # START code for the simulation procedure
+    if(fcall=="Fitting"){
+        ### Parameters' settings:
+        nuisance <- NULL
+        likelihood <- CheckLikelihood(likelihood)
+        vartype <- CheckVarType(vartype)
+        type <- CheckType(type)
+        if(model==1){ # Gaussian random field:
+            mu <- mean(data)
+            if(any(type==c(1, 3, 6)))# Checks the type of likelihood
+                if(is.list(fixed)) fixed$mean <- mu# Fixs the mean
+                else fixed <- list(mean=mu)
+            nuisance <- c(mu, 0, var(c(data)))
+            if(likelihood==2 & CheckType(typereal)==5) tapering <- 1}
+        if(model==2){ # Binary Gaussian random field:
+            # check the threshould:
+            if(is.null(threshold) || !is.numeric(threshold))
+                threshold <- 0
+            p <- mean(data)
+            mu <- threshold+qnorm(p)
+            nuisance <- c(mu, 0, 1)
+            if(!is.null(start$nugget))
+                if(length(start)>1) start<-start[!names(start)%in%"nugget"]
+                else start<-NULL
+            if(is.list(fixed)) fixed$nugget<-0# Fixs the nugget
+            else fixed<-list(nugget=0)
+            #set the nugget in case the sill is fixed
+            if(!is.null(fixed$sill)) fixed$nugget <- 1-fixed$sill}
+        if(model>2){ # Max-stable random field:
+            if(model==3){# Checks if its the Brown-Resnick model
+                if(is.list(fixed)) fixed$sill <- 1 # Fixs the sill
+                else fixed <- list(sill=1)
+                if(corrmodel==4) fixed$power1 <- 2}
+            # Cheks if its the Extremal-t model
+            if(model==5) nuisance <- c(nuisance,1)
+            nuisance <- c(nuisance,0.5)
+            if(margins=="Gev") data <- Dist2Dist(data)}
+        # Update the parameter verctor:
+        names(nuisance) <- namesnuis
+        namesparam <- sort(c(namescorr, namesnuis))
+        param <- c(nuisance, paramcorr)
+        param <- param[namesparam]
+        numparam <- length(param)
+        flag <- rep(1, numparam)
+        namesflag <- namesparam
+        names(flag) <- namesflag
+        # Update the parameters with fixed values:
+        if(!is.null(fixed)){
+            fixed <- unlist(fixed)
+            namesfixed <- names(fixed)
+            numfixed <- length(namesfixed)
+            if(numfixed==numparam){
+                error <- 'the are not parameters left to estimate\n'
+                return(list(error=error))}
+            flag[pmatch(namesfixed, namesflag)] <- 0
+            param <- param[-pmatch(namesfixed, namesparam)]
+            numparamcorr <- numparamcorr-sum(namesfixed %in% namescorr)
+            namesparam <- names(param)
+            numparam <- length(param)}
+        flagcorr <- flag[namescorr]
+        flagnuis <- flag[namesnuis]
+        # Update the parameters with starting values:
+        if(!is.null(start)){
+            start <- unlist(start)
+            namesstart <- names(start)
+            if(any(type == c(1, 3, 6)))
+                if(any(namesstart == 'mean'))
+                    start <- start[!namesstart == 'mean']
+            namesstart <- names(start)
+            numstart <- length(start)
+            param[pmatch(namesstart,namesparam)] <- start}
+        ### set the scale of the parameters:
+        # Insert here!
+        # set the range of the parameters if its the case
+        if(paramrange) paramrange <- SetRangeParam(namesparam, numparam)
+        else paramrange <- list(lower=NULL, upper=NULL)
+        ### If the case set the sub-sampling parameters to the default values
+        if(missing(winconst) || !is.numeric(winconst)) winconst <- 0
+        if(missing(winstp) || !is.numeric(winstp)) winstp <- 0
+        ### Set the data format:
+        if(spacetime){ # set the number of temporal realisations:
+            numtime <- length(coordt)
+            if(grid) # if the data are in regular grid:
+                if(replicates>1){ # checks if there are iid replicates:
+                    dim(data) <- c(numcoord, numtime, replicates)
+                    data <- aperm(data, c(2,1,3))}
+                else # if there are not iid replicates:
+                    data <- matrix(data, ncol=numcoord, nrow=numtime, byrow=TRUE)}
+        else{
+            numtime <- 1
+            coordt <- 0
+            if(grid) data <- matrix(data, ncol=numcoord, nrow=replicates, byrow=TRUE)
+            else data <- matrix(data, ncol=numcoord, nrow=replicates)
+            if(typereal=="Tapering"){
+                idx<-integer(numcoord*numcoord)
+                ja<-integer(numcoord*numcoord)
+                ia<-integer(numcoord+1)}}
+    }
+    # END code for the fitting procedure
+    # START code for the simulation procedure
+    if(fcall=="Simulation"){
+        namesnuis <- sort(unique(c(namesnuis,NuisanceParam("Gaussian"))))
+        param <- unlist(param)
+        numparam <- length(param)
+        namesparam <- names(param)
+        if(model %in% c(3,5))
+            if(is.null(numblock)) numblock <- as.integer(500)
+            else numblock <- as.integer(numblock)
+        if(model==3){
+            param["df"] <- 0
+            if(corrmodel==2) param["scale"] <- 2*log(numblock)*param["scale"]
+            if(corrmodel %in% c(3,4)) param["scale"] <- 2*sqrt(log(numblock))*param["scale"]
+            if(corrmodel==6) param["scale"] <- 2*(log(numblock))^(1/param["power"])*param["scale"]}
+        namessim <- c("mean","sill","nugget","scale",namescorr[!namescorr=="scale"])
+        if(spacetime) numtime <- length(coordt)
+        else {numtime <- 1; coordt <- 0}
+    }
+    # END code for the simulation procedure
+    ### Compute the spatial and spatial-temporal distances:
+    numpairs <- integer(1)
     srange <- double(1)
     trange <- double(1)
-    if(is.null(maxdist)) srange <- c(srange, double(1)) else srange <- c(srange, as.double(maxdist))
-    if(is.null(maxtime)) trange <- c(trange, double(1)) else trange <- c(trange, as.double(maxtime))
+    if(is.null(maxdist)) srange<-c(srange, double(1)) else srange<-c(srange, as.double(maxdist))
+    if(is.null(maxtime)) trange<-c(trange, double(1)) else trange<-c(trange, as.double(maxtime))
     isinit <- as.integer(1)
-    .C('SetGlobalVar', as.double(coordx), as.double(coordy), as.double(coordt),
-       as.integer(grid), isinit, as.integer(numcoord), as.integer(numcoordx),
-       as.integer(numcoordy), as.integer(replicates), as.integer(spacetime),
-       srange, as.integer(numtime), trange, as.integer(lonlat), as.integer(weighted),
-       PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('SetGlobalVar',as.double(coordx),as.double(coordy),as.double(coordt),
+       as.integer(grid),ia,idx,isinit,ja,as.integer(numcoord),as.integer(numcoordx),
+       as.integer(numcoordy),numpairs,as.integer(replicates),as.integer(spacetime),
+       srange,as.integer(numtime),trange,as.integer(tapering),as.integer(lonlat),
+       as.integer(weighted), PACKAGE='CompRandFld', DUP=FALSE, NAOK=TRUE)
     ### Returned list of objects:
-    return(list(coordx=coordx, coordy=coordy, coordt=coordt, corrmodel=corrmodel, data=data,
-                error=error, flagcorr=flagcorr, flagnuis=flagnuis, fixed=fixed, likelihood=likelihood,
-                lower=paramrange$lower, model=model, namescorr=namescorr, namesfixed=namesfixed,
-                namesnuis=namesnuis, namesparam=namesparam, namessim=namessim, namesstart=namesstart,
-                numcoord=numcoord, numfixed=numfixed, numpairs=numpairs, numparam=numparam,
-                numparamcorr=numparamcorr, numrep=replicates, numstart=numstart, numtime=numtime,
-                param=param, spacetime=spacetime, srange=srange, start=start, upper=paramrange$upper,
-                type=type, threshold=threshold, trange=trange, vartype=vartype, winconst=winconst))
-  }
+    return(list(coordx=coordx,coordy=coordy,coordt=coordt,corrmodel=corrmodel,data=data,
+                error=error,flagcorr=flagcorr,flagnuis=flagnuis,fixed=fixed,likelihood=likelihood,
+                lower=paramrange$lower,model=model,namescorr=namescorr,namesfixed=namesfixed,
+                namesnuis=namesnuis,namesparam=namesparam,namessim=namessim,namesstart=namesstart,
+                numblock=numblock,numcoord=numcoord,numcoordx=numcoordx,numcoordy=numcoordy,
+                numfixed=numfixed,numpairs=numpairs,numparam=numparam,numparamcorr=numparamcorr,
+                numrep=replicates,numstart=numstart,numtime=numtime,param=param,setup=list(
+                ia=ia,idx=idx,ja=ja,nozero=numpairs/numcoord^2),
+                spacetime=spacetime,srange=srange,start=start,upper=paramrange$upper,type=type,
+                threshold=threshold,trange=trange,vartype=vartype,winconst=winconst,winstp=winstp))
+}
