@@ -10,13 +10,11 @@
   fix any of the parameters.
 }
 \usage{
-FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
-             fixed=NULL, grid=FALSE, likelihood='Marginal',
-             lonlat=FALSE, margins='Gev', maxdist=NULL, maxtime=NULL,
-             model='Gaussian', optimizer='Nelder-Mead', replicates=1,
-             start=NULL, taper=NULL, threshold=NULL, type='Pairwise',
-             varest=FALSE, vartype='SubSamp', weighted=FALSE,
-             weights=NULL, winconst=NULL)
+FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
+             grid=FALSE, likelihood='Marginal',lonlat=FALSE, margins='Gev',
+             maxdist=NULL, maxtime=NULL, model='Gaussian', optimizer='Nelder-Mead',
+             replicates=1, start=NULL, taper=NULL, threshold=NULL, type='Pairwise',
+             varest=FALSE, vartype='SubSamp', weighted=FALSE, winconst, winstp)
 }
 \arguments{
   \item{data}{A \eqn{d}{d}-dimensional vector (a single spatial realisation) or a (\eqn{n \times d}{n x d})-matrix
@@ -92,15 +90,23 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
   \item{weighted}{Logical; if \code{TRUE} the likelihood objects are
     weighted, see the Section \bold{Details}. If \code{FALSE} (the
     default) the composite likelihood is not weighted.}
-  \item{weights}{A numeric vector of weights (see \bold{Details}). Optional argument, the default value is \code{NULL}
-   then no weights are considered}
-  \item{winconst}{Numeric; a positive real value indicating the window size used from the
-   sub-sampling method for the estimation of the parameters' variances. This window size
-   is considered only if \code{vartype=SubSamp}. Optional argument, the default value is \eqn{1}
-   (see \bold{Details}).}
+  \item{winconst}{Numeric; a positive value for computing the sub-window
+    size where observations are sampled in the sub-sampling procedure (if \code{vartype=SubSamp}).
+    For increasing \code{winconst}
+    increasing sub-window sizes are obtained. Optional argument, the
+   default is \eqn{1}. See \bold{Details} for more information.}
+ \item{winstp}{Numeric; a value in \eqn{(0,1]} for computing the
+   sub-window step (in the sub-sampling procedure). This value denote the proportion
+   of the sub-window size. Optional argument, the default is
+   \eqn{0.5}. See \bold{Details} for more information.}
 }
 
 \details{
+  Note, that the standard likelihood may be seen as particular case of the
+  composite likelihood. In this respect \code{FitComposite} provides maximum likelihood
+  fitting, including also the restricted and taperd versions, of Gaussian
+  random fields.
+
   With \code{data}, \code{coordx}, \code{coordy}, \code{coordt}, \code{grid} and \code{replicates} parameters:
   \itemize{
     \item If \code{data} is a numeric \eqn{d}{d}-dimensional vector, \code{coordx} and \code{coordy} are two
@@ -136,15 +142,34 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
   }
 
   The \code{corrmodel} parameter allows to select a specific correlation
-  function for the random field. The implemented correlation models
+  function for the random field. The implemented spatial correlation models
   are:
   \enumerate{
     \item \code{cauchy};
     \item \code{exponential};
     \item \code{gauss} (Gaussian);
     \item \code{gencauchy} (generalised Cauchy);
+    \item \code{spherical};
     \item \code{stable} (or powered exponential);
+    \item \code{wave};
     \item \code{whittlematern} (Whittle-Matern).
+  }
+  The implemented non-separable spatio-temporal correlation models
+  are:
+  \enumerate{
+    \item \code{iacocesare} (Iaco-Cesare);
+    \item \code{gneiting} (Gneiting);
+    \item \code{porcu} (Porcu).
+  }
+  Separable spatio-temporal correlation models are
+  easily obtained by a product between a spatial and
+  a temporal correlation. The implemented function are:
+  \enumerate{
+    \item \code{exp_cauchy} (exponential-Cauchy);
+    \item \code{exp_exp} (exponential-exponential);
+    \item \code{exp_gauss} (exponential-Gaussian);
+    \item \code{matern_cauchy} (Whittle-Matern-Cauchy);
+    \item \code{matern_exp} (Whittle-Matern-exponential).
   }
   See for more details \code{\link[RandomFields]{CovarianceFct}}.
 
@@ -211,8 +236,7 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
      \item Wendland type 2;
      \item Wendland type 3.
    }
-   For more details e.g. Kaufman et al. (2008) (see
-   \bold{References}).
+   For more details Furrer et al. (2006) and see Kaufman et al. (2008).
    \bold{ATTENTION}! Insert also a value for the
    \code{maxdist} parameter in order to set the upper bound of the compact support; if
    no \code{maxdist} is inserted then the effective maximum spatial
@@ -277,21 +301,41 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
   maximum composite-likelihood estimator (not implemented yet). If
   \code{FALSE} the efficient improvement procedure is not used.
 
-  The \code{weights} parameter allows to weight the composite-likelihood
-  by weights insert by the users. These do not imply any gain in
-  efficiency of the maximum composite-likelihood estimator but still be
-  a reasonable setting (not implemented yet).
+  For computing the standard errors by the sub-sampling procedure,
+  \code{winconst} and \code{winstp} parameters represent respectively a positive constant used to
+  determine the sub-window size and the the step with which the
+  sub-window moves.
 
-  The \code{winconst} parameter set the size of the sub spatial window into which
-  observations are sampled. The window is moved covering the entire spatial
-  domain. Observations belonging to disjoint or overlapping windows are
-  considered indipendent. If you do not insert a window size the rule
-  described by Lee and Lahiri (2002) is followed to determine
-  the dimension.
-  For the case of spatial-temporal Gaussian random fields,
-  you can insert the size of a temporal window, if it is not inserted the rule of
-  Carlstein (1986) is followed.
+  In the spatial case (subset of \eqn{R^2}{R^2}), the domain is seen as
+  a rectangle \eqn{B \times H}{BxH}, therefore the size of the
+  sub-window side \eqn{b}{b} is given by \eqn{b=winconst \times
+  \sqrt(B)}{b=winconst x sqrt(B)} (similar is of \eqn{h}{h}).
+  For a complete description see Lee and Lahiri (2002).
+  By default \code{winconst} is set \eqn{B / (2 \times \sqrt(B))}{B / (2
+  x sqrt(B))}.
+  The \code{winstp} parameter is used to determine the sub-window step. The latter is given by the
+  proportion of the sub-window size, so that when \code{winstp=1} there
+  is not overlapping between contiguous sub-windows.
+  In the spatial case by default \code{winstp=0.5}.
+  The sub-window is moved
+  by successive steps in order to cover the entire spatial
+  domain.
+  Observations, that fall in disjoint or overlapping windows
+  are considered indipendent samples.
 
+  In the spatio-temporal case the subsampling is meant only in time as
+  described by Li et al. (2007). Thus, \code{winconst} represents
+  the lenght of the temporal sub-window. By default the size of the
+  sub-window is computed following the rule established in Li et al. (2007).
+  By default \code{winstp} is the time step.
+
+  Observe that in the spatio-temporal case, the returned values by
+  \code{srange}
+  and \code{trange}, represent respectively the minimum and maximum
+  of the marginal spatial distances and those of the temporal
+  separations. Thus, the minimum being not the overall (i.e. considering
+  the spatio-temporal coordinates) is not zero, as one could be expect and
+  the latter can be easily added by the user.
 }
 
 \value{
@@ -319,13 +363,21 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
   \item{numrep}{The number of the iid replicatations of the random field;}
   \item{numtime}{The number the temporal realisations of the random field;}
   \item{param}{The vector of  parameters' estimates;}
-  \item{srange}{The minimum and maximum spatial distance;}
+  \item{srange}{The minimum and maximum spatial distance (see \bold{Details}). The maximum
+  is \code{maxdist}, if inserted, rather the effective maximum distance;}
   \item{stderr}{The vector of standard errors;}
   \item{sensmat}{The sensitivity matrix;}
   \item{varcov}{The matrix of the variance-covariance of the estimates;}
   \item{varimat}{The variability matrix;}
-  \item{trange}{The minimum and maximum temporal separation;}
+  \item{vartype}{The method used to compute the variance of the estimates;}
+  \item{trange}{The minimum and maximum temporal separation (see \bold{Details}). The maximum
+    is \code{maxtime}, if inserted, rather then the effective maximum
+  separation;}
+  \item{threshold}{The threshold used in the binary random field.}
   \item{type}{The type of the likelihood objects.}
+  \item{winconst}{The constant use to compute the window size in the
+  sub-sampling procedure;}
+  \item{winstp}{The step used for moving the window in the sub-sampling procedure}
 }
 
 
@@ -340,13 +392,12 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 
   Composite-likelihood:
 
+  Varin, C., Reid, N. and Firth, D. (2011). An Overview of Composite
+  Likelihood Methods. \emph{Statistica Sinica}, \bold{21}, 5--42.
+
   Varin, C. and Vidoni, P. (2005)
   A Note on Composite Likelihood Inference and Model Selection.
   \emph{Biometrika}, \bold{92}, 519--528.
-
-  Varin, C. (2008)
-  On Composite Marginal Likelihoods.
-  \emph{Advances in Statistical Analysis}, \bold{92}, 1--28.
 
   Patrick, J. H. and Subhash, R. L. (1998)
   A Composite Likelihood Approach to Binary Spatial Data.
@@ -354,13 +405,13 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 
   Weighted Composite-likelihood for max-stable random fields:
 
-  Padoan, S. A. (2008). \emph{Computational
-    Methods for Complex Problems in Extreme Value Theory}. PhD. Thesis,
-  Department of Statistics, University of Padua.
-
   Padoan, S. A. Ribatet, M. and Sisson, S. A. (2010)
   Likelihood-Based Inference for Max-Stable Processes.
   \emph{Journal of the American Statistical Association, Theory & Methods}, \bold{105}, 263--277.
+
+  Padoan, S. A. (2008). \emph{Computational
+    Methods for Complex Problems in Extreme Value Theory}. PhD. Thesis,
+  Department of Statistics, University of Padua.
 
   Weighted Composite-likelihood for Gaussian random fields:
 
@@ -371,6 +422,33 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 
   Spatial Statistics:
 
+  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
+  Spring Verlang, New York.
+
+  Bevilacqua, M., Mateu, J., Porcu, E., Zhang, H., Zini, A. (2009), Weighted composite likelihood-based
+  tests for space-time separability of covariance functions.
+  \emph{Statistics and Computing}, \bold{20}, 283--293.
+
+  Kaufman, C. G., Schervish, M. J. and Nychka, D. W. (2008)
+  Covariance Tapering for Likelihood-Based Estimation in Large Spatial Dataset.
+  \emph{Journal of the American Statistical Association}, \bold{103},
+  1545--1555.
+
+  Gneiting, T., Genton, M. G. and Guttorp, P. (2007).
+  \emph{Geostatistical space-time models, stationarity, separability and full
+  symmetry}.
+  In Finkenstadt, B., Held, L. and Isham, V. (eds.),
+  Statistical Methods for Spatio-Temporal Systems, Chapman & Hall/CRC, Boca Raton, pp. 151-175
+
+  Furrer, R., Genton, M. G., and Nychika, D. (2006). \emph{Covariance tapering
+  for interpolation of large spatial datasets. Journal of Computational and Graphical
+  Statistics}, \bold{15}(3), 502--523.
+
+  Gneiting, T. (2002). Nonseparable, stationary covariance functions for
+  space-time data.
+  \emph{Journal of the American Statistical Association}, \bold{97},
+  590--600.
+
   Schlather, M. (1999) \emph{An introduction to positive definite
     functions and to unconditional simulation of random fields}.
   Technical report ST 99--10, Dept. of Maths and Statistics, Lancaster University
@@ -378,46 +456,44 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
   Wackernagel, H. (1998) \emph{Multivariate Geostatistics}. Berlin:
   Springer, 2nd edition.
 
-  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
-  Spring Verlang, New York.
-
-  Kaufman, C. G., Schervish, M. J. and Nychka, D. W. (2008)
-  Covariance Tapering for Likelihood-Based Estimation in Large Spatial Dataset.
-  \emph{Journal of the American Statistical Association}, \bold{103}, 1545--1555.
-
   Spatial Extremes:
 
-  Smith, R. L. (1990) Max-Stable Processes and Spatial Extremes.
-  \emph{Unpublished manuscript}, University of North California.
+  Davison, A. C., Padoan, S. A., and Ribatet, M. (2012) Statistical
+  Modelling of Spatial Extremes, with discussion.
+  \emph{Statistical Science}, in press.
 
-  Schlather, M. (2002) Models for Stationary Max-Stable Random
-  Fields. \emph{Extremes}, \bold{5}, 33--44.
+  Kabluchko, Z. (2010) Extremes of Independent Gaussian
+  Processes. \emph{Extremes}, \bold{14}, 285--310.
+
+  Kabluchko, Z., Schlather, M., and de Haan, L. (2009) Stationary max-stable fields
+  associated to negative definite functions. \emph{The Annals of
+    Probability}, \bold{37}, 2042--2065.
 
   de Haan, L., and Pereira, T. T. (2006) Spatial Extremes: Models for
   the Stationary Case. \emph{The Annals of Statistics}, \bold{34},
   146--168.
 
-  Kabluchko, Z., Schlather, M., and de Haan, L. (2009) Stationary max-stable fields
-associated to negative definite functions. \emph{The Annals of
-  Probability}, \bold{37}, 2042--2065.
+  Schlather, M. (2002) Models for Stationary Max-Stable Random
+  Fields. \emph{Extremes}, \bold{5}, 33--44.
 
-  Kabluchko, Z. (2010) Extremes of Independent Gaussian
-  Processes. \emph{Extremes}, \bold{14}, 285--310.
-
-  Davison, A. C., Padoan, S. A., and Ribatet, M. (2011) Statistical Modelling of Spatial Extremes.
-  \emph{Statistical Science}, to appear.
+  Smith, R. L. (1990) Max-Stable Processes and Spatial Extremes.
+  \emph{Unpublished manuscript}, University of North California.
 
   Sub-sampling estimation:
 
-  Heagerty, P. J. and Lumley T. (2000) Window Subsampling of Estimating
-  Functions with Application to Regression Models.
-  \emph{Journal of the American Statistical Association, Theory &
-    Methods}, \bold{95}, 197--211.
+  Li, B., Genton, M. G. and Sherman, M. (2007). A nonparametric assessment of properties of space-time
+  covariance functions. \emph{Journal of the American Statistical
+    Association}, \bold{102}, 736--744
 
   Lee, Y. D. and Lahiri S. N. (2002) Variogram Fitting by Spatial
   Subsampling.
   \emph{Journal of the Royal Statistical Society. Series B},
   \bold{64}, 837--854.
+
+  Heagerty, P. J. and Lumley T. (2000) Window Subsampling of Estimating
+  Functions with Application to Regression Models.
+  \emph{Journal of the American Statistical Association, Theory &
+    Methods}, \bold{95}, 197--211.
 
   Carlstein, E. (1986) The Use of Subseries Values for Estimating the
   Variance.
@@ -430,44 +506,46 @@ associated to negative definite functions. \emph{The Annals of
   \code{\link[RandomFields]{MaxStableRF}}, \code{\link{WLeastSquare}}, \code{\link{optim}}}
 
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan};
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
+  \url{www.unibg.it/pers/?moreno.bevilacqua}.}
 
 \examples{
+library(CompRandFld)
 library(RandomFields)
 library(spam)
-set.seed(2111)
+set.seed(3132)
 
-# Set the coordinates of the points:
-x <- runif(100, 0, 20)
-y <- runif(100, 0, 20)
+# Define the spatial-coordinates of the points:
+x <- runif(100, 0, 10)
+y <- runif(100, 0, 10)
 
 
 ################################################################
 ###
-### Example 1. Maximum composite-likelihood fitting of
-### Gaussian random fields with Stable correlation model
+### Example 1. Maximum likelihood fitting of
+### Gaussian random fields with exponential correlation.
 ### One spatial replication.
-### Composite setting: difference marginal likelihoods.
+### Likelihood setting: composite with
+### marginal pairwise likelihood objects.
 ###
 ###############################################################
 
 # Set the model's parameters:
-corrmodel <- "stable"
+corrmodel <- "exponential"
 mean <- 0
-variance <- 1
+sill <- 1
 nugget <- 0
-scale <- 10
-power <- 1.2
+scale <- 1.5
 
-# Simulation of the Gaussian random field in the specified points:
-data <- GaussRF(x=x, y=y, model=corrmodel, grid=FALSE,
-                param=c(mean, variance, nugget, scale, power))
+# Simulation of the spatial Gaussian random field:
+data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
+              sill=sill,nugget=nugget,scale=scale))$data
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel,
-                    type='Difference', varest=TRUE)
+fit <- FitComposite(data, x, y, corrmodel=corrmodel, maxdist=5,
+                    varest=TRUE,fixed=list(mean=mean,nugget=nugget))
 
 # Results:
 print(fit)
@@ -475,16 +553,16 @@ print(fit)
 ################################################################
 ###
 ### Example 2. Maximum likelihood fitting of
-### Gaussian random fields with Stable correlation model.
+### Gaussian random fields with exponential correlation.
 ### One spatial replication.
 ### Likelihood setting: standard full likelihood.
 ###
 ###############################################################
 
-
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel,
-                    likelihood='Full', type='Standard', varest=TRUE)
+fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood='Full',
+                    type='Standard',varest=TRUE,fixed=list(mean=mean,
+                    nugget=nugget))
 
 # Results:
 print(fit)
@@ -492,54 +570,95 @@ print(fit)
 ################################################################
 ###
 ### Example 3. Maximum likelihood fitting of
-### Gaussian random fields with Stable correlation model.
+### Gaussian random fields with exponetial correlation.
 ### One spatial replication.
 ### Likelihood setting: tapered full likelihood.
 ###
 ###############################################################
 
-# Note that this example is really time consuming!
-# However faster than the standard full likelihood!
-
-# Set the coordinates of the points:
-#x <- runif(1000, 0, 40)
-#y <- runif(1000, 0, 40)
-
-# Simulation of the Gaussian random field in the specified points:
-#data <- GaussRF(x=x, y=y, model=corrmodel, grid=FALSE,
-#                param=c(mean, variance, nugget, scale, power))
-
 # Maximum composite-likelihood fitting of the random field:
-#fit <- FitComposite(data, x, y, corrmodel=corrmodel,
-#                    likelihood='Full', type='Tapering',
-#                    taper="Wendland1", maxdist=15)
-
-# Results:
-#print(fit)
-
-################################################################
-###
-### Example 4. Maximum composite-likelihood fitting of
-### max-stable random fields. Extremal Gaussian model with
-### Stable correlation function. n iid spatial replications.
-### Composite-likelihood setting: pairwise marginal likelihoods.
-###
-###############################################################
-
-# Simulation of a max-stable random field in the specified points:
-data <- MaxStableRF(x=x, y=y, model=corrmodel, grid=FALSE, maxstable="extr",
-                   param=c(mean, variance, nugget, scale, power),
-                   n=20,pch='')
-data <- t(data)
-
-# Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel, model='ExtGauss',
-                    replicates=20, varest=TRUE, vartype='Sampling',
-                    margins="Frechet")
+fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood='Full',
+                    type='Tapering',taper="Wendland1",maxdist=4,
+                    varest=TRUE,fixed=list(mean=mean,nugget=nugget))
 
 # Results:
 print(fit)
 
+################################################################
+###
+### Example 4. Maximum likelihood fitting of
+### Gaussian random field with double-exponential correlation.
+### One spatio-temporal replication.
+### Likelihood setting: composite with conditional pairwise
+### likelihood objects.
+###
+###############################################################
+
+# Define the temporal sequence:
+time <- seq(1, 10, 1)
+
+# Simulation of the spatial-temporal Gaussian random field:
+data <- RFsim(x,y,time,corrmodel="exp_exp",param=list(mean=0,
+              scale_s=1,scale_t=1,sill=sill,nugget=nugget))$data
+
+# Maximum composite-likelihood fitting of the random field:
+fit <- FitComposite(data,x,y,time,corrmodel="exp_exp",maxtime=3,
+                    maxdist=10,likelihood="Conditional",type="Pairwise",
+                    varest=FALSE,start=list(scale_s=1,scale_t=1,sill=.5),
+                    fixed=list(mean=mean,nugget=nugget))
+
+# Results:
+print(fit)
+
+################################################################
+###
+### Example 5. Maximum composite-likelihood fitting of
+### max-stable random fields. Extremal Gaussian model with
+### exponential correlation. n iid spatial replications.
+### Likelihood setting: composite with marginal pairwise
+### likelihood objects.
+###
+###############################################################
+
+# Simulation of a max-stable random field in the specified points:
+data <- RFsim(x, y, corrmodel=corrmodel, model="ExtGauss", replicates=30,
+              param=list(mean=mean,sill=sill,nugget=nugget,scale=scale))$data
+
+# Maximum composite-likelihood fitting of the random field:
+fit <- FitComposite(data, x, y, corrmodel=corrmodel, model='ExtGauss',
+                    replicates=30, varest=TRUE, vartype='Sampling',
+                    margins="Frechet",start=list(sill=sill,scale=scale))
+
+# Results:
+print(fit)
+
+################################################################
+###
+### Example 6. Maximum likelihood fitting of
+### Binary-Gaussian random fields with exponential correlation.
+### One spatial replication.
+### Likelihood setting: composite with marginal pairwise
+### likelihood objects.
+###
+###############################################################
+
+set.seed(3128)
+
+x <- runif(300, 0, 10)
+y <- runif(300, 0, 10)
+
+# Simulation of the spatial Binnry-Gaussian random field:
+data <- RFsim(x, y, corrmodel=corrmodel, model="BinaryGauss",
+              threshold=0, param=list(mean=mean,sill=.8,
+              nugget=nugget,scale=scale))$data
+
+# Maximum composite-likelihood fitting of the random field:
+fit <- FitComposite(data, x, y, corrmodel=corrmodel, threshold=0,
+                    model="BinaryGauss", fixed=list(nugget=nugget,
+                    mean=0),start=list(scale=.1,sill=.1))
+
+# Results:
+print(fit)
 }
 
 \keyword{Composite}
