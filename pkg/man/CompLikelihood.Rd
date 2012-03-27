@@ -13,7 +13,7 @@ CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
                lower, model, namescorr, namesnuis, namesparam,
                numparam, numparamcorr, optimizer, param,
                spacetime, threshold, type, upper, varest,
-               vartype, winconst)
+               vartype, winconst, winstp)
 }
 \arguments{
   \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -66,14 +66,20 @@ CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
     \code{FALSE} is the default.}
   \item{vartype}{String; the type of estimation method for computing
   the estimate variances, see \code{\link{FitComposite}}.}
-  \item{winconst}{Numeric; a positive real value -- if
-    \code{vartype=SubSamp} -- that determines the window size in the sub-sampling
+  \item{winconst}{Numeric; a positive value -- if
+    \code{vartype=SubSamp} -- determines the window size in the sub-sampling
+    estimates of the variances, see \code{\link{FitComposite}}.}
+  \item{winstp}{Numeric; a positive value -- if
+    \code{vartype=SubSamp} -- determines the window step in the sub-sampling
     estimates of the variances, see \code{\link{FitComposite}}.}
 }
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
+  \url{www.unibg.it/pers/?moreno.bevilacqua}.}
+
 
 \keyword{Composite}
