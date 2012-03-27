@@ -8,10 +8,10 @@
   composite-likelihood fitting procedure based on weigthed least squares.
 }
 \usage{
-WlsInit(coordx, coordy, coordt, corrmodel, data, fixed, grid,
-        likelihood, lonlat, margins, maxdist, maxtime, model,
-        parscale, paramrange, replicates, start, threshold,
-        type, varest, vartype, weighted, winconst)
+WlsInit(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
+        likelihood, lonlat, margins, maxdist, maxtime, model, numblock,
+        param, parscale, paramrange, replicates, start, threshold,
+        type, varest, vartype, weighted, winconst, winstp)
 }
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -26,6 +26,8 @@ WlsInit(coordx, coordy, coordt, corrmodel, data, fixed, grid,
     description.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
       \times n}{d x d x n})-matrix of observations.}
+  \item{fcall}{String; "fitting" to call the fitting procedure and
+    "simulation" to call the simulation procedure.}
   \item{fixed}{A named list giving the values of the parameters that
     will be considered as known values.}
   \item{grid}{Logical; if \code{FALSE} (the default) the data
@@ -45,7 +47,13 @@ WlsInit(coordx, coordy, coordt, corrmodel, data, fixed, grid,
   \item{maxtime}{Numeric; an optional positive value indicating the maximum
     temporal separation considered in the composite-likelihood
     computation.}
-  \item{model}{String; the name of the model. Here the default is \code{NULL}.}
+  \item{model}{String; the name of the model. Here the default is
+    \code{NULL}.}
+  \item{numblock}{Numeric; the observation size of the underlying random
+    field. Only in case of max-stable random fields and in the
+    simulation.}
+  \item{param}{A numeric vector of parameter values required in the
+    simulation procedure of random fields.}
   \item{parscale}{A numeric vector with scaling values for improving the
     maximisation routine.}
   \item{paramrange}{A numeric vector with the range of the parameter
@@ -64,12 +72,15 @@ WlsInit(coordx, coordy, coordt, corrmodel, data, fixed, grid,
   \item{weighted}{Logical; if \code{TRUE} the likelihood objects are
     weighted, see \code{\link{FitComposite}}.}
   \item{winconst}{Numeric; a positive real value indicating the window size used from the
-   sub-sampling method for the estimation of the parameters' variances.}.
+   sub-sampling method for the estimation of the parameters'
+   variances.}.
+ \item{winstp}{Numeric; a value in \eqn{(0,1]} for defining the window
+    step. See \code{\link{FitComposite}}.}
 }
 
 \seealso{\code{\link{FitComposite}}, \code{\link{WLeastSquare}}.}
 
-\author{Simone Padoan, \email{simone.padoan@unibg.it},
-  \url{http://www.unibg.it/pers/?simone.padoan}.}
+\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
+  \url{http://homes.stat.unipd.it/padoan}.}
 
 \keyword{LeastSquare}
