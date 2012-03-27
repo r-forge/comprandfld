@@ -71,7 +71,7 @@ void integr_pt(double *x, int n, void *ex)
 {
   int i=0;
   double d=0.0;
-  
+
   //*df=*((double *)ex);
   //d=*df;
   d=*((double *)ex);
@@ -89,21 +89,21 @@ double ddf_t_dt(double x, double clc, double df, double somc2)
 			log(y)-1/df+2*df1*x*clc/nu/sqrt(df)/somc2/y);
     return res;
   }
-// First order derivative of the first order derivative of the 
+// First order derivative of the first order derivative of the
 // Student-t probability density function (with respect to the arg)
 // with respect to the degree of freedom with argument g(x):
 double ddf_t_d1x_dt(double x, double clc, double df, double somc2)
   {
     double df1=df+1, nu=df-1, res=0.0, sdf=sqrt(df), y=0.0;
-    y=1+pow(x,2)/df;    
+    y=1+pow(x,2)/df;
     res=0.5*d1x_dt(x,df)*(digamma(0.5*df1)-digamma(0.5*df)-
 			  log(y)-2/df+2*x*clc*(df1+2)/nu/sdf/somc2/y+
 			  2/df1-2*clc*sdf/nu/x/somc2);
     return res;
   }
 // Switch from a GEV distribution to another GEV distribution:
-void Dist2Dist(double *data, double *eloc, double *escale, double *eshape, 
-	       int *ndata, int *nsite, double *ploc, double *pscale, 
+void Dist2Dist(double *data, double *eloc, double *escale, double *eshape,
+	       int *ndata, int *nsite, double *ploc, double *pscale,
 	       double *pshape, int *type, double *res)
 {
   int i=0, k=0;
@@ -150,7 +150,7 @@ void Dist2Dist(double *data, double *eloc, double *escale, double *eshape,
 	for(i = 0; i < *ndata; i++)
 	  res[i + k * *ndata] = qgev(pgev(data[i + k * *ndata], 1, 1, -1), ploc[k], pscale[k], pshape[k]);
     }
-   
+
   return;
 }
 
@@ -163,7 +163,7 @@ double dgev(double x, double loc, double scale, double shape)
   if(shape==0)
     res = exp(-exp(-y) - y) / scale;
   else
-    res = exp(-pow(fmax(1 + shape * y, 0), - 1 / shape)) * 
+    res = exp(-pow(fmax(1 + shape * y, 0), - 1 / shape)) *
       pow(fmax(1 + shape * y, 0), - 1 / shape - 1) / scale;
 
   return res;
@@ -172,7 +172,7 @@ double dgev(double x, double loc, double scale, double shape)
 void GevLogLik(double *data, int *ndata, double *par, double *res)
 {
   int n=0;
-  
+
   if(par[1] <= 0)
     {
       *res = LOW;
@@ -221,4 +221,27 @@ double d2norm(double x, double y, double rho)
   res=0.5*exp(-0.5*(pow(x,2)-2*rho*x*y+pow(y,2))/omr)/sqrt(omr)/M_PI;
 
   return res;
+}
+
+// compute the bivariate normal cdf:
+double pbnorm(int *cormod, double h, double u, double *nuis, double *par, double thr)
+{
+  double res=0;
+  double lim_inf[2]={0,0};//lower bound for the integration
+  double lim_sup[2]={(nuis[0]-thr)/(sqrt(nuis[2]+nuis[1])),(nuis[0]-thr)/(sqrt(nuis[2]+nuis[1]))};
+  int infin[2]={0,0};//set the bounds for the integration
+  double corr[1]={nuis[2]*CorFct(cormod,h,u,par)};
+  res=F77_CALL(bvnmvn)(lim_inf,lim_sup,infin,corr);
+  return(res);
+}
+// compute a sequence (depending on space and time) of bivariate normal cdf:
+void vpbnorm(int *cormod, double *h, double *u, int *nlags, int *nlagt,
+	     double *nuis, double *par, double *rho, double *thr)
+{
+  int i,j,t=0;
+  for(j=0;j<*nlagt;j++)
+    for(i=0;i<*nlags;i++){
+      rho[t]=pbnorm(cormod,h[i],u[j],nuis,par,thr[0]);
+      t++;}
+  return;
 }
