@@ -1,5 +1,131 @@
 #include "header.h"
 
+// binned spatial lorelogram:
+void Binned_Lorelogram(double *bins, double *data, int *lbins, double *moms,int *nbins)
+{
+  int h=0, i=0, j=0, n=0, p=0;
+  double step=0.0,*n11,*n10,*n01,*n00;
+
+  n11=(double *) calloc(*nbins-1, sizeof(double));
+  n10=(double *) calloc(*nbins-1, sizeof(double));
+  n01=(double *) calloc(*nbins-1, sizeof(double));
+  n00=(double *) calloc(*nbins-1, sizeof(double));
+
+  //Set the binnes step:
+  step=(*maxdist-*minimdista)/(*nbins-1);
+  bins[0]= *minimdista;
+  //define bins:
+  for(h=1;h<*nbins;h++)
+    bins[h]=bins[h-1]+step;
+  //Computes the binned statistics:
+  for(i=0;i<(*ncoord-1);i++)
+    for(j=(i+1);j<*ncoord;j++){
+      if(lags[p]<=*maxdist){
+	for(h=0;h<(*nbins-1);h++)
+	  if((bins[h]<=lags[p]) && (lags[p]<bins[h+1])){
+	    for(n=0;n<*nrep;n++){
+	      if(data[n+i * *nrep] && data[n+j * *nrep]) n11[h]++;
+	      if(data[n+i * *nrep] && !data[n+j * *nrep]) n10[h]++;
+	      if(!data[n+i * *nrep] && data[n+j * *nrep]) n01[h]++;
+	      if(!data[n+i * *nrep] && !data[n+j * *nrep]) n00[h]++;
+	      }}}
+      p++;}
+// computing log odds ration in each bin
+ for(h=0;h<(*nbins-1);h++){
+   if(n11[h]&&n10[h]&&n01[h]&&n00[h]){
+     moms[h]=log((n11[h]*n00[h])/(n01[h]*n10[h]));
+     lbins[h]=1;}
+   else{
+     moms[h]=1;
+     lbins[h]=0;}}
+  return;
+}
+// binned spatial-temporal variogram:
+void Binned_Lorelogram_st(double *bins, double *bint, double *data, int *lbins, int *lbinst,
+			 int *lbint, double *moms,double *momst, double *momt, int *nbins, int *nbint)
+{
+  int h=0, i=0, j=0, n=0;
+  int q=0, t=0, u=0, v=0;
+  double step=0.0,*n11s,*n10s,*n01s,*n00s,*n11t;
+  double *n10t,*n01t,*n00t,*n11,*n10,*n01,*n00;
+  n11s=(double *) calloc((*nbins-1), sizeof(double));
+  n10s=(double *) calloc((*nbins-1), sizeof(double));
+  n01s=(double *) calloc((*nbins-1), sizeof(double));
+  n00s=(double *) calloc((*nbins-1), sizeof(double));
+  n11t=(double *) calloc((*nbint), sizeof(double));
+  n10t=(double *) calloc((*nbint), sizeof(double));
+  n01t=(double *) calloc((*nbint), sizeof(double));
+  n00t=(double *) calloc((*nbint), sizeof(double));
+  n11=(double *) calloc((*nbins-1)*(*nbint), sizeof(double));
+  n10=(double *) calloc((*nbins-1)*(*nbint), sizeof(double));
+  n01=(double *) calloc((*nbins-1)*(*nbint), sizeof(double));
+  n00=(double *) calloc((*nbins-1)*(*nbint), sizeof(double));
+   //defines the spatial bins:
+  step=*maxdist/(*nbins-1);
+  bins[0]=0;
+  for(h=1;h<*nbins;h++)
+    bins[h]=bins[h-1]+step;
+  //defines the temporal bins:
+  bint[0]=0;
+  for(u=1;u<*nbint;u++)
+    bint[u]=bint[u-1]+minimtime[0];
+  //computes the empirical variogram:
+  for(i=0;i<*ncoord;i++){
+    for(t=0;t<*ntime;t++){
+      for(j=i;j<*ncoord;j++){
+	if(i==j){//computes the marignal temporal lorelogram:
+	  for(v=(t+1);v<*ntime;v++){
+	    if(mlagt[t][v]<=*maxtime){
+	      for(u=0;u<*nbint;u++){
+		if(bint[u]==mlagt[t][v]){
+
+		  for(n=0;n<*nrep;n++){
+		    if(data[(t+i * *ntime)+n* *nrep]&&data[(v+i * *ntime)+n* *nrep]) n11t[u]++;
+		    if(data[(t+i * *ntime)+n* *nrep]&&!data[(v+i * *ntime)+n* *nrep]) n10t[u]++;
+		    if(!data[(t+i * *ntime)+n* *nrep]&&data[(v+i * *ntime)+n* *nrep]) n01t[u]++;
+		    if(!data[(t+i * *ntime)+n* *nrep]&&!data[(v+i * *ntime)+n* *nrep]) n00t[u]++;
+		    }}}}}}
+	else{
+	  for(v=0;v<*ntime;v++){
+	    if(t==v){// computes the marginal spatial lorelogram:
+	      if(mlags[i][j]<=*maxdist){
+		for(h=0;h<(*nbins-1);h++){
+		  if((bins[h]<=mlags[i][j]) && (mlags[i][j]<bins[h+1])){
+		    for(n=0;n<*nrep;n++){
+		      if(data[(t+i * *ntime)+n* *nrep]&&data[(t+j * *ntime)+n* *nrep]) n11s[h]++;
+		      if(data[(t+i * *ntime)+n* *nrep]&&!data[(t+j * *ntime)+n* *nrep]) n10s[h]++;
+		      if(!data[(t+i * *ntime)+n* *nrep]&&data[(t+j * *ntime)+n* *nrep]) n01s[h]++;
+		      if(!data[(t+i * *ntime)+n* *nrep]&&!data[(t+j * *ntime)+n* *nrep]) n00s[h]++;}}}}}
+	    if(v>t){// computes the spatial-temporal lorelogram:
+	      if(mlags[i][j]<=*maxdist && mlagt[t][v]<=*maxtime){
+		q=0;
+		for(h=0;h<(*nbins-1);h++){
+		  for(u=0;u<*nbint;u++){
+		    if((bins[h]<=mlags[i][j]) && (mlags[i][j]<bins[h+1]) && (bint[u]==mlagt[t][v])){
+		      for(n=0;n<*nrep;n++){
+			if(data[(t+i * *ntime)+n* *nrep]&&data[(v+j * *ntime)+n* *nrep])  n11[q]++;
+			if(data[(t+i * *ntime)+n* *nrep]&&!data[(v+j * *ntime)+n* *nrep])  n10[q]++;
+			if(!data[(t+i * *ntime)+n* *nrep]&&data[(v+j * *ntime)+n* *nrep])  n01[q]++;
+			if(!data[(t+i * *ntime)+n* *nrep]&&!data[(v+j * *ntime)+n* *nrep])  n00[q]++;
+			}}
+			q++;}}}}}}}
+    }}
+  // computing  space time log odds ratio in each spacetime bin
+  q=0;
+  for(h=0;h<(*nbins-1);h++){
+   if(!n10s[h]||!n01s[h]||!n11s[h]||!n00s[h]||((n11s[h]*n00s[h])==(n10s[h]*n01s[h])))
+     moms[h]=0;
+   else moms[h]=log((n11s[h]*n00s[h])/(n01s[h]*n10s[h]));}
+   for(u=0;u<(*nbint);u++){
+     if(!n11t[u]||!n01t[u]||!n10t[u]||!n00t[u]||((n11t[u]*n00t[u])==(n10t[u]*n01t[u])))
+       momt[u]=0;
+     else momt[u]=log((n11t[u]*n00t[u])/(n01t[u]*n10t[u]));}
+   for(q=0;q<((*nbins-1)*(*nbint));q++){
+     if(!n11[q]||!n01[q]||!n10[q]||!n00[q]||((n11[q]*n00[q])==(n10[q]*n01[q])))
+       momst[q]=0;
+     else momst[q]=log((n11[q]*n00[q])/(n01[q]*n10[q]));}
+  return;
+}
 // binned spatial variogram:
 void Binned_Variogram(double *bins, double *data, int *lbins, double *moms, int *nbins)
 {
@@ -31,14 +157,14 @@ int h=0, i=0, j=0, n=0;
   int q=0, t=0, u=0, v=0;
   double step=0.0;
   //defines the spatial bins:
-  step=(*maxdist-*minimdista)/(*nbins-1);
-  bins[0]= *minimdista;
+  step=*maxdist/(*nbins-1);
+  bins[0]=0;
   for(h=1;h<*nbins;h++)
     bins[h]=bins[h-1]+step;
   //defines the temporal bins:
-  bint[0]=*minimtime;
+  bint[0]=0;
   for(h=1;h<*nbint;h++)
-    bint[h]=bint[h-1]+bint[0];
+    bint[h]=bint[h-1]+minimtime[0];
   //computes the empirical variogram:
   for(i=0;i<*ncoord;i++)
     for(t=0;t<*ntime;t++)
