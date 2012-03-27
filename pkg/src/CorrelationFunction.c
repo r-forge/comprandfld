@@ -1,3 +1,20 @@
+/*###################################################
+### Authors: Simone Padoan and Moreno Bevilacqua.
+### Emails: simone.padoan@stat.unipd.it,
+### moreno.bevilacqua@unibg.it
+### Institutions: Department of Statistical Science,
+### University of Padua and Department of Information
+### Technology and Mathematical Methods, University
+### of Bergamo.
+### File name: CorrelationFunction.c
+### Description:
+### This file contains a set of procedures
+### for the computation of the correlation functions
+### and their derivatives.
+### Last change: 17/02/2012.
+##################################################*/
+
+
 #include "header.h"
 
 // check the validity of the parameters' range:
@@ -256,8 +273,9 @@ double CorFunWitMat(double lag, double scale, double smooth)
 {
   double rho=0.0;
   // Computes the correlation:
-  rho=pow(2,1-smooth)/gammafn(smooth)*pow(lag/scale,smooth) *
+  if(lag) rho=pow(2,1-smooth)/gammafn(smooth)*pow(lag/scale,smooth)*
 	bessel_k(lag/scale,smooth,1);
+  else rho=1;
   return rho;
 }
 double CorFunWend1(double lag)
@@ -345,9 +363,10 @@ double DGaussSc(double lag, double scale, double rho)
 // Derivatives with respect to power1 of the generalised Cauchy correlation model:
 double DGenCauP1(double lag, double power1, double power2, double scale, double rho)
 {
-  return power2*rho/power1*(log(1+pow(lag/scale,power1))/power1-
-			    pow(lag/scale,power1)*log(lag/scale)/
-			    (1+pow(lag/scale,power1)));
+  if(lag)return power2*rho/power1*(log(1+pow(lag/scale,power1))/power1-
+				   pow(lag/scale,power1)*log(lag/scale)/
+				   (1+pow(lag/scale,power1)));
+  else return 0.0;
 }
 // Derivatives with respect to power2 of the generalised Cauchy correlation model:
 double DGenCauP2(double lag, double power1, double scale, double rho)
@@ -357,44 +376,49 @@ double DGenCauP2(double lag, double power1, double scale, double rho)
 // Derivatives with respect to scale of the generalised Cauchy correlation model:
 double DGenCauSc(double lag, double power1, double power2, double scale, double rho)
 {
-  return rho/(1+pow(lag/scale,2))*power2*pow(lag,power1)/pow(scale,power1+1);
+  if(lag) return rho/(1+pow(lag/scale,2))*power2*pow(lag,power1)/pow(scale,power1+1);
+  else return 0.0;
 }
 // Derivatives with respect to scale of the sferical correlation model:
 double DSferiSc(double lag, double scale)
 {
-  if(lag<=scale)
-    return 1.5*lag*(1-pow(lag/scale, 2))/pow(scale, 2);
-  else
-    return 0.0;
+  if(lag<=scale) return 1.5*lag*(1-pow(lag/scale, 2))/pow(scale, 2);
+  else return 0.0;
 }
 // Derivatives with respect to power of the Stable correlation model:
 double DStabPow(double lag, double power, double scale, double rho)
 {
-  return -rho*pow(lag/scale,power)*log(lag/scale);
+  if(lag) return -rho*pow(lag/scale,power)*log(lag/scale);
+  else return 0.0;
 }
 // Derivatives with respect to scale of the Stable correlation model:
 double DStabSc(double lag, double power, double scale, double rho)
 {
-  return rho*pow(lag/scale,power-1)*power*lag/pow(scale,2);
+  if(lag) return rho*pow(lag/scale,power-1)*power*lag/pow(scale,2);
+  else return 0.0;
 }
 // Derivatives with respect to scale of the Whittle-Matern correlation model:
 double DWhMatSc(double *eps, double lag, double scale, double smooth)
 {
-  double pscale=0.0;
-  pscale=(bessel_k(lag/(scale+*eps),smooth,1)-
-	  bessel_k(lag/scale,smooth,1))/ *eps;
-  return pow(2,1-smooth)/gammafn(smooth)*pow(lag/scale,smooth)*
-    (pscale-smooth*bessel_k(lag/scale,smooth,1)/scale);
+  if (lag){
+    double pscale=0.0;
+    pscale=(bessel_k(lag/(scale+*eps),smooth,1)-
+	    bessel_k(lag/scale,smooth,1))/ *eps;
+    return pow(2,1-smooth)/gammafn(smooth)*pow(lag/scale,smooth)*
+      (pscale-smooth*bessel_k(lag/scale,smooth,1)/scale);}
+  else return 0;
 }
+
 // Derivatives with respect to smooth of the Whittle-Matern correlation model:
 double DWhMatSm(double *eps, double lag, double scale, double smooth)
 {
-  double psmooth=0.0;
-  psmooth=(bessel_k(lag/scale,smooth+ *eps,1)-
-	   bessel_k(lag/scale,smooth,1))/ *eps;
-  return pow(2,1-smooth)*pow(lag/scale,smooth)/
-    gammafn(smooth)*(log(lag/scale)-log(2)-
-		     digamma(smooth)*bessel_k(lag/scale,smooth,1)+psmooth);
+  if (lag){
+    double psmooth=0.0;
+    psmooth=(bessel_k(lag/scale,smooth+ *eps,1)-
+	     bessel_k(lag/scale,smooth,1))/ *eps;
+    return pow(2,1-smooth)*pow(lag/scale,smooth)/gammafn(smooth)*
+      ((log(lag/scale)-log(2)-digamma(smooth))*bessel_k(lag/scale,smooth,1)+psmooth);}
+  else return 0;
 }
 // Derivatives with respect to spatial scale of the Gneiting correlation model:
 double DGneiting_sc_s(double h,double u,double power_s,double power_t,
@@ -444,11 +468,10 @@ double DGneiting_pw_t(double h,double u, double power_s,double power_t,
 double DGneiting_sep(double h,double u, double power_s,double power_t,
 		     double scale_s,double scale_t,double sep)
 {
-  double arg=0,rho=0,a=0;
+  double arg=0,rho=0;
   arg=1+pow(u, power_t)/scale_t;
-  rho=exp(-pow(h, power_s)/(scale_s*pow(arg, 0.5*sep*power_s)));
-  if(arg)   a=(0.5*pow(h, power_s)*power_s*log(arg)*rho)/(pow(arg, 0.5*sep*power_s+1)*scale_s);
-  return a;
+  rho=exp(-pow(h, power_s)/(scale_s*pow(arg, 0.5*sep*power_s)))/arg;
+  return (0.5*pow(h, power_s)*power_s*log(arg)*rho)/(pow(arg, 0.5*sep*power_s)*scale_s);
 }
 // Derivatives with respect to the separable parameter of the Gneiting correlation model:
 double DIaco_sc_s(double h,double u, double power_s,double power_t,double scale_s,double scale_t,double power2)
@@ -463,18 +486,18 @@ double DIaco_sc_s(double h,double u, double power_s,double power_t,double scale_
 {
 
   double rho=0,arg=0;
- arg=1+pow(h/scale_s, power_s)+pow(u/scale_t, power_t);
- rho=pow(arg,-power2);
- return (rho*power_t*power2*pow(u/scale_t, power_t))/(arg*scale_t);
+  arg=1+pow(h/scale_s, power_s)+pow(u/scale_t, power_t);
+  rho=pow(arg,-power2);
+  return (rho*power_t*power2*pow(u/scale_t, power_t))/(arg*scale_t);
 
  }
  double DIaco_pw_s(double h,double u, double power_s,double power_t,double scale_s,double scale_t,double power2)
 {
   double a=0,rho=0,arg=0;
- arg=1+pow(h/scale_s, power_s)+pow(u/scale_t, power_t);
- rho=pow(arg,-power2);
- if(h) a=-power2*log(h/scale_s)*pow(h/scale_s, power_s)*rho/arg;
- return a;
+  arg=1+pow(h/scale_s, power_s)+pow(u/scale_t, power_t);
+  rho=pow(arg,-power2);
+  if(h) a=-power2*log(h/scale_s)*pow(h/scale_s, power_s)*rho/arg;
+  return a;
 
  }
  double DIaco_pw_t(double h,double u, double power_s,double power_t,double scale_s,double scale_t,double power2)
@@ -506,22 +529,22 @@ double DMat_Cauchy_sc_t(double h,double u,double power2,double scale_s,double sc
 
 double DMat_Cauchy_pw2(double h,double u,double power2,double scale_s,double scale_t,double smooth)
 {
-double arg=0.0,arg2=0.0,arg3=0.0;
-arg3=pow((1+pow(u/scale_t, 2)),-power2);
-if(h) arg=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
-else  arg=1;
-if(1+pow(u/scale_t, 2)) arg2=arg*arg3*log(1+pow(u/scale_t, 2));
-return arg2;
+  double arg=0.0,arg2=0.0,arg3=0.0;
+  arg3=pow((1+pow(u/scale_t, 2)),-power2);
+  if(h) arg=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
+  else  arg=1;
+  if(1+pow(u/scale_t, 2)) arg2=arg*arg3*log(1+pow(u/scale_t, 2));
+ return arg2;
 }
 
 
 double DMat_Cauchy_sc_s(double h,double u,double power2,double scale_s,double scale_t,double smooth)
 {
-double arg1,arg2=0,arg3;
-arg3=pow((1+pow(u/scale_t, 2)),-power2);
-if(h) {  arg2=2*smooth*scale_s*bessel_k(h/scale_s, smooth,1)-h*bessel_k(h/scale_s, smooth+1,1);}
-arg1=pow(2, 1-smooth)*pow(h/scale_s, smooth)*arg3;
-return -arg1*arg2/(gammafn(smooth)*pow(scale_s,2));
+  double arg1,arg2=0,arg3;
+  arg3=pow((1+pow(u/scale_t, 2)),-power2);
+  if(h) {  arg2=2*smooth*scale_s*bessel_k(h/scale_s, smooth,1)-h*bessel_k(h/scale_s, smooth+1,1);}
+  arg1=pow(2, 1-smooth)*pow(h/scale_s, smooth)*arg3;
+  return -arg1*arg2/(gammafn(smooth)*pow(scale_s,2));
 }
 
 double DMat_Cauchy_sm(double h,double u,double *eps, double power2, double scale_s,double scale_t,double smooth)
@@ -530,26 +553,25 @@ double DMat_Cauchy_sm(double h,double u,double *eps, double power2, double scale
   arg3=pow((1+pow(u/scale_t, 2)),-power2);
   psmooth=(bessel_k(h/scale_s,smooth+ *eps,1)-bessel_k(h/scale_s,smooth,1))/ *eps;
   if(h) arg=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
-  else  arg=1;
-  if(h)  arg2=-arg3*arg*(log(2)+digamma(smooth)
-               -log(h/scale_s)-psmooth/bessel_k(h/scale_s, smooth, 1));
+  else arg=1;
+  if(h) arg2=-arg3*arg*(log(2)+digamma(smooth)-log(h/scale_s)-psmooth/bessel_k(h/scale_s, smooth, 1));
   else arg2=0;
-return arg2;
+  return arg2;
 }
 
 double DMat_Exp_sc_t(double h,double u,double scale_s,double scale_t,double smooth)
 {
-double arg=0;
-if(h) arg=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
-else arg=1;
-return arg*u*exp(-u/scale_t)/R_pow(scale_t,2);
+  double arg=0;
+  if(h) arg=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
+ else arg=1;
+  return arg*u*exp(-u/scale_t)/R_pow(scale_t,2);
 }
 
 double DMat_Exp_sc_s(double h,double u,double scale_s,double scale_t,double smooth)
 {
 double arg1=0,arg2=0;
 
- if(h) {arg1=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
+ if(h){arg1=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
    arg2=h*(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth+1, 1);}
  else {arg1=1;
    arg2=0;}
@@ -560,12 +582,11 @@ double arg1=0,arg2=0;
 double DMat_Exp_sm(double h,double u,double *eps,double scale_s,double scale_t,double smooth)
 {
   double arg=0.0,psmooth=0.0,arg2=0.0;
- psmooth=(bessel_k(h/scale_s,smooth+ *eps,1)-bessel_k(h/scale_s,smooth,1))/ *eps;
- if(h){arg=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
-  arg2=-exp(-u/scale_t)*arg*(log(2)+digamma(smooth)
-               -log(h/scale_s)-psmooth/bessel_k(h/scale_s, smooth, 1));}
- else arg2=0;
- return arg2;
+  psmooth=(bessel_k(h/scale_s,smooth+ *eps,1)-bessel_k(h/scale_s,smooth,1))/ *eps;
+  if(h){arg=(pow(2, 1-smooth)/gammafn(smooth))*pow(h/scale_s, smooth)*bessel_k(h/scale_s, smooth, 1);
+    arg2=-exp(-u/scale_t)*arg*(log(2)+digamma(smooth)-log(h/scale_s)-psmooth/bessel_k(h/scale_s,smooth,1));}
+  else arg2=0;
+  return arg2;
 }
 
 double DPorcu_sc_s(double h,double u, double power_s,double power_t,double scale_s,double scale_t,double sep)
@@ -610,7 +631,6 @@ double DPorcu_pw_t(double h,double u, double power_s,double power_t,double scale
   if(h) a=-(0.5*pow(u, power_t)*rho*arg2*log(u))/(arg*arg2*scale_t);
   return a;
 }
-
 
 double DPorcu_sep(double h,double u, double power_s,double power_t,double scale_s,double scale_t,double sep)
 {
@@ -672,7 +692,60 @@ double DExp_Gauss_sc_t(double h,double u,double scale_s,double scale_t)
   rho=exp(-h/scale_s-pow(u/scale_t,2));
   return 2*pow(u,2)*rho/pow(scale_t,3);
 }
+// compute the gradient matrix (numcoord...) for the spatial field:
+void DCorrelationMat(int *cormod,double *drho,double *eps,int *flagcor,int *nparcor,double *parcor,double *rho)
+{
+  int i=0,j=0,k=0;
+  double *gradcor,*derho;
+  //Initializes gradients:
+  gradcor=(double *) R_alloc(*nparcor, sizeof(double));
+  derho=(double *) R_alloc(*npairs * *nparcor, sizeof(double));
+  k=0;
+  for(i=0;i<*npairs;i++){
+    GradCorrFct(rho[i],cormod,eps,flagcor,gradcor,lags[i],0,parcor);
+    for(j=0;j<*nparcor;j++){
+      derho[k]=gradcor[j];k++;}}
+  k=0;
+  for(i=0;i<*nparcor;i++){
+    for(j=0;j<*npairs;j++){
+      drho[k]=derho[i+j* *nparcor];k++;}}
+  return;
+}
+// compute the gradient matrix (numcoord*numtime...) for the spatial-temporal field:
+void DCorrelationMat_st(int *cormod,double *drho,double *eps,int *flagcor,int *nparcor,double *parcor,double *rho)
+{
+  int i=0,j=0,t=0,p=0,k=0,npair=0,v=0,s=0,st=0;
+  double *gradcor,*derho;
+  st=*ncoord * *ntime;
+  npair=0.5*st*(st-1);
+  gradcor=(double *) R_alloc(*nparcor, sizeof(double));
+  derho=(double *) R_alloc(npair * *nparcor, sizeof(double));
 
+  for(i=0;i<*ncoord;i++)
+    {// first temporal loop:
+      for(t=0;t<*ntime;t++)
+	{// second spatial loop:
+	  for(j=i;j<*ncoord;j++){
+	    if(i==j)
+	      for(v=(t+1);v<*ntime;v++)// second temporal loop:
+		{//marignal temporal correlations
+		  GradCorrFct(rho[p],cormod,eps,flagcor,gradcor,0,mlagt[t][v],parcor);
+		  p++;
+		  for(s=0;s<*nparcor;s++){
+		    derho[k]=gradcor[s];k++;}}
+	    else
+	      for(v=0;v<*ntime;v++){// second temporal loop:
+		GradCorrFct(rho[p],cormod,eps,flagcor,gradcor,mlags[i][j],mlagt[t][v],parcor);
+		p++;
+		for(s=0;s<*nparcor;s++){
+		  derho[k]=gradcor[s];
+		  k++;}}}}}
+  k=0;
+  for(i=0;i<*nparcor;i++){
+    for(j=0;j<npair;j++){drho[k]=derho[i+j* *nparcor];
+      k++;}}
+  return;
+}
 // list of the gradients. Derivatives with respect ot the correlations parameters:
 void GradCorrFct(double rho, int *cormod, double *eps, int *flag,
 		 double *grad, double h, double u, double *par)
@@ -1043,7 +1116,7 @@ double Variogram(int *cormod, double h, double u, double *nuis, double *par)
 }
 double VarioFct(int *cormod, double lag, double *par)
 {
-  double power=0.0, scale=0.0, vario=0.0;
+  double power=0.0, power1=0, power2=0, scale=0.0, vario=0.0;
 
   switch(*cormod) // Variogram functions are in alphabetical order
     {
@@ -1060,6 +1133,10 @@ double VarioFct(int *cormod, double lag, double *par)
       vario=VarioStable(lag, power, scale);
       break;
     case 4: // Generalised Cuachy correlation function
+      power1=par[0];
+      power2=par[1];
+      scale=par[2];
+      vario=VarioGCauchy(lag, power1, power2, scale);
       break;
     case 6:// Stable correlation function
       power=par[0];
@@ -1080,12 +1157,21 @@ double VarioStable(double lag, double power, double scale)
   return 2*vario;
 }
 
+// Variogram associated to the Stable class of correlation models:
+double VarioGCauchy(double lag, double power1, double power2, double scale)
+{
+  double vario=0.0;
+  // Computes the correlation:
+  vario=pow(sqrt(power2/power1)*lag/scale,power1);
+  return 2*vario;
+}
+
 // list of the gradients. Derivatives with respect ot the variograms parameters:
 void GradVarioFct(double vario, int *cormod, double *eps, int *flag,
 		  double *grad, double lag, double *par)
 {
   int i=0;
-  double power=0.0, scale=0.0;
+  double power=0.0, power1=0, power2=0, scale=0.0;
 
   switch(*cormod)// Variogram functions are in alphabetical order
     {
@@ -1102,15 +1188,18 @@ void GradVarioFct(double vario, int *cormod, double *eps, int *flag,
 	grad[i]=-2*vario/scale;
       break;
     case 4:// Generalised Cuachy variogram function
+      power1=par[0];
+      power2=par[1];
+      scale=par[2];
+      if(flag[0]==1)
+	grad[i]=-2*sqrt(power2/power1)*vario/scale;
        break;
     case 6:// Stable variogram function
       power=par[0];
       scale=par[1];
-      if(flag[0]==1)
-	{
+      if(flag[0]==1){
 	  grad[i]=vario*log(lag/scale);
-	  i++;
-	}
+	  i++;}
       if(flag[1]==1)
 	grad[i]=-vario*power/scale;
       break;
@@ -1119,16 +1208,17 @@ void GradVarioFct(double vario, int *cormod, double *eps, int *flag,
     }
   return;
 }
-
-void VectCorrelation(double *rho, int *cormod, double *lag, int *nlags, double *par)
+// Vector of spatio-temporal correlations:
+void VectCorrelation(double *rho, int *cormod, double *h, int *nlags, int *nlagt, double *par, double *u)
 {
-  int i;
-
-  for(i=0;i<*nlags;i++)
-    rho[i]=CorFct(cormod, lag[i], 0, par);
+  int i,j,t=0;
+  for(j=0;j<*nlagt;j++)
+    for(i=0;i<*nlags;i++){
+      rho[t]=CorFct(cormod, h[i], u[j], par);
+      t++;}
   return;
 }
-
+// Vector of spatial extremal coefficients:
 void ExtCoeff(int *cormod, double *extc, double *lag, int *model,
 	      int *nlags, double *nuis, double *par)
 {
