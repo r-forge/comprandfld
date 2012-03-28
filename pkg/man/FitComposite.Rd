@@ -604,7 +604,7 @@ data <- RFsim(x,y,time,corrmodel="exp_exp",param=list(mean=0,
 # Maximum composite-likelihood fitting of the random field:
 fit <- FitComposite(data,x,y,time,corrmodel="exp_exp",maxtime=3,
                     maxdist=10,likelihood="Conditional",type="Pairwise",
-                    varest=FALSE,start=list(scale_s=1,scale_t=1,sill=.5),
+                    start=list(scale_s=1,scale_t=1,sill=.5),
                     fixed=list(mean=mean,nugget=nugget))
 
 # Results:
