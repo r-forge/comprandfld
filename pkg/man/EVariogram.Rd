@@ -56,23 +56,38 @@ EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, grid=FALSE,
 
 \details{
 
-  The procedure, for a spatial random field, uses the following
-  definition of the sample variogram estimator:
+  We briefly report the definitions of variogram used in this function.
+
+  In the case of a spatial Gaussian random field
+  the sample \code{variogram} estimator is defined by
   \deqn{\hat{\gamma}(h) = 0.5 \sum_{x_i, x_j \in N(h)} (Z(x_i) - Z(x_j))^2 / |N(h)|}
   where \eqn{N(h)} is the set of all the sample pairs whose distances fall into a tolerance region with size \eqn{h}
   (equispaced intervalls are considered).
-  Observe, that in the literature often the above definition is termed semivariogram (see i.e. the first reference).
+  Observe, that in the literature often the above definition is termed semivariogram (see e.g. the first reference).
   Nevertheless, here this defition has been used in order to be consistent with the variogram defition used for the extremes
-  (see i.e. the third reference).
+  (see e.g. the third reference).
 
-  The procedure, for a max-stable random field, uses the following defition of the sample madogram estimator:
-  \deqn{\hat{\nu}(h) = 0.5 \sum_{x_i, x_j \in N(h)} |Z(x_i) - Z(x_j)| / |N(h)|.}
+  In the case of a spatial max-stable random field, the sample \code{madogram}
+  estimator is defined similarly to the Gaussian case by
+  \deqn{\hat{\nu}(h) = 0.5 \sum_{x_i, x_j \in N(h)} |Z(x_i) - Z(x_j)| /
+    |N(h)|.}
 
-  The procedure, for a spatial-temporal random field, uses the following
-  definition of the sample variogram estimator:
+  In the case of a spatial binary random field, the sample \code{lorelogram}
+  estimator (the analogue of the correlation) is defined by
+  \deqn{\hat{L}(h) = (N_{11}(h) N_{00}(h) )/ (N_{01}(h) N_{10}(h)).}
+  where \eqn{N_{11}(h)} is the number of pairs who are both equal to
+  \eqn{1}{1} and that falls in the bin
+  \eqn{h}{h}. Similarly are defined the other quantities.
+
+  In the case of a spatio-temporal Gaussian random field the sample
+  \code{variogram} estimator is defined by
   \deqn{\hat{\gamma}(h, u) = 0.5 \sum_{(x_i, l), (x_j, k) \in N(h, u)} (Z(x_i, l) - Z(x_j, k))^2 / |N(h, u)|}
-  where \eqn{N(h, u)} is the set of all the sample pairs whose spatial distances fall into a tolerance region with size \eqn{h}
-  and \eqn{|k - l| = u}. Note, that \eqn{Z(x_i, l)} is the observation at site \eqn{x_i} and time \eqn{l}.
+  where \eqn{N(h, u)}{N(h, u)} is the set of all the sample pairs whose
+  spatial distances fall into a tolerance region with size \eqn{h}{h}
+  and \eqn{|k - l| = u}{\|k-l\|=u}. Note, that \eqn{Z(x_i, l)}{Z(x_i,l)}
+  is the observation at site \eqn{x_i}{x_i} and time
+  \eqn{l}{l}. Taking this in mind and given the above definition of
+  lorelogram, the spatio-temporal extention is straightforward.
 
   The  \code{numbins} parameter indicates the number of adjacent
   intervals to consider in order to grouped distances with which to
