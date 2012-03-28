@@ -152,7 +152,7 @@ Variance Components. \emph{Biometrics Bulletin}, \bold{2}, 110--114.
 \examples{
 library(CompRandFld)
 library(RandomFields)
-set.seed(2121)
+set.seed(3451)
 
 # Define the spatial-coordinates of the points:
 x <- runif(300, 0, 10)
@@ -171,14 +171,14 @@ y <- runif(300, 0, 10)
 # Set the model's parameters:
 corrmodel <- "stable"
 mean <- 0
-variance <- 1
+sill <- 1
 nugget <- 1
 scale <- 1
 power <- 1.3
 
 # Simulation of the spatial Gaussian random field:
-data <- GaussRF(x=x, y=y, model=corrmodel, grid=FALSE,
-                param=c(mean,variance,nugget,scale,power))
+data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
+              sill=sill,nugget=nugget,scale=scale,power=power))$data
 
 # Maximum composite-likelihood fitting of the random field, full model:
 fit1 <- FitComposite(data, x, y, corrmodel=corrmodel, maxdist=5,
