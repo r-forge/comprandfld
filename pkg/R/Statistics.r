@@ -204,18 +204,20 @@ HypoTest <- function(object1, object2, ..., statistic)
       {   # consider the ith model:
           model <- get(models[i], envir=parent.frame())
           if(!inherits(model, "FitComposite"))
-              stop("Use HypoTest only with 'FitComposite' objects")
+              stop("use HypoTest only with 'FitComposite' objects\n")
           numparam <- c(numparam, length(model$param))
           lmodels[[i]] <- model
+          if(!is.matrix(lmodels[[i]]$varcov))
+              stop("one of the fitted models does not have a valid variance-covariance matrix\n")
           if(i>1){
             j <- i-1
             if((!all(names(lmodels[[j]]) %in% names(lmodels[[i]]))) &&
                (!identical(lmodels[[j]]$model,lmodels[[i]]$model)) &&
                (!Isnested(lmodels[[j]]$corrmodel,lmodels[[i]]$corrmodel)))
-              stop('models are not nested')
+              stop("models are not nested\n")
             # Define the degrees of freedom:
             df[j] <- length(lmodels[[j]]$param)-length(lmodels[[i]]$param)
-            if(df[j] <= 0) stop('model are not nested')
+            if(df[j] <= 0) stop("model are not nested\n")
             stat <- StatiTest(df[j],lmodels[[j]],lmodels[[i]],statistic)
             nu[j] <- stat$nu
             W[j] <- stat$W
