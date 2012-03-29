@@ -179,12 +179,12 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                 par(mai=c(.5,.5,.3,.3),mgp=c(1.6,.6,0))
                 plot(lagt, covariance[fix.lags,], xlab="Time",
                      ylab="Covariance", type="l",cex.axis=.8,cex.lab=.8,
-                     main="Space-time cov: temporal profile")}
+                     main="Space-time cov: temporal profile",...)}
             if(plags){
                 par(mai=c(.5,.5,.3,.3),mgp=c(1.6,.6,0))
                 plot(lags, covariance[,fix.lagt], xlab="Distance",
                      ylab="Covariance", type="l",cex.axis=.8,cex.lab=.8,
-                     main="Space-time cov: spatial profile")}
+                     main="Space-time cov: spatial profile",...)}
         }
         else{# spatial case:
             if(add.cov & dev.cur()!=1){
@@ -193,7 +193,7 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
             else{
                 plot(lags, covariance, type='l', ylim=c(min(covariance),
                      max(covariance)), main="Spatial covariance",pch=20,
-                     xlab="Distance", ylab="Covariance")
+                     xlab="Distance", ylab="Covariance",...)
                 if(show.range) abline(v=Range)}}}
     # display the variogram function
     if(show.vario){
@@ -235,14 +235,14 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                 plot(lagt, variogram[fix.lags,], xlab="Time",cex.axis=.8,cex.lab=.8,
                      ylab=vario.ylab, type="l", ylim=c(0,max(nuisance["nugget"]+
                      nuisance["sill"],tup)), main=paste(vario.ylab,": temporal profile",
-                     sep=""))
+                     sep=""),...)
                 if(isvario) points(lagt, evario[fix.lags,], pch=20)}
             if(plags){
                 par(mai=c(.5,.5,.3,.3),mgp=c(1.6,.6,0))
                 plot(lags, variogram[,fix.lagt], xlab="Distance",cex.axis=.8,cex.lab=.8,
                      ylab=vario.ylab, type="l", ylim=c(0,max(nuisance["nugget"]+
                      nuisance["sill"],sup)), main=paste(vario.ylab,": spatial profile",
-                     sep=""))
+                     sep=""),...)
                 if(isvario) points(lags, evario[,fix.lagt], pch=20)}}
         else{# spatial case:
             if(add.vario & dev.cur()!=1){
@@ -255,7 +255,7 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                 bnds[2] <- max(bnds[2], vario$variograms)
                 plot(lags, variogram, type='l', ylim=c(bnds[1], bnds[2]),
                      main=vario.main,pch=20,xlab="Distance",
-                     ylab=vario.ylab)
+                     ylab=vario.ylab,...)
                 points(vario$centers, vario$variograms,pch=20)
                 if(show.range) abline(v=Range)}}}
     # display the extremal function
@@ -271,7 +271,7 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                 bnds[2] <- max(bnds[2], vario$extcoeff)}
             plot(lags, extrcoeff, type='l', ylim=c(bnds[1], bnds[2]), pch=20,
                  main="Spatial extremal coefficient",ylab="Extremal coefficient",
-                 xlab="Distance")
+                 xlab="Distance",...)
             if(isvario & isextc)
                 points(vario$centers, vario$extcoeff,pch=20)
             if(show.range) abline(v=Range)}}
