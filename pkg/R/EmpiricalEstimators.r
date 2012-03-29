@@ -160,7 +160,6 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, grid
       numbins <- length(bins)
       # check if cloud or binned variogram:
       if(cloud) centers <- bins else centers <- bins[1:(numbins-1)]+diff(bins)/2
-      centers <- centers[indbin]
       moments <- moments[indbin]
       lenbins <- lenbins[indbin]
       variograms <- moments/lenbins}
