@@ -1,0 +1,5 @@
+exportPattern("^[^\\.]")
+useDynLib(CompRandFld)
+import(scatterplot3d)
+import(RandomFields)
+import(spam)
