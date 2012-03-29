@@ -188,11 +188,11 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
         }
         else{# spatial case:
             if(add.cov & dev.cur()!=1){
-                lines(lags, covariance)
+                lines(lags, covariance,...)
                 if(show.range) abline(v=Range)}
             else{
                 plot(lags, covariance, type='l', ylim=c(min(covariance),
-                     max(covariance)), main="Spatial covariance",pch=20,
+                     max(covariance)), main="Spatial covariance",
                      xlab="Distance", ylab="Covariance",...)
                 if(show.range) abline(v=Range)}}}
     # display the variogram function
@@ -218,9 +218,8 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                 evario.grid <- expand.grid(c(0,vario$centers),c(0,vario$bint))
                 scatterplot3d(evario.grid[,1],evario.grid[,2], c(evario),
                               type="h",highlight.3d=TRUE,cex.axis=.7,cex.lab=.7,
-                              main=paste("Empirical",vario.main),pch=20,
-                              xlab="Distance",ylab="Time",zlab=vario.zlab,
-                              mar=c(2,2,2,2),mgp=c(0,0,0))
+                              main=paste("Empirical",vario.main),xlab="Distance",
+                              ylab="Time",zlab=vario.zlab,mar=c(2,2,2,2),mgp=c(0,0,0))
                 if(plagt) tup <- max(evario[fix.lags,],na.rm=TRUE)
                 if(plags) sup <- max(evario[,fix.lagt],na.rm=TRUE)
             }
@@ -236,18 +235,18 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                      ylab=vario.ylab, type="l", ylim=c(0,max(nuisance["nugget"]+
                      nuisance["sill"],tup)), main=paste(vario.ylab,": temporal profile",
                      sep=""),...)
-                if(isvario) points(lagt, evario[fix.lags,], pch=20)}
+                if(isvario) points(lagt, evario[fix.lags,],...)}
             if(plags){
                 par(mai=c(.5,.5,.3,.3),mgp=c(1.6,.6,0))
                 plot(lags, variogram[,fix.lagt], xlab="Distance",cex.axis=.8,cex.lab=.8,
                      ylab=vario.ylab, type="l", ylim=c(0,max(nuisance["nugget"]+
                      nuisance["sill"],sup)), main=paste(vario.ylab,": spatial profile",
                      sep=""),...)
-                if(isvario) points(lags, evario[,fix.lagt], pch=20)}}
+                if(isvario) points(lags, evario[,fix.lagt],...)}}
         else{# spatial case:
             if(add.vario & dev.cur()!=1){
-                points(vario$centers, vario$variograms,pch=20)
-                lines(lags, variogram)
+                points(vario$centers, vario$variograms,...)
+                lines(lags, variogram,...)
                 if(show.range) abline(v=Range)}
             else{
                 bnds <- range(variogram)
@@ -256,13 +255,13 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                 plot(lags, variogram, type='l', ylim=c(bnds[1], bnds[2]),
                      main=vario.main,pch=20,xlab="Distance",
                      ylab=vario.ylab,...)
-                points(vario$centers, vario$variograms,pch=20)
+                points(vario$centers, vario$variograms,...)
                 if(show.range) abline(v=Range)}}}
     # display the extremal function
     if(show.extc){
         if(add.extc & dev.cur()!=1){
-            if(isvario & isextc) points(vario$centers, vario$extcoeff,pch=20)
-            lines(lags, extrcoeff)
+            if(isvario & isextc) points(vario$centers, vario$extcoeff,...)
+            lines(lags, extrcoeff,...)
             if(show.range) abline(v=Range)}
         else{
             bnds <- range(extrcoeff)
@@ -273,7 +272,7 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                  main="Spatial extremal coefficient",ylab="Extremal coefficient",
                  xlab="Distance",...)
             if(isvario & isextc)
-                points(vario$centers, vario$extcoeff,pch=20)
+                points(vario$centers, vario$extcoeff,...)
             if(show.range) abline(v=Range)}}
     # return the estimated covariance function
     if(answer.cov) result <- list(lags=lags, covariance=covariance)
