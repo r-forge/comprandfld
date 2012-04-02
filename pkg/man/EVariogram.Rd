@@ -129,19 +129,19 @@ EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, grid=FALSE,
 }
 
 \references{
-  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
-  Spring Verlang, New York.
-
   Cooley, D., Naveau, P. and Poncet, P. (2006) \emph{Variograms for spatial
   max-stable random fields}. Dependence in Probability and
-  Statistics, p. 373--390.
+Statistics, p. 373--390.
+
+Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York: Wiley.
+
+  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
+  Spring Verlang, New York.
 
   Heagerty, P. J., and Zeger, S. L. (1998). Lorelogram: A Regression
   Approach to Exploring Dependence in Longitudinal Categorical
   Responses.
   \emph{Journal of the American Statistical Association}, \bold{93}(441), 150--162
-
-  Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York: Wiley.
 }
 
 \seealso{\code{\link{FitComposite}}}
