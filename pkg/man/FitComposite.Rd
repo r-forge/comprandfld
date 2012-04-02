@@ -392,6 +392,10 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
 
   Composite-likelihood:
 
+  Patrick, J. H. and Subhash, R. L. (1998)
+  A Composite Likelihood Approach to Binary Spatial Data.
+  \emph{Journal of the American Statistical Association, Theory & Methods}, \bold{93}, 1099--1111.
+
   Varin, C., Reid, N. and Firth, D. (2011). An Overview of Composite
   Likelihood Methods. \emph{Statistica Sinica}, \bold{21}, 5--42.
 
@@ -399,55 +403,56 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   A Note on Composite Likelihood Inference and Model Selection.
   \emph{Biometrika}, \bold{92}, 519--528.
 
-  Patrick, J. H. and Subhash, R. L. (1998)
-  A Composite Likelihood Approach to Binary Spatial Data.
-  \emph{Journal of the American Statistical Association, Theory & Methods}, \bold{93}, 1099--1111.
-
   Weighted Composite-likelihood for max-stable random fields:
+
+  Davison, A. C. and Gholamrezaee, M. M. (2012)
+  Geostatistics of extremes.
+  \emph{Proceedings of the Royal Society of London, series A}, \bold{468}, 581--608.
+
+  Padoan, S. A. (2008). \emph{Computational
+  Methods for Complex Problems in Extreme Value Theory}. PhD. Thesis,
+  Department of Statistics, University of Padua.
 
   Padoan, S. A. Ribatet, M. and Sisson, S. A. (2010)
   Likelihood-Based Inference for Max-Stable Processes.
   \emph{Journal of the American Statistical Association, Theory & Methods}, \bold{105}, 263--277.
 
-  Padoan, S. A. (2008). \emph{Computational
-    Methods for Complex Problems in Extreme Value Theory}. PhD. Thesis,
-  Department of Statistics, University of Padua.
-
   Weighted Composite-likelihood for Gaussian random fields:
 
-  Bevilacqua, M. Gaetan, C., Mateu, J. and Porcu, E. (2011)
+  Bevilacqua, M. Gaetan, C., Mateu, J. and Porcu, E. (2012)
   Estimating space and space-time covariance functions for large data
   sets: a weighted composite likelihood approach.
-  \emph{Journal of the American Statistical Association}, to appear.
+  \emph{Journal of the American Statistical Association, Theory & Methods}, in print.
 
   Spatial Statistics:
-
-  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
-  Spring Verlang, New York.
 
   Bevilacqua, M., Mateu, J., Porcu, E., Zhang, H., Zini, A. (2009), Weighted composite likelihood-based
   tests for space-time separability of covariance functions.
   \emph{Statistics and Computing}, \bold{20}, 283--293.
 
-  Kaufman, C. G., Schervish, M. J. and Nychka, D. W. (2008)
-  Covariance Tapering for Likelihood-Based Estimation in Large Spatial Dataset.
-  \emph{Journal of the American Statistical Association}, \bold{103},
-  1545--1555.
-
-  Gneiting, T., Genton, M. G. and Guttorp, P. (2007).
-  \emph{Geostatistical space-time models, stationarity, separability and full
-  symmetry}.
-  In Finkenstadt, B., Held, L. and Isham, V. (eds.),
-  Statistical Methods for Spatio-Temporal Systems, Chapman & Hall/CRC, Boca Raton, pp. 151-175
-
   Furrer, R., Genton, M. G., and Nychika, D. (2006). \emph{Covariance tapering
   for interpolation of large spatial datasets. Journal of Computational and Graphical
   Statistics}, \bold{15}(3), 502--523.
+
+  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
+  Spring Verlang, New York.
 
   Gneiting, T. (2002). Nonseparable, stationary covariance functions for
   space-time data.
   \emph{Journal of the American Statistical Association}, \bold{97},
   590--600.
+
+  Gneiting, T., Genton, M. G. and Guttorp, P. (2007).
+  \emph{Geostatistical space-time models, stationarity, separability and full
+  symmetry}.
+  In Finkenstadt, B., Held, L. and Isham, V. (eds.),
+  Statistical Methods for Spatio-Temporal Systems, Chapman & Hall/CRC,
+  Boca Raton, pp. 151-175
+
+  Kaufman, C. G., Schervish, M. J. and Nychka, D. W. (2008)
+  Covariance Tapering for Likelihood-Based Estimation in Large Spatial Dataset.
+  \emph{Journal of the American Statistical Association}, \bold{103},
+  1545--1555.
 
   Schlather, M. (1999) \emph{An introduction to positive definite
     functions and to unconditional simulation of random fields}.
@@ -462,16 +467,16 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   Modelling of Spatial Extremes, with discussion.
   \emph{Statistical Science}, in press.
 
+  de Haan, L., and Pereira, T. T. (2006) Spatial Extremes: Models for
+  the Stationary Case. \emph{The Annals of Statistics}, \bold{34},
+  146--168.
+
   Kabluchko, Z. (2010) Extremes of Independent Gaussian
   Processes. \emph{Extremes}, \bold{14}, 285--310.
 
   Kabluchko, Z., Schlather, M., and de Haan, L. (2009) Stationary max-stable fields
   associated to negative definite functions. \emph{The Annals of
     Probability}, \bold{37}, 2042--2065.
-
-  de Haan, L., and Pereira, T. T. (2006) Spatial Extremes: Models for
-  the Stationary Case. \emph{The Annals of Statistics}, \bold{34},
-  146--168.
 
   Schlather, M. (2002) Models for Stationary Max-Stable Random
   Fields. \emph{Extremes}, \bold{5}, 33--44.
@@ -481,24 +486,24 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
 
   Sub-sampling estimation:
 
-  Li, B., Genton, M. G. and Sherman, M. (2007). A nonparametric assessment of properties of space-time
-  covariance functions. \emph{Journal of the American Statistical
-    Association}, \bold{102}, 736--744
-
-  Lee, Y. D. and Lahiri S. N. (2002) Variogram Fitting by Spatial
-  Subsampling.
-  \emph{Journal of the Royal Statistical Society. Series B},
-  \bold{64}, 837--854.
+  Carlstein, E. (1986) The Use of Subseries Values for Estimating the
+  Variance.
+  \emph{The Annals of Statistics},
+  \bold{14}, 1171--1179.
 
   Heagerty, P. J. and Lumley T. (2000) Window Subsampling of Estimating
   Functions with Application to Regression Models.
   \emph{Journal of the American Statistical Association, Theory &
     Methods}, \bold{95}, 197--211.
 
-  Carlstein, E. (1986) The Use of Subseries Values for Estimating the
-  Variance.
-  \emph{The Annals of Statistics},
-  \bold{14}, 1171--1179.
+  Lee, Y. D. and Lahiri S. N. (2002) Variogram Fitting by Spatial
+  Subsampling.
+  \emph{Journal of the Royal Statistical Society. Series B},
+  \bold{64}, 837--854.
+
+  Li, B., Genton, M. G. and Sherman, M. (2007). A nonparametric assessment of properties of space-time
+  covariance functions. \emph{Journal of the American Statistical
+    Association}, \bold{102}, 736--744
 }
 
 \seealso{\code{\link[RandomFields]{CovarianceFct}},
