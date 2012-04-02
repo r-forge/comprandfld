@@ -36,12 +36,13 @@ If \code{start} is omitted the routine is computing the
 }
 
 \references{
-  Smith, R. L. (1985)
-  Maximum likelihood estimation in a class of non-regular cases.
-  \emph{Biometrika}, \bold{72}, 67--90.
 
   de Haan, L. and Ferreira, A. (2006) \emph{Extreme Value Theory An
     Introduction}. Springer Verlang, New York.
+
+  Smith, R. L. (1985)
+  Maximum likelihood estimation in a class of non-regular cases.
+  \emph{Biometrika}, \bold{72}, 67--90.
 
 }
 
