@@ -110,8 +110,6 @@ WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 }
 
 \references{
-  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
-  Spring Verlang, New York.
 
   Barry, J. T., Crowder, M. J. and Diggle, P. J. (1997)
   \emph{Parametric estimation of the variogram}. Tech. Report, Dept Maths &
@@ -119,6 +117,9 @@ WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 
   Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York:
   Wiley.
+
+  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
+  Spring Verlang, New York.
 
   Smith, R. L. (1990) Max-Stable Processes and Spatial Extremes.
   \emph{Unpublished manuscript}, University of North California.
