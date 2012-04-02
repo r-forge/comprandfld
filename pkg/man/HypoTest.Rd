@@ -22,7 +22,7 @@ HypoTest(object1, object2, \dots, statistic)
 
 
 \details{
-  The implemented hypothesis tests for nasted models are based on the
+  The implemented hypothesis tests for nested models are based on the
   following statistics:
   \enumerate{
      \item Wald-type (\code{Wald});
@@ -52,7 +52,7 @@ where \eqn{\mathbf{\theta} \in \Theta}{theta in Theta} is a
  \psi \neq \psi_0}{H_1: psi <> psi_0}. Composite likelihood versions
 of 'Wald' and 'score' statistics have the usual asymptotic
 chi-square distribution with \eqn{q'} degree of freedom. The Wald-type statistic is
-\deqn{W=(\hat{\psi}-\psi_0)^T G_{\psi \psi}(\hat{\theta})(\hat{\psi}-\psi_0),}{%
+\deqn{W=(\hat{\psi}-\psi_0)^T (G^{\psi \psi})^{-1}(\hat{\theta})(\hat{\psi}-\psi_0),}{%
 W=(hat{psi}-psi_0)^T G_{psi psi} (hat{theta})(hat{psi}-psi_0),}
 where \eqn{G_{\psi \psi}}{G_{psi psi}} is the \eqn{q' \times q'}{q' x q'}
  submatrix of the Godambe information pertaining to \eqn{\psi}{psi} and
@@ -126,14 +126,11 @@ freedom. Note that in this case the distribution of the likelihood ratio
 
 \references{
 
-  Pace, L., Salvan, A. and Sartori, N. (2011). Adjusting Composite
-  Likelihood Ratio Statistics. \emph{Statistica Sinica}, \bold{21}, 129--148.
-
-Varin, C., Reid, N. and Firth, D. (2011). An Overview of Composite
-Likelihood Methods. \emph{Statistica Sinica}, \bold{21}, 5--42.
-
 Chandler, R. E., and Bate, S. (2007). Inference for Clustered Data Using the
 Independence log-likelihood. \emph{Biometrika}, \bold{94}, 167--183.
+
+Pace, L., Salvan, A. and Sartori, N. (2011). Adjusting Composite
+Likelihood Ratio Statistics. \emph{Statistica Sinica}, \bold{21}, 129--148.
 
 Rotnitzky, A. and Jewell, N. P. (1990). Hypothesis Testing of Regression
 Parameters in Semiparametric Generalized Linear Models for Cluster
@@ -141,6 +138,10 @@ Correlated Data. \emph{Biometrika}, \bold{77}, 485--497.
 
 Satterthwaite, F. E. (1946). An Approximate Distribution of Estimates of
 Variance Components. \emph{Biometrics Bulletin}, \bold{2}, 110--114.
+
+Varin, C., Reid, N. and Firth, D. (2011). An Overview of Composite
+Likelihood Methods. \emph{Statistica Sinica}, \bold{21}, 5--42.
+
 }
 
 \author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
