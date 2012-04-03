@@ -53,7 +53,7 @@ where \eqn{\mathbf{\theta} \in \Theta}{theta in Theta} is a
 of 'Wald' and 'score' statistics have the usual asymptotic
 chi-square distribution with \eqn{q'} degree of freedom. The Wald-type statistic is
 \deqn{W=(\hat{\psi}-\psi_0)^T (G^{\psi \psi})^{-1}(\hat{\theta})(\hat{\psi}-\psi_0),}{%
-W=(hat{psi}-psi_0)^T G_{psi psi} (hat{theta})(hat{psi}-psi_0),}
+W=(hat{psi}-psi_0)^T (G^{psi psi})^{-1} (hat{theta})(hat{psi}-psi_0),}
 where \eqn{G_{\psi \psi}}{G_{psi psi}} is the \eqn{q' \times q'}{q' x q'}
  submatrix of the Godambe information pertaining to \eqn{\psi}{psi} and
  \eqn{\hat{\theta}}{hat{theta}} is the maximum likelihood estimator from
