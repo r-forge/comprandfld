@@ -253,7 +253,7 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                 bnds[1] <- min(bnds[1], vario$variograms)
                 bnds[2] <- max(bnds[2], vario$variograms)
                 plot(lags, variogram, type='l', ylim=c(bnds[1], bnds[2]),
-                     main=vario.main,pch=20,xlab="Distance",
+                     main=vario.main,xlab="Distance",
                      ylab=vario.ylab,...)
                 points(vario$centers, vario$variograms,...)
                 if(show.range) abline(v=Range)}}}
@@ -268,7 +268,7 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
             if(isvario & isextc){
                 bnds[1] <- min(bnds[1], vario$extcoeff)
                 bnds[2] <- max(bnds[2], vario$extcoeff)}
-            plot(lags, extrcoeff, type='l', ylim=c(bnds[1], bnds[2]), pch=20,
+            plot(lags, extrcoeff, type='l',ylim=c(bnds[1], bnds[2]),
                  main="Spatial extremal coefficient",ylab="Extremal coefficient",
                  xlab="Distance",...)
             if(isvario & isextc)
