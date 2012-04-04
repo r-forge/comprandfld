@@ -121,7 +121,7 @@ data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
 fit <- FitComposite(data, x, y, corrmodel=corrmodel,
                     type='Difference')
 
-# Empirical estimation of the madogram:
+# Empirical estimation of the variogram:
 vario <- EVariogram(data, x, y)
 
 # Plot of covariance and variogram functions:
