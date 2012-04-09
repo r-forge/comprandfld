@@ -581,13 +581,14 @@ print(fit)
 ###
 ###############################################################
 
+# Remove the symbol # in order to run this example.
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood='Full',
-                    type='Tapering',taper="Wendland1",maxdist=4,
-                    varest=TRUE,fixed=list(mean=mean,nugget=nugget))
-
+#fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood='Full',
+#                    type='Tapering',taper="Wendland1",maxdist=4,
+#                    varest=TRUE,fixed=list(mean=mean,nugget=nugget))
+#
 # Results:
-print(fit)
+#print(fit)
 
 ################################################################
 ###
