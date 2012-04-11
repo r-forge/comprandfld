@@ -435,11 +435,10 @@ void Sens_Pair_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *
 {
   // Initialization variables:
   int h=0, i=0, l=0, d=0, nsens=0, j=0;
-  double rho=0.0, *grad, *gradcor, *gradient, *sens;
+  double rho=0.0, *grad, *gradcor, *sens;
 
   nsens=*npar * (*npar+1)/2;
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// Correlation gradient
-  gradient=(double *) R_alloc(*npar, sizeof(double));// Overall gradient
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
   sens=(double *) R_alloc(nsens, sizeof(double));// One sensitive contribute
 
@@ -472,11 +471,10 @@ void Sens_Pair_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, in
 {
   // Initialization variables:
   int  d=0, i=0, l=0, nsens=0, j=0, t=0, v=0;
-  double rho=0.0, *grad, *gradcor, *gradient, *sens;
+  double rho=0.0, *grad, *gradcor, *sens;
 
   nsens=*npar * (*npar+1)/2;
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// Correlation gradient
-  gradient=(double *) R_alloc(*npar, sizeof(double));// Overall gradient
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
   sens=(double *) R_alloc(nsens, sizeof(double));// One sensitive contribute
   for(i=0;i<*ncoord;i++)
@@ -606,11 +604,10 @@ void Sens_Cond_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *
 {
   // Initialization variables:
   int d=0, h=0, i=0, l=0, nsens=0, j=0;
-  double rho=0.0, *grad, *gradcor, *gradient, *sens;
+  double rho=0.0, *grad, *gradcor, *sens;
 
   nsens=*npar * (*npar+1)/2;
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// Correlation gradient
-  gradient=(double *) R_alloc(*npar, sizeof(double));// Overall gradient
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
   sens=(double *) R_alloc(nsens, sizeof(double));// One sensitive contribute
 
@@ -641,11 +638,10 @@ void Sens_Cond_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, in
 {
   // Initialization variables:
   int d=0, i=0, l=0, nsens=0, j=0, t=0, v=0;
-  double rho=0.0, *grad, *gradcor, *gradient, *sens;
+  double rho=0.0, *grad, *gradcor, *sens;
 
   nsens=*npar * (*npar+1)/2;
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// Correlation gradient
-  gradient=(double *) R_alloc(*npar, sizeof(double));// Overall gradient
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
   sens=(double *) R_alloc(nsens, sizeof(double));// One sensitive contribute
   for(i=0;i<*ncoord;i++)
