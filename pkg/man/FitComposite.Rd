@@ -2,19 +2,21 @@
 \alias{FitComposite}
 \alias{print.FitComposite}
 
-\title{Max-Likelihood Fitting of Gaussian, Binary and Max-Stable Random Fields}
+\title{Max-Likelihood-Based Fitting of Gaussian, Binary and Max-Stable Fields}
 \description{
-  Maximum weighted composite-likelihood fitting of Gaussian, binary and max-stable random fields.
+  Maximum weighted composite-likelihood fitting of spatio-temporal
+  Gaussian, binary and spatial max-stable random fields.
+  For the spatio-temporal Gaussian random field, (restricted)
+  maximum likelihood and tapered likelihood fitting is also avalable.
   The function returns the model parameters' estimates and the estimates'
-  variances by weighted maximisation of the composite-likelihood and allows to
-  fix any of the parameters.
+  variances and allows to fix any of the parameters.
 }
 \usage{
-FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
-             grid=FALSE, likelihood='Marginal',lonlat=FALSE, margins='Gev',
-             maxdist=NULL, maxtime=NULL, model='Gaussian', optimizer='Nelder-Mead',
-             replicates=1, start=NULL, taper=NULL, threshold=NULL, type='Pairwise',
-             varest=FALSE, vartype='SubSamp', weighted=FALSE, winconst, winstp)
+FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance='Eucl', fixed=NULL,
+             grid=FALSE, likelihood='Marginal', margins='Gev', maxdist=NULL, maxtime=NULL,
+             model='Gaussian', optimizer='Nelder-Mead',replicates=1, start=NULL, taper=NULL,
+             tapsep=NULL, threshold=NULL,type='Pairwise', varest=FALSE, vartype='SubSamp',
+             weighted=FALSE, winconst, winstp)
 }
 \arguments{
   \item{data}{A \eqn{d}{d}-dimensional vector (a single spatial realisation) or a (\eqn{n \times d}{n x d})-matrix
@@ -38,6 +40,8 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
     then a spatial random field is expected.}
   \item{corrmodel}{String; the name of a correlation model, for the
     description see the Section \bold{Details}.}
+  \item{distance}{String; the name of the spatial distance. The default is \code{Eucl}, the euclidean distance.
+    See the Section \bold{Details}.}
   \item{fixed}{An optional named list giving the values of the parameters that
     will be considered as known values. The listed parameters for a
     given correlation function will be not estimated, i.e. if
@@ -47,17 +51,14 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   \item{likelihood}{String; the configuration of the composite
     likelihood. \code{Marginal} is the default, see the Section
     \bold{Details}.}
-  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
-    and \code{coordy} are interpreted as Cartesian coordinates
-    otherwise they are considered as longitude and latitude.}
   \item{margins}{String; the type of the marginal distribution of the
     max-stable field. \code{Gev} is the default, see the Section
     \bold{Details}.}
   \item{maxdist}{Numeric; an optional positive value indicating the maximum
-    spatial distance considered in the composite-likelihood
+    spatial distance considered in the composite or tapered likelihood
     computation. See the Section \bold{Details} for more information.}
   \item{maxtime}{Numeric; an optional positive value indicating the maximum
-    temporal separation considered in the composite-likelihood
+    temporal separation considered in the composite or tapered likelihood
     computation (see \bold{Details}).}
   \item{model}{String; the type of random field and therefore the densities associated to the likelihood
     objects. \code{Gaussian} is the default, see the Section
@@ -71,10 +72,10 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   \item{start}{An optional named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure. \code{NULL} is the default (see \bold{Details}).}
-  \item{taper}{String; the name of the taper correlation
-    function, see the Section \bold{Details}. Optional
-    parameter considered only if the \code{type} parameter is equal to
-    \code{Tapering}.}
+  \item{taper}{String; the name of the type of covariance matrix.
+     It can be \code{Standard} (the default value) or
+    \code{Tapering} for taperd covariance matrix.}
+   \item{tapsep}{Numeric; an optional  value indicating the separabe parameter in the space time quasi taper (see \bold{Details}).}
   \item{threshold}{Numeric; a value indicating a threshold for the
     binary random field. Optional in the case that \code{model}
     is \code{BinaryGauss}, see the Section \bold{Details}.}
@@ -103,9 +104,9 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
 
 \details{
   Note, that the standard likelihood may be seen as particular case of the
-  composite likelihood. In this respect \code{FitComposite} provides maximum likelihood
-  fitting, including also the restricted and taperd versions, of Gaussian
-  random fields.
+  composite likelihood. In this respect \code{FitComposite} provides maximum (restricted) likelihood
+  fitting. Only composite likelihood estimation based on pairs are considered. Specifically marginal pairwise,
+  conditional pairwise and difference pairwise. Covariance tapering is considered only for Gaussian random fields.
 
   With \code{data}, \code{coordx}, \code{coordy}, \code{coordt}, \code{grid} and \code{replicates} parameters:
   \itemize{
@@ -142,36 +143,15 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   }
 
   The \code{corrmodel} parameter allows to select a specific correlation
-  function for the random field. The implemented spatial correlation models
-  are:
+  function for the random field. (See   \code{\link{Covmatrix}} ).
+
+  The \code{distance} parameter allows to consider differents kinds of spatial distances.
+  The settings alternatives are:
   \enumerate{
-    \item \code{cauchy};
-    \item \code{exponential};
-    \item \code{gauss} (Gaussian);
-    \item \code{gencauchy} (generalised Cauchy);
-    \item \code{spherical};
-    \item \code{stable} (or powered exponential);
-    \item \code{wave};
-    \item \code{whittlematern} (Whittle-Matern).
+    \item \code{Eucl}, the euclidean distance (default value);
+    \item \code{Chor}, the chordal distance;
+    \item \code{Geod}, the geodesic distance;
   }
-  The implemented non-separable spatio-temporal correlation models
-  are:
-  \enumerate{
-    \item \code{iacocesare} (Iaco-Cesare);
-    \item \code{gneiting} (Gneiting);
-    \item \code{porcu} (Porcu).
-  }
-  Separable spatio-temporal correlation models are
-  easily obtained by a product between a spatial and
-  a temporal correlation. The implemented function are:
-  \enumerate{
-    \item \code{exp_cauchy} (exponential-Cauchy);
-    \item \code{exp_exp} (exponential-exponential);
-    \item \code{exp_gauss} (exponential-Gaussian);
-    \item \code{matern_cauchy} (Whittle-Matern-Cauchy);
-    \item \code{matern_exp} (Whittle-Matern-exponential).
-  }
-  See for more details \code{\link[RandomFields]{CovarianceFct}}.
 
   The \code{likelihood} parameter represents the composite-likelihood
   configurations. The settings alternatives are:
@@ -201,12 +181,18 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   is \code{NULL}, in this case the effective maximum spatial distance
   between sites is considered.
 
+
   The same arguments of \code{maxdist} are valid for \code{maxtime} but
   here the weigthed composite-likelihood regards the case of
   spatial-temporal field. At the moment is
   implemented only for Gaussian random fields. The default
   is \code{NULL}, in this case the effective maximum temporal lag
   between pairs of observations is considered.
+
+    In the case of tapering likelihood \code{maxdist} and \code{maxtime} describes the spatial and temporal compact support
+    of the taper model (see \code{\link{Covmatrix}}). If they are not specified then the maximum spatial and temporal distances are considered.
+    In the case of space time quasi taper the \code{tapsep} parameter allows to specify the spatio temporal compact support (see \code{\link{Covmatrix}}).
+
 
   The \code{model} paramter indicates the type of random field
   considered, for instance \code{model=Gaussian} denotes a Gaussian random field.
@@ -218,8 +204,9 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
     \item \code{BinaryGauss}, for a Binary random field (see Heagerty
     and Lele 1998)
     \item \code{BrowResn}, for a Brown-Resnick max-stable random field (see Kabluchko, Z. et al. 2009);
-    \item \code{ExtGauss}, for a Extremal Gaussian max-stable random field (see Schlather, M. 2002);
-    \item \code{ExtT}, for a Extremal \code{t} max-stable random field (see Davison, A. C. et al. 2011);
+    \item \code{ExtGauss}, for an Extremal Gaussian max-stable random
+  field (known also as Schlather model) (see Schlather, M. 2002);
+    \item \code{ExtT}, for an Extremal \code{t} max-stable random field (see Davison, A. C. et al. 2012);
   }
   Note, that only for the \code{Gaussian} case the estimation procedure is implemented for spatial and spatial-temporal
   random fields.
@@ -230,18 +217,7 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
 
    The \code{taper} parameter, optional in case that
    \code{type=Tapering}, indicates the type of taper
-   correlation model. At the moment the implemented models are:
-   \enumerate{
-     \item Wendland type 1;
-     \item Wendland type 2;
-     \item Wendland type 3.
-   }
-   For more details Furrer et al. (2006) and see Kaufman et al. (2008).
-   \bold{ATTENTION}! Insert also a value for the
-   \code{maxdist} parameter in order to set the upper bound of the compact support; if
-   no \code{maxdist} is inserted then the effective maximum spatial
-   distance is considered and therefore the tapering approach does not
-   have any effect.
+   correlation model. (See \code{\link{Covmatrix}})
 
    The \code{threshold} parameter indicates the value (common for all
    the spatial sites) above which the values of the underlying Gaussian latent process
@@ -275,21 +251,23 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
 	\item \code{Restricted}, the objective function is the
         restricted version of the full likelihood (e.g. Harville 1977, see \bold{References});
 	\item \code{Tapering}, the objective function is the tapered
-        version of the full likelihood (e.g. Kaufman et al. 2008, see \bold{References}). At
-        the moment is implemented only for spatial Gaussian random fields.
+        version of the full likelihood (e.g. Kaufman et al. 2008, see \bold{References}).
       }
       }
       }
 
-  The \code{vartype} parameter specifies the method used to compute the estimates' variances. In particular
+
+  The \code{varest} parameter specifies if the standard error estimation of the estimated parameters must be computed.
+  For Gaussian random field and standard (restricted) likelihood estimation, standard  errrors  are computed as square root of the diagonal elements of the Fisher
+  Information matrix (asymptotic covariance matrix of the estimates under increasing domain).
+  For Gaussian random field and tapered and composite  likelihood estimation, standard errors estimate are computed as square root of the diagonal elements of the
+  Godambe Information matrix. (asymptotic covariance matrix of the estimates under increasing domain  (see Shaby, B. and D. Ruppert (2012) for tapering and
+  Bevilacqua et. al. (2012) , Bevilacqua and Gaetan (2013) for weighted composite likelihood)).
+  The \code{vartype} parameter specifies the method used to compute the estimates' variances in the composite likelihood case. In particular
   for estimating the variability matrix \code{J} in the Godambe expression matrix.
   This parameter is considered if \code{varest=TRUE}. The options are:
   \itemize{
     \item \code{SubSamp} (the default), indicates the Sub-Sampling method;
-    \item \code{Theoretical}, denotes that the variability matrix is computed using the exact
-    analytical expression. At the moment is implemented for spatial
-    Gaussian random fields when using difference composite likelihood,
-    namely \code{Model='Gaussian'} and \code{likelihood='Difference'};
     \item \code{Sampling}, indicates that the variability matrix
     is estimated by the sample contro-part (available only for \eqn{n}{n} iid
     replications of the random field, i.e. \code{replicates=n});
@@ -352,13 +330,15 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   \item{convergence}{A string that denotes if convergence is reached;}
   \item{corrmodel}{The correlation model;}
   \item{data}{The vector or matrix or array of data;}
+  \item{distance}{The type of spatial distance;}
   \item{fixed}{The vector of fixed parameters;}
   \item{iterations}{The number of iteration used by the numerical routine;}
   \item{likelihood}{The configuration of the composite likelihood;}
   \item{logCompLik}{The value of the log composite-likelihood at the maximum;}
-  \item{lonlat}{The type of coordinates;}
   \item{message}{Extra message passed from the numerical routines;}
   \item{model}{The density associated to the likelihood objects;}
+   \item{nozero}{In the case of tapered likelihood  the percentage of non zero values in the covariance matrix.
+  Otherwise is NULL.}
   \item{numcoord}{The number of spatial coordinates;}
   \item{numrep}{The number of the iid replicatations of the random field;}
   \item{numtime}{The number the temporal realisations of the random field;}
@@ -390,11 +370,19 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   \emph{Journal of the American Statistical Association}, \bold{72},
   320--338.
 
-  Composite-likelihood:
+  Tapered likelihood:
 
-  Patrick, J. H. and Subhash, R. L. (1998)
-  A Composite Likelihood Approach to Binary Spatial Data.
-  \emph{Journal of the American Statistical Association, Theory & Methods}, \bold{93}, 1099--1111.
+    Kaufman, C. G., Schervish, M. J. and Nychka, D. W. (2008)
+  Covariance Tapering for Likelihood-Based Estimation in Large Spatial Dataset.
+  \emph{Journal of the American Statistical Association}, \bold{103},
+  1545--1555.
+
+    Shaby, B. and D. Ruppert (2012).
+  Tapered covariance: Bayesian estimation and asymptotics. \emph{J. Comp. Graph.
+Stat.}, \bold{21-2}, 433--452.
+
+
+  Composite-likelihood:
 
   Varin, C., Reid, N. and Firth, D. (2011). An Overview of Composite
   Likelihood Methods. \emph{Statistica Sinica}, \bold{21}, 5--42.
@@ -402,6 +390,14 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
   Varin, C. and Vidoni, P. (2005)
   A Note on Composite Likelihood Inference and Model Selection.
   \emph{Biometrika}, \bold{92}, 519--528.
+
+
+  Weighted Composite-likelihood for binary random fields:
+
+   Patrick, J. H. and Subhash, R. L. (1998)
+  A Composite Likelihood Approach to Binary Spatial Data.
+  \emph{Journal of the American Statistical Association, Theory & Methods}, \bold{93}, 1099--1111.
+
 
   Weighted Composite-likelihood for max-stable random fields:
 
@@ -419,53 +415,22 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
 
   Weighted Composite-likelihood for Gaussian random fields:
 
-  Bevilacqua, M. Gaetan, C., Mateu, J. and Porcu, E. (2012)
+    Bevilacqua, M. Gaetan, C., Mateu, J. and Porcu, E. (2012)
   Estimating space and space-time covariance functions for large data
   sets: a weighted composite likelihood approach.
-  \emph{Journal of the American Statistical Association, Theory & Methods}, in print.
+  \emph{Journal of the American Statistical Association, Theory &
+    Methods}, \bold{107}, 268--280.
 
-  Spatial Statistics:
-
-  Bevilacqua, M., Mateu, J., Porcu, E., Zhang, H., Zini, A. (2009), Weighted composite likelihood-based
-  tests for space-time separability of covariance functions.
-  \emph{Statistics and Computing}, \bold{20}, 283--293.
-
-  Furrer, R., Genton, M. G., and Nychika, D. (2006). \emph{Covariance tapering
-  for interpolation of large spatial datasets. Journal of Computational and Graphical
-  Statistics}, \bold{15}(3), 502--523.
-
-  Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
-  Spring Verlang, New York.
-
-  Gneiting, T. (2002). Nonseparable, stationary covariance functions for
-  space-time data.
-  \emph{Journal of the American Statistical Association}, \bold{97},
-  590--600.
-
-  Gneiting, T., Genton, M. G. and Guttorp, P. (2007).
-  \emph{Geostatistical space-time models, stationarity, separability and full
-  symmetry}.
-  In Finkenstadt, B., Held, L. and Isham, V. (eds.),
-  Statistical Methods for Spatio-Temporal Systems, Chapman & Hall/CRC,
-  Boca Raton, pp. 151-175
-
-  Kaufman, C. G., Schervish, M. J. and Nychka, D. W. (2008)
-  Covariance Tapering for Likelihood-Based Estimation in Large Spatial Dataset.
-  \emph{Journal of the American Statistical Association}, \bold{103},
-  1545--1555.
-
-  Schlather, M. (1999) \emph{An introduction to positive definite
-    functions and to unconditional simulation of random fields}.
-  Technical report ST 99--10, Dept. of Maths and Statistics, Lancaster University
-
-  Wackernagel, H. (1998) \emph{Multivariate Geostatistics}. Berlin:
-  Springer, 2nd edition.
+  Bevilacqua, M. Gaetan, C. (2013)
+  On composite likelihood inference based on pairs for
+spatial Gaussian random fields
+  \emph{Techical Report, Department of Statistics, de Valparaiso University}.
 
   Spatial Extremes:
 
   Davison, A. C., Padoan, S. A., and Ribatet, M. (2012) Statistical
   Modelling of Spatial Extremes, with discussion.
-  \emph{Statistical Science}, in press.
+  \emph{Statistical Science}, \bold{27}, 161--186.
 
   de Haan, L., and Pereira, T. T. (2006) Spatial Extremes: Models for
   the Stationary Case. \emph{The Annals of Statistics}, \bold{34},
@@ -506,15 +471,16 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
     Association}, \bold{102}, 736--744
 }
 
-\seealso{\code{\link[RandomFields]{CovarianceFct}},
+\seealso{
+  \code{\link{Covmatrix}},
   \code{\link[RandomFields]{GaussRF}},
   \code{\link[RandomFields]{MaxStableRF}}, \code{\link{WLeastSquare}}, \code{\link{optim}}}
 
 
-\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
-  \url{http://homes.stat.unipd.it/padoan};
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
-  \url{www.unibg.it/pers/?moreno.bevilacqua}.}
+\author{Simone Padoan, \email{simone.padoan@unibocconi.it},
+  \url{http://faculty.unibocconi.it/simonepadoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
+  \url{http://staff.deuv.cl/bevilacqua/}.}
 
 \examples{
 library(CompRandFld)
@@ -522,9 +488,30 @@ library(RandomFields)
 library(spam)
 set.seed(3132)
 
+###############################################################
+############ Examples of spatial random fields ################
+###############################################################
+
 # Define the spatial-coordinates of the points:
 x <- runif(100, 0, 10)
 y <- runif(100, 0, 10)
+
+# Set the covariance model's parameters:
+corrmodel <- "exponential"
+mean <- 0
+sill <- 1
+nugget <- 0
+scale <- 1.5
+param<-list(mean=mean,sill=sill,nugget=nugget,scale=scale)
+
+# Simulation of the spatial Gaussian random field:
+data <- RFsim(x, y, corrmodel=corrmodel, param=param)$data
+
+# Fixed parameters
+fixed<-list(mean=mean,nugget=nugget)
+
+# Starting value for the estimated parameters
+start<-list(scale=scale,sill=sill)
 
 
 ################################################################
@@ -537,20 +524,10 @@ y <- runif(100, 0, 10)
 ###
 ###############################################################
 
-# Set the model's parameters:
-corrmodel <- "exponential"
-mean <- 0
-sill <- 1
-nugget <- 0
-scale <- 1.5
-
-# Simulation of the spatial Gaussian random field:
-data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
-              sill=sill,nugget=nugget,scale=scale))$data
 
 # Maximum composite-likelihood fitting of the random field:
 fit <- FitComposite(data, x, y, corrmodel=corrmodel, maxdist=5,
-                    varest=TRUE,fixed=list(mean=mean,nugget=nugget))
+                    varest=TRUE,start=start,fixed=fixed)
 
 # Results:
 print(fit)
@@ -565,10 +542,8 @@ print(fit)
 ###############################################################
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood='Full',
-                    type='Standard',varest=TRUE,fixed=list(mean=mean,
-                    nugget=nugget))
-
+fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood="Full",
+                    type="Standard",varest=TRUE,start=start,fixed=fixed)
 # Results:
 print(fit)
 
@@ -581,44 +556,18 @@ print(fit)
 ###
 ###############################################################
 
-# Remove the symbol # in order to run this example.
-# Maximum composite-likelihood fitting of the random field:
-#fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood='Full',
-#                    type='Tapering',taper="Wendland1",maxdist=4,
-#                    varest=TRUE,fixed=list(mean=mean,nugget=nugget))
-#
-# Results:
-#print(fit)
-
-################################################################
-###
-### Example 4. Maximum likelihood fitting of
-### Gaussian random field with double-exponential correlation.
-### One spatio-temporal replication.
-### Likelihood setting: composite with conditional pairwise
-### likelihood objects.
-###
-###############################################################
-
-# Define the temporal sequence:
-time <- seq(1, 10, 1)
-
-# Simulation of the spatial-temporal Gaussian random field:
-data <- RFsim(x,y,time,corrmodel="exp_exp",param=list(mean=0,
-              scale_s=1,scale_t=1,sill=sill,nugget=nugget))$data
-
-# Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data,x,y,time,corrmodel="exp_exp",maxtime=3,
-                    maxdist=10,likelihood="Conditional",type="Pairwise",
-                    start=list(scale_s=1,scale_t=1,sill=.5),
-                    fixed=list(mean=mean,nugget=nugget))
+# Maximum tapered likelihood fitting of the random field:
+fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood="Full",
+                    type="Tapering",taper="Wendland1",maxdist=4,
+                    varest=TRUE,start=start,fixed=fixed)
 
 # Results:
 print(fit)
 
+
 ################################################################
 ###
-### Example 5. Maximum composite-likelihood fitting of
+### Example 4. Maximum composite-likelihood fitting of
 ### max-stable random fields. Extremal Gaussian model with
 ### exponential correlation. n iid spatial replications.
 ### Likelihood setting: composite with marginal pairwise
@@ -631,8 +580,8 @@ data <- RFsim(x, y, corrmodel=corrmodel, model="ExtGauss", replicates=30,
               param=list(mean=mean,sill=sill,nugget=nugget,scale=scale))$data
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel, model='ExtGauss',
-                    replicates=30, varest=TRUE, vartype='Sampling',
+fit <- FitComposite(data, x, y, corrmodel=corrmodel, model="ExtGauss",
+                    replicates=30, varest=TRUE, vartype="Sampling",
                     margins="Frechet",start=list(sill=sill,scale=scale))
 
 # Results:
@@ -640,7 +589,7 @@ print(fit)
 
 ################################################################
 ###
-### Example 6. Maximum likelihood fitting of
+### Example 5. Maximum likelihood fitting of
 ### Binary-Gaussian random fields with exponential correlation.
 ### One spatial replication.
 ### Likelihood setting: composite with marginal pairwise
@@ -650,10 +599,10 @@ print(fit)
 
 set.seed(3128)
 
-x <- runif(300, 0, 10)
-y <- runif(300, 0, 10)
+x <- runif(200, 0, 10)
+y <- runif(200, 0, 10)
 
-# Simulation of the spatial Binnry-Gaussian random field:
+# Simulation of the spatial Binary-Gaussian random field:
 data <- RFsim(x, y, corrmodel=corrmodel, model="BinaryGauss",
               threshold=0, param=list(mean=mean,sill=.8,
               nugget=nugget,scale=scale))$data
@@ -665,6 +614,57 @@ fit <- FitComposite(data, x, y, corrmodel=corrmodel, threshold=0,
 
 # Results:
 print(fit)
-}
 
+
+###############################################################
+######### Examples of spatio-temporal random fields ###########
+###############################################################
+
+# Define the temporal sequence:
+time <- seq(1, 80, 1)
+
+# Define the spatial-coordinates of the points:
+x <- runif(10, 0, 10)
+y <- runif(10, 0, 10)
+coords=cbind(x,y)
+
+# Set the covariance model's parameters:
+corrmodel="exp_exp"
+scale_s=0.5
+scale_t=1
+sill=1
+nugget=0
+mean=0
+
+param<-list(mean=0,scale_s=1,scale_t=1,sill=sill,nugget=nugget)
+
+# Simulation of the spatial-temporal Gaussian random field:
+data <- RFsim(coordx=coords,coordt=time,corrmodel=corrmodel,
+              param=param)$data
+
+# Fixed parameters
+fixed<-list(mean=mean,nugget=nugget)
+
+# Starting value for the estimated parameters
+start<-list(scale_s=scale_s,scale_t=scale_t,sill=sill)
+
+################################################################
+###
+### Example 6. Maximum likelihood fitting of
+### Gaussian random field with double-exponential correlation.
+### One spatio-temporal replication.
+### Likelihood setting: composite with conditional pairwise
+### likelihood objects.
+###
+###############################################################
+
+# Maximum composite-likelihood fitting of the random field:
+fit <- FitComposite(data=data,coordx=coords,coordt=time,corrmodel="exp_exp",
+                    maxtime=2,maxdist=1,likelihood="Conditional",type="Pairwise",
+                    start=start,fixed=fixed)
+
+# Results:
+print(fit)
+
+}
 \keyword{Composite}
