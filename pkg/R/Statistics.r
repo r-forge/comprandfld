@@ -1,17 +1,17 @@
 ######################################################
 ### Authors: Simone Padoan.
-### Emails: simone.padoan@stat.unipd.it
-### web: http://homes.stat.unipd.it/padoan
-### Institutions: Department of Statistical Science,
-### University of Padua
-###
-###
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estad“stica
+### Universidad de Valparaiso
 ### File name: Statistics.r
 ### Description:
 ### This file contains a set of procedures
 ### for the computation of composite likelihood-based
 ### statistics and tests.
-### Last change: 27/03/2012.
+### Last change: 28/03/2013.
 ######################################################
 
 ### Procedures are in alphabetical order.
@@ -66,9 +66,9 @@ HypoTest <- function(object1, object2, ..., statistic)
               namesparam <- names(model2$fixed)}
           # derive the initial parameters:
           initparam <- InitParam(model2$coordx,model2$coordy,model2$coordt,model2$corrmodel,
-                                 model2$data,"Fitting",fixed,model2$grid,model2$likelihood,
-                                 model2$lonlat,model2$margins,model2$srange[2],model2$trange[2],
-                                 model2$model,NULL,NULL,NULL,FALSE,model2$numrep,start,
+                                 model2$data,model2$distance,"Fitting",fixed,model2$grid,
+                                 model2$likelihood,model2$margins,model2$srange[2],model2$trange[2],
+                                 model2$model,NULL,NULL,NULL,FALSE,model2$numrep,start,NULL,NULL,
                                  model2$threshold,model2$type,model2$type,TRUE,model2$vartype,
                                  NULL,model2$winconst,model2$winstp)
           # set useful quantities for the computation of the Godambe matrix
@@ -85,10 +85,10 @@ HypoTest <- function(object1, object2, ..., statistic)
           nuisance <- param[initparam$namesnuis]
           # compute the gradient and the components of the Godambe matrix:
           .C('GodambeMat',as.double(model2$coordx),as.double(model2$coordy),
-             as.integer(initparam$corrmodel),as.double(model2$data),as.double(eps),
-             as.integer(initparam$flagcorr),as.integer(initparam$flagnuis),
+             as.integer(initparam$corrmodel),as.double(model2$data),as.integer(initparam$distance),
+             as.double(eps),as.integer(initparam$flagcorr),as.integer(initparam$flagnuis),
              as.integer(model2$grid),as.integer(initparam$likelihood),
-             as.integer(model2$lonlat),as.integer(initparam$model),as.integer(numparam),
+             as.integer(initparam$model),as.integer(numparam),
              as.integer(initparam$numparamcorr),as.double(paramcorr),as.double(nuisance),
              score,sensmat,as.integer(spacetime),as.double(model2$threshold),
              as.integer(initparam$type),varimat,as.integer(initparam$vartype),
@@ -163,7 +163,6 @@ HypoTest <- function(object1, object2, ..., statistic)
                   lambda <- eigen(solve(Hi[namesparam, namesparam])%*%varcov[namesparam, namesparam])$values
                   slambda <- sum(lambda)
                   nu <- slambda^2/sum(lambda^2)
-                  print(nu)
                   W <- nu*W/slambda}
               if(statistic=="Rao"){
                   varcov <- varcov[namesparam,namesparam]
@@ -231,4 +230,3 @@ HypoTest <- function(object1, object2, ..., statistic)
       structure(table, heading = c("Statistical Hypothesis Test Table\n"),
                 class = c("data.frame"))
   }
-
