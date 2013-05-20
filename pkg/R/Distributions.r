@@ -1,13 +1,17 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Email: simone.padoan@epfl.ch.
-### Institute: EPFL.
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estadistica
+### Universidad de Valparaiso
 ### File name: Distribution.r
 ### Description:
 ### This file contains a set of procedures
 ### that define several distributions and
 ### related functions.
-### Last change: 24/11/2010.
+### Last change: 28/03/2013.
 ####################################################
 
 
