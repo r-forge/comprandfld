@@ -7,9 +7,9 @@
   The procedure controls the the validity of the input inserted by the users.
 }
 \usage{
-CheckInput(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
-           likelihood, lonlat, margins, maxdist, maxtime, model, numblock,
-           optimizer, param, replicates, start, taper, threshold, type,
+CheckInput(coordx, coordy, coordt, corrmodel, data, distance, fcall, fixed,
+           grid, likelihood, margins, maxdist, maxtime, model, numblock,
+           optimizer, param, replicates, start, taper, tapsep, threshold, type,
            varest, vartype, weighted)
 }
 \arguments{
@@ -25,6 +25,8 @@ CheckInput(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
     description see \code{\link{FitComposite}}.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
       \times n}{d x d x n})-matrix of observations.}
+  \item{distance}{String; the name of the spatial distance. The default is \code{Eucl},
+               the euclidean distance. See the Section \bold{Details}.}
   \item{fcall}{String; \code{Fitting} to call the fitting procedure and
     \code{simulation} to call the simulation.}
   \item{fixed}{A named list giving the values of the parameters that
@@ -37,9 +39,6 @@ CheckInput(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
       \times n}{d x d x n})-matrix is considered.}
   \item{likelihood}{String; the configuration of the composite
     likelihood. \code{Marginal} is the default.}
-  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
-    and \code{coordy} are interpreted as Cartesian coordinates
-    otherwise they are considered as longitude and latitude.}
   \item{margins}{String; the type of the marginal distribution of the
     max-stable field.}
   \item{maxdist}{Numeric; an optional positive value indicating the maximum
@@ -64,6 +63,7 @@ CheckInput(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
     procedure. \code{NULL} is the default.}
   \item{taper}{String; the name of the tapered correlation
     function.}
+   \item{tapsep}{Numeric; an optional  value indicating the separabe parameter in the space time quasi taper (see \bold{Details}).}
   \item{threshold}{Numeric; a value indicating a threshold for the
     binary random field.}
   \item{type}{String; the type of the likelihood objects. If \code{Pairwise} (the
@@ -81,10 +81,10 @@ CheckInput(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
-  \url{http://homes.stat.unipd.it/padoan};
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
-   \url{www.unibg.it/pers/?moreno.bevilacqua}.
+\author{Simone Padoan, \email{simone.padoan@unibocconi.it},
+  \url{http://faculty.unibocconi.it/simonepadoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
+   \url{http://staff.deuv.cl/bevilacqua/}.
   }
 
 \keyword{Composite}
