@@ -1,24 +1,24 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Emails: simone.padoan@stat.unipd.it,
-### moreno.bevilacqua@unibg.it
-### Institutions: Department of Statistical Science,
-### University of Padua and Department of Information
-### Technology and Mathematical Methods, University
-### of Bergamo.
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estad“stica
+### Universidad de Valparaiso
 ### File name: Simulation.r
 ### Description:
 ### This file contains a set of procedures
 ### for the simulation of Gaussian random fields and
 ### related functions.
-### Last change: 26/03/2012.
+### Last change: 28/03/2013.
 ####################################################
 
 
 ### Procedures are in alphabetical order.
 
 # Simulate spatial and spatio-temporal random felds:
-RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, grid=FALSE,
+RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl", grid=FALSE,
                   model='Gaussian', numblock=NULL, param, replicates=1, threshold=NULL)
 {
     ### START -- exact direct simulation based on the Cholesky decomposition
@@ -40,17 +40,26 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, grid=FALSE,
         # Simulation based on the Cholesky decomposition:
         if(grid){
             sim <- array(double(numcoord*numtime*replicates), c(numcoordx, numcoordy, numtime, replicates))
-            for(i in 1:replicates)
-                sim[,,,i] <- array(nuisance['mean']+t(chol(varcov))%*%rnorm(numcoord*numtime),
-                                   c(numcoordx,numcoordy, numtime))
+            for(i in 1:replicates) {
+                 cholvarcov <- try(chol(varcov),silent=TRUE)
+                 if(!is.matrix(cholvarcov)) return("Covariance matrix is not positive definite")
+                 da=nuisance['mean']+t(cholvarcov)%*%rnorm(numcoord*numtime)
+                 l=0
+                 for(k in 1:(numtime)) {
+                 sim[,,l+1,i]=da[seq(1+l,numcoord*numtime*replicates+l,numtime)]
+                 l=l+1 }}
+
             if(replicates==1)
                 if(!spacetime) sim <- array(sim, c(numcoordx, numcoordy))
                 else sim <- array(sim, c(numcoordx, numcoordy, numtime))
-            else if(!spacetime) sim <- array(sim, c(numcoordx, numcoordy, replicates))}
+            else if(!spacetime) sim <- array(sim, c(numcoordx, numcoordy, replicates))
+            }
         else{
             sim <- array(double(numcoord*numtime*replicates), c(numtime, numcoord, replicates))
-            for(i in 1:replicates)
-                sim[,,i] <- nuisance['mean']+t(chol(varcov))%*%rnorm(numcoord*numtime)
+            for(i in 1:replicates){
+                cholvarcov <- try(chol(varcov),silent=TRUE)
+                if(!is.matrix(cholvarcov)) return("Covariance matrix is not positive definite")
+                sim[,,i] <- nuisance['mean']+t(chol(varcov))%*%rnorm(numcoord*numtime)}
             if(replicates==1)
                 if(!spacetime) sim <- c(sim)
                 else sim <- matrix(sim, nrow=numtime, ncol=numcoord)
@@ -64,16 +73,16 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, grid=FALSE,
     }
     ### END -- exact direct simulation based on the Cholesky decomposition
     # Check the user input
-    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, NULL, "Simulation",
-                             NULL, grid, NULL, NULL, NULL, NULL, NULL, model,
-                             numblock, NULL, param, replicates, NULL, NULL,
-                             threshold, NULL, NULL, NULL, NULL)
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, NULL, distance, "Simulation",
+                             NULL, grid, NULL, NULL, NULL, NULL, model, numblock, NULL, param,
+                             replicates, NULL, NULL, NULL, threshold, "Standard", NULL, NULL, NULL)
 
     if(!is.null(checkinput$error)) stop(checkinput$error)
     # Initialising the simulation parameters:
-    initparam <- InitParam(coordx, coordy, coordt, corrmodel, NULL, "Simulation",
-                           NULL, grid, NULL, FALSE, NULL, NULL, NULL, model, numblock,
-                           param, NULL, NULL, replicates, NULL, threshold, NULL, NULL,
+
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, NULL, distance, "Simulation",
+                           NULL, grid, NULL, NULL, NULL, NULL, model, numblock,
+                           param, NULL, NULL, replicates, NULL, NULL, NULL, threshold, NULL, "Standard",
                            NULL, NULL, FALSE, NULL, NULL)
     if(!is.null(initparam$error)) stop(initparam$error)
     ### Simulation of Gaussian or Binary-Gaussian random fields:
@@ -83,6 +92,7 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, grid=FALSE,
                          initparam$numcoord,initparam$numcoordx,initparam$numcoordy,initparam$numtime,
                          initparam$param[initparam$namescorr],initparam$numrep,initparam$spacetime,
                          initparam$threshold)}
+
     if(model=="ExtGauss"){
         # Simulate directly Extremal Gaussian random fields from Random Felds:
         sim <- RandomFields::MaxStableRF(x=initparam$coordx, y=initparam$coordy, model=corrmodel, grid=grid,
@@ -121,13 +131,14 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, grid=FALSE,
             if(replicates==1) sim <- c(sim)
             else sim <- matrix(sim, nrow=replicates,ncol=initparam$numcoord, byrow=TRUE)}}
     # Delete the global variables:
-    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+     .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
     # Return the objects list:
     RFsim <- list(coordx = initparam$coordx,
                   coordy = initparam$coordy,
                   coordt = initparam$coordt,
                   corrmodel = corrmodel,
                   data = sim,
+                  distance = distance,
                   grid = grid,
                   model = model,
                   numcoord = initparam$numcoord,
