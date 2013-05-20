@@ -8,8 +8,8 @@
   composite log-likelihood.
 }
 \usage{
-CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
-               flagnuis, fixed, grid, likelihood, lonlat,
+CompLikelihood(coordx, coordy, corrmodel, data, distance, 
+               flagcorr, flagnuis, fixed, grid, likelihood, 
                lower, model, namescorr, namesnuis, namesparam,
                numparam, numparamcorr, optimizer, param,
                spacetime, threshold, type, upper, varest,
@@ -25,6 +25,8 @@ CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
   \item{corrmodel}{Numeric; the id of the correlation model.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
       \times n}{d x d x n})-matrix of observations.}
+  \item{distance}{String; the name of the spatial distance. The default is \code{Eucl},
+            the euclidean distance. See the Section \bold{Details}.}
   \item{flagcorr}{A numeric vector of binary values denoting which
     paramerters of the correlation function will be estimated.}
   \item{flagnuis}{A numeric vector of binary values denoting which
@@ -37,9 +39,6 @@ CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
       \times n}{d x d x n})-matrix is considered.}
   \item{likelihood}{String; the configuration of the
     compositelikelihood, see \code{\link{FitComposite}}.}
-  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
-    and \code{coordy} are interpreted as Cartesian coordinates
-    otherwise they are considered as longitude and latitude.}
   \item{lower}{A numeric vector with the lower bounds of the parameters' ranges.}
   \item{model}{Numeric; the id value of the density associated to the likelihood
     objects.}
@@ -76,10 +75,10 @@ CompLikelihood(coordx, coordy, corrmodel, data, flagcorr,
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
-  \url{http://homes.stat.unipd.it/padoan};
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
-  \url{www.unibg.it/pers/?moreno.bevilacqua}.}
+\author{Simone Padoan, \email{simone.padoan@unibocconi.it},
+  \url{http://faculty.unibocconi.it/simonepadoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
+  \url{http://staff.deuv.cl/bevilacqua/}.}
 
 
 \keyword{Composite}
