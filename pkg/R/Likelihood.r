@@ -1,17 +1,17 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Emails: simone.padoan@stat.unipd.it,
-### moreno.bevilacqua@unibg.it
-### Institutions: Department of Statistical Science,
-### University of Padua and Department of Information
-### Technology and Mathematical Methods, University
-### of Bergamo.
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estadistica
+### Universidad de Valparaiso
 ### File name: Likelihood.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum likelihood fitting of
 ### random fields.
-### Last change: 27/03/2012.
+### Last change: 28/03/2013.
 ####################################################
 
 ### Procedures are in alphabetical order.
@@ -42,14 +42,13 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
         llik <- -0.5*(const+2*detvarcov+log(sumvarcov)+crossprod(t(crossprod(stdata,p)),stdata))
         return(llik)
     }
-    # Tapering log-likelihood for multivariate normal density:
+        # Tapering log-likelihood for multivariate normal density:
     LogNormDenTap <- function(const,cova,ident,dimat,nuisance,setup,stdata)
     {
         lliktap <- -1.0e8
         # Computes the vector of the correlations:
-        varcov <- cova;
-        varcov[varcov==(nuisance['sill'])] <- nuisance['sill']+nuisance['nugget']
-        varcovtap <- new("spam",entries=varcov*setup$taps,colindices=setup$ja,
+        cova[cova==(nuisance['sill'])] <- nuisance['sill']+nuisance['nugget']
+        varcovtap <- new("spam",entries=cova*setup$taps,colindices=setup$ja,
                          rowpointers=setup$ia,dimension=as.integer(rep(dimat,2)))
         cholvctap <- try(chol.spam(varcovtap),silent=TRUE)
         if(class(cholvctap)=="try-error") return(lliktap)
@@ -80,7 +79,7 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
     ### END Defining the objective functions
     # Call to the objective functions:
     loglik <- function(const,corr,corrmat,corrmodel,data,dimat,fixed,fname,
-                       grid,ident,model,namescorr,namesnuis,nuisance,param,setup)
+                       grid,ident,model,namescorr,namesnuis,param,setup)
       {
         loglik <- -1.0e8
         # Set the parameter vector:
@@ -100,34 +99,62 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
                             ident=ident,nuisance=nuisance,setup=setup))
         return(loglik)
       }
+
+
+          ### END Defining the objective functions
+    # Call to the objective functions:
+    loglik_tap_comp <- function(const,corr,corrmat,corrmodel,data,dimat,fixed,fname,
+                       grid,ident,model,namescorr,namesnuis,param,setup)
+      {
+        loglik <- -1.0e8
+        # Set the parameter vector:
+        param <- c(param, fixed)
+        paramcorr <- param[namescorr]
+        nuisance <- param[namesnuis]
+        # Standardizes the data:
+        stdata <- data-nuisance['mean']
+        # Computes the vector of the correlations:
+        .C(corrmat,corr,as.integer(corrmodel),as.double(nuisance),
+           as.double(paramcorr),PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+        if(corr[1]==-2) return(loglik)
+        # Computes the correlation matrix:
+        cova <- corr*nuisance['sill']
+        # Computes the log-likelihood
+
+        loglik <-  LogNormDenTap(const=const,cova=cova,dimat=dimat,
+                            ident=ident,nuisance=nuisance,setup=setup,stdata=stdata)
+        sumloglik=sumloglik+loglik
+
+
+        return(sumloglik)
+      }
+
     ### START the main code of the function:
     dimat <- numcoord*numtime# set the data format
+    numpairstot <- dimat*(dimat-1)/2
     const<-dimat*log(2*pi)# set the likelihood constant
-    corr<-double(numpairs)# initialize the correlation
+    corr<-double(numpairstot)# initialize the correlation
     corrmat<-"CorrelationMat"# set the type of correlation matrix
     ident <- diag(dimat)# set the identity matrix
     # settings for space-time:
-    if(spacetime){
-      dim(data)<-c(numrep,dimat)
-      corrmat<-"CorrelationMat_st"}
+    if(spacetime){  data=matrix(c(data),numrep,dimat,byrow=T)
+                    corrmat<-"CorrelationMat_st"}
     # detects the type of likelihood:
     if(type==3){
         fname<-"LogNormDenRestr"# set the name of object function
         const <- const-log(2*pi)}
     if(type==4) fname <- 'LogNormDenStand'
     if(type==5){
-        setup$idx <- setup$idx[1:numpairs]
-        setup$ja <- setup$ja[1:numpairs]
+        corrmat<-"CorrelationMat_tap"
+        if(spacetime) corrmat<-"CorrelationMat_st_tap"
         fname <- 'LogNormDenTap'
         corr <- double(numpairs)
         tapcorr <- double(numpairs)
-        tapmod <- switch(taper,
-                         Wendland1=15,
-                         Wendland2=16,
-                         Wendland3=17)
+        tapmod <- setup$tapmodel
         .C(corrmat, tapcorr,as.integer(tapmod),as.double(c(0,0,1)),
            as.double(1),PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
-        setup$taps<-tapcorr}
+        setup$taps<-tapcorr
+        }
     # Optimize the log-likelihood:
     if(optimizer=='L-BFGS-B')
       Likelihood <- optim(param,loglik,const=const,corr=corr,corrmat=corrmat,
@@ -135,14 +162,14 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
                           pgtol=1e-14,maxit=1e8),data=data,dimat=dimat,fixed=fixed,
                           fname=fname,grid=grid,ident=ident,lower=lower,
                           method=optimizer,model=model,namescorr=namescorr,
-                          namesnuis=namesnuis,nuisance=nuisance,upper=upper,setup=setup)
+                          namesnuis=namesnuis,upper=upper,setup=setup)
     else
       Likelihood <- optim(param,loglik,const=const,corr=corr,corrmat=corrmat,
                           corrmodel=corrmodel,control=list(fnscale=-1,factr=1,
                           pgtol=1e-14,maxit=1e8),data=data,dimat=dimat,
                           fixed=fixed,fname=fname,grid=grid,ident=ident,
                           method=optimizer,model=model,namescorr=namescorr,
-                          namesnuis=namesnuis,nuisance=nuisance,setup=setup)
+                          namesnuis=namesnuis,setup=setup)
     # Set useful quantities:
     param<-Likelihood$par# set the parameter vector
     numparam<-length(param)# parameter size
@@ -191,13 +218,13 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
             # set array of gradient matrices
             gradient<-array(0,dim=c(dimat,numparam,dimat))# vector derivatives
             colnames(gradient) <- gnames
-            dcorr <- double(numpairs*numparamcorr)
+            dcorr <- double(numpairstot*numparamcorr)
             # correlation gradient vector
             .C(dname,as.integer(corrmodel),dcorr,as.double(eps),
                as.integer(flagcor),as.integer(numparamcorr),
                as.double(paramcorr),corr,PACKAGE='CompRandFld',
                DUP=FALSE,NAOK=TRUE)
-            dim(dcorr) <- c(numpairs,numparamcorr)
+            dim(dcorr) <- c(numpairstot,numparamcorr)
             # Computing the gradient matrices:
             if(flagnuis[2]) gradient[,namesnuis[2],] <- ident
             # gradient matrix, derivatives with respect to the sill (correlation matrix)
@@ -213,7 +240,7 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
                 grad[lower.tri(grad)]<-dcorr[,i]
                 grad<-t(grad)
                 grad[lower.tri(grad)]<-dcorr[,i]
-                if(flagcor[i]) gradient[,namescorr[i],] <- grad}
+                if(flagcor[namescorr][i])  gradient[,namescorr[i],] <- grad  }
             i<-1
             # Computing the gradient matrices:
             k<-1
@@ -235,6 +262,8 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
                 fisher<-rbind(c(fishmean,zeros),cbind(zeros,fisher))}
             invfisher <- try(solve(fisher),silent=TRUE)
             if(!is.matrix(invfisher)) invfisher<-NULL
+            Likelihood$sensmat <- NULL
+            Likelihood$varimat <- NULL
         }
         # Computing of the asymptotic variance covariance matrix: case TAP
         if(type==5){
@@ -256,6 +285,8 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
             # computing the matrix of derivatives
             gradient <- array(0,c(numpairs,numparam))# vector derivatives
             colnames(gradient) <- gnames
+            if(!spacetime) dname<-"DCorrelationMat_tap"
+            else dname<-"DCorrelationMat_st_tap"
             dcorr <- double(numpairs*numparamcorr)
             # correlation gradient vector
             .C(dname,as.integer(corrmodel),dcorr,as.double(eps),
@@ -297,17 +328,19 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
                 fishmJ <- sum(spamvar%*%varcov%*%spamvar)
                 J <- rbind(c(fishmJ,zeros),cbind(zeros,J))}
             invH <- try(solve(H),silent = TRUE)
+              Likelihood$sensmat <- H
+              Likelihood$varimat <- J
             if(!is.matrix(invH) || !is.matrix(H)){
                 invfisher<-NULL
                 Likelihood$clic <- NULL}
             else{
                 invfisher<-invH%*%J%*%invH
-                Likelihood$clic <- -2*(Likelihood$value-sum(diag(J%*%invH)))}# penalty in the TIC case
+                Likelihood$clic <- -2*(Likelihood$value-sum(diag(J%*%invH)))# penalty in the TIC case
+                }
         }
         ### END Computing the asymptotic variance-covariance matrices
         Likelihood$varcov <- invfisher
-        Likelihood$sensmat <- NULL
-        Likelihood$varimat <- NULL
+
         #Checks if the resulting variance and covariance matrix:
         if(is.null(Likelihood$varcov)){
             warning("Asymptotic information matrix is singular")
