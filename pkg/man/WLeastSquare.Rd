@@ -9,7 +9,7 @@
 }
 \usage{
 WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
-             fixed=NULL, grid=FALSE, lonlat=FALSE, maxdist=NULL,
+             distance="Eucl", fixed=NULL, grid=FALSE, maxdist=NULL,
              maxtime=NULL,  model='Gaussian', optimizer='Nelder-Mead',
              numbins=NULL, replicates=1, start=NULL, weighted=FALSE)
 }
@@ -22,16 +22,19 @@ WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
    (a single spatial-temporal realisation on regular grid) or an (\eqn{d \times d \times t \times n }{d x d x t x n})-array
    (\eqn{n} iid spatial-temporal realisations on regular grid). See \code{\link{FitComposite}} for details.}
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
-    \code{d} is the number of spatial sites) assigning 2-dimensions of spatial coordinates or a numeric \eqn{d}{d}-dimensional vector assigning
+    \code{d} is the number of spatial sites) giving 2-dimensions of spatial coordinates or a numeric \eqn{d}{d}-dimensional vector giving
     1-dimension of spatial coordinates.}
-  \item{coordy}{A numeric vector assigning 1-dimension of
+  \item{coordy}{A numeric vector giving 1-dimension of
     spatial coordinates; \code{coordy} is interpreted only if \code{coordx} is a numeric
     vector or \code{grid=TRUE} otherwise it will be ignored. Optional argument, the default is \code{NULL} then \code{coordx} is expected to
     be numeric a (\eqn{d \times 2}{d x 2})-matrix.}
-  \item{coordt}{A numeric vector assigning 1-dimension of
+  \item{coordt}{A numeric vector giving 1-dimension of
     temporal coordinates. Optional argument, the default is \code{NULL} then a spatial random field is expected.}
   \item{corrmodel}{String; the name of a correlation model, for the
     description (see \code{\link{FitComposite}}).}
+  \item{distance}{String; the name of the spatial distance. The default is \code{Eucl},
+                  the euclidean distance. See the Section \bold{Details}
+		  of \code{\link{FitComposite}}.}
   \item{fixed}{A named list giving the values of the parameters that
     will be considered as known values. The listed parameters for a
     given correlation function will be not estimated, i.e. if
@@ -40,9 +43,6 @@ WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
     are interpreted as a vector or a (\eqn{n \times d}{n x d})-matrix,
     instead if \code{TRUE} then (\eqn{d \times d
       \times n}{d x d x n})-matrix is considered.}
-  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
-    and \code{coordy} are interpreted as Cartesian coordinates
-    otherwise they are considered as longitude and latitude.}
   \item{maxdist}{A numeric value denoting the maximum distance, see
     \bold{Details} and \code{\link{FitComposite}}.}
   \item{maxtime}{Numeric; an optional positive value indicating the maximum
@@ -90,6 +90,7 @@ WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
   \item{convergence}{A string that denotes if convergence is reached;}
   \item{corrmodel}{The correlation model;}
   \item{data}{The vector or matrix of data;}
+  \item{distance}{The type of spatial distance;}
   \item{fixed}{The vector of fixed parameters;}
   \item{iterations}{The number of iteration used by the numerical routine;}
   \item{message}{Extra message passed from the numerical routines;}
@@ -127,13 +128,15 @@ WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 
 \seealso{\code{\link{FitComposite}}, \code{\link{optim}}}
 
-\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
-  \url{http://homes.stat.unipd.it/padoan};
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
-  \url{www.unibg.it/pers/?moreno.bevilacqua}.}
+\author{Simone Padoan, \email{simone.padoan@unibocconi.it},
+  \url{http://faculty.unibocconi.it/simonepadoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
+  \url{http://staff.deuv.cl/bevilacqua/}.}
+
 
 
 \examples{
+library(CompRandFld)
 library(RandomFields)
 set.seed(2111)
 
@@ -156,14 +159,16 @@ corrmodel <- "exponential"
 mean <- 0
 sill <- 1
 nugget <- 0
-scale <- 3
+scale <- 2
 
 # Simulation of the Gaussian random field:
 data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
               sill=sill, nugget=nugget, scale=scale))$data
 
+fix=list(nugget=0)
+ini=list(scale=scale,sill=sill)
 # Least square fitting of the random field:
-fit <- WLeastSquare(data, x, y, corrmodel=corrmodel)
+fit <- WLeastSquare(data, x, y, corrmodel=corrmodel,fixed=fix,start=ini)
 
 # Results:
 print(fit)
@@ -201,16 +206,18 @@ print(fit)
 ###############################################################
 
 # Define the temporal sequence:
-time <- seq(1, 30, 1)
+time <- seq(1, 25, 1)
 
 # Simulation of the Gaussian random field:
 data <- RFsim(x, y, time, corrmodel="exp_exp", param=list(mean=mean,
              scale_s=scale,scale_t=1,sill=sill,nugget=nugget))$data
 
+
+fix=list(nugget=nugget)
+ini=list(scale_s=scale,scale_t=1,sill=1)
 # Weighted least square estimation:
 fit <- WLeastSquare(data, x, y, time, corrmodel="exp_exp", maxdist=5,
-                    maxtime=5, fixed=list(nugget=nugget),
-                    start=list(scale_s=0.1,scale_t=0.1,sill=1))
+                    maxtime=5,fixed=fix,start=ini)
 
 # Results
 print(fit)
