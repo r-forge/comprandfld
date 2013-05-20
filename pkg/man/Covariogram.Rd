@@ -75,16 +75,28 @@ Covariogram(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.vario=FALSE,
 }
 
 \references{
+   Cooley, D., Naveau, P. and Poncet, P. (2006) \emph{Variograms for spatial
+  max-stable random fields}. Dependence in Probability and
+Statistics, p. 373--390.
+
+Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York:
+Wiley.
+
   Gaetan, C. and Guyon, X. (2010) Spatial Statistics and Modelling.
   \emph{Spring Verlang, New York}.
+
+  Smith, R. L. (1990) Max-Stable Processes and Spatial Extremes.
+  \emph{Unpublished manuscript}, University of North California.
 }
 
 \seealso{\code{\link{FitComposite}}, \code{\link{WLeastSquare}}}
 
-\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
-  \url{http://homes.stat.unipd.it/padoan};
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
-   \url{www.unibg.it/pers/?moreno.bevilacqua}}
+\author{Simone Padoan, \email{simone.padoan@unibocconi.it},
+  \url{http://faculty.unibocconi.it/simonepadoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
+  \url{http://staff.deuv.cl/bevilacqua/}.}
+
+
 
 \examples{
 library(CompRandFld)
