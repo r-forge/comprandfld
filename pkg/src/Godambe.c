@@ -11,141 +11,586 @@
 ### This file contains a set of procedures
 ### for the computation of the Godambe matrix of
 ### random fields.
-### Last change: 09/02/2012.
+### Last change: 12/06/2012.
 ##################################################*/
 
 #include "header.h"
-
-
-// Empirical estimation of the Senstive (H) and Variability (J) components of
-// the Godambe matrix:
-void GodambeMat_emp(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
-		    int *like, int *model, int *npar, int *nparc, double *parcor,
-		    double *nuis, double *score, double *sensmat, double *varimat,
-		    int *type)
+// Empirical Godambe matrix in the conditional spatial Gaussian case:
+void God_Cond_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		    int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		    double *sensmat, double *varimat)
 {
-  int d=0, h=0, i=0, j=0, k=0, m=0, n=0;
-  double *gradcor, *grad, *gradient, rho=0.0, vario=0.0;
+  int d=0,i=0,j=0,h=0,k=0,m=0,n=0;
+  double *gradcor, *grad, *gradient,rho=0.0;
   // Set the gradient vectors:
   gradcor=(double *) R_alloc(*nparc,sizeof(double));
   grad=(double *) R_alloc(*npar,sizeof(double));
   gradient=(double *) R_alloc(*npar,sizeof(double));
 
-  for(n=0;n<*nrep;n++)
-    {
-      for(i=0;i<*npar;i++)// Initialize the gradient vector
-	gradient[i]=0;
-      h=0;
-      // Main loop, respect the pairs:
-      for(i=0;i<(*ncoord-1);i++)
-        for(j=(i+1);j<*ncoord;j++)
-	  {
-	    if(lags[h]<=*maxdist)
-	      {
-		switch(*model)// Compute the gradient of a log likelihood object
-		  {
-		  case 1:// Gaussian random field:
-		    rho=CorFct(cormod,lags[h],0,parcor);// Compute the correlation function
-		    // Compute the gradient for a given correlation model
-		    GradCorrFct(rho,cormod,eps,flagcor,gradcor,lags[h],0,parcor);
-		    switch(*like)
-		      {
-		      case 1:// Conditional likelihood:
-			Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
-					data[(n+i * *nrep)], data[(n+j * *nrep)]);
-			break;
-		      case 3: // Marginal likelihood:
-			switch(*type)
-			  {
-			  case 1: // Gradient of the log difference likelihood
-			    Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
-					    data[(n+i * *nrep)], data[(n+j * *nrep)]);
-			    break;
-			  case 2:// Gradient of the log pairwise likelihood
-			    Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
-					    data[(n+i * *nrep)], data[(n+j * *nrep)]);
-			    break;
-			  }
-			break;
-		      }
-		    break;
-		  case 3:// Max-stable random field (Brown Resnick):
-		    vario=VarioFct(cormod,lags[h],parcor);
-		    GradVarioFct(vario,cormod,eps,flagcor,gradcor,lags[h],parcor);
-		    Grad_Brow_Resn(vario,flagnuis,gradcor,grad,npar,nuis,
-				   data[(n+i * *nrep)], data[(n+j * *nrep)]);
-		    break;
-		  case 4:// Max-stable random field (Extremal Gaussian):
-		    rho=CorFct(cormod,lags[h],0,parcor);// Compute the correlation function
-		    // Compute the gradient for a given correlation model
-		    GradCorrFct(rho,cormod,eps,flagcor,gradcor,lags[h],0,parcor);
-		    Grad_Ext_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
-				   data[(n+i * *nrep)], data[(n+j * *nrep)]);
-		    break;
-		  case 5:// Max-stable random field (Extremal-t):
-		    rho=CorFct(cormod,lags[h],0,parcor);// Compute the correlation function
-		    // Compute the gradient for a given correlation model
-		    GradCorrFct(rho,cormod,eps,flagcor,gradcor,lags[h],0,parcor);
-		    Grad_Ext_T(rho,flagnuis,gradcor,grad,npar,nuis,
-			       data[(n+i * *nrep)], data[(n+j * *nrep)]);
-		    break;
-		  }
-		m=0;
-		// Set the sensitivity matrix:
-		for(d=0;d<*npar;d++)
-		  {
-		    gradient[d]=gradient[d]+grad[d];
-		    score[d]=score[d]+grad[d];
-		    for(k=d;k<*npar;k++)
-		      {
-			sensmat[m]=sensmat[m]+grad[d]*grad[k];
-			m++;
-		      }
-		  }
-	      }
-	    h++;
-	  }
-      m=0;
-      // Set the variability matrix:
-      for(i=0;i<*npar;i++)
-      	for(j=i;j<*npar;j++)
-	  {
-	    varimat[m]=varimat[m]+gradient[i]*gradient[j];
-	    m++;
-	  }
-      //for(d=0;d<*npar;d++) score[d]=score[d]+gradient[d];
-    }
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    // Compute the gradient of a log likelihood object
+    // Main loop, respect the pairs:
+   for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+         if(mlags[i][j]<*maxdist){
+      //Compute the correlation function
+      rho=CorFct(cormod,mlags[i][j],0,parcor);
+      //Compute the gradient for a given correlation model
+	  GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+	  // Gradient of the log conditional likelihood
+	  Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+			  data[(n+i* *nrep)], data[(n+j* *nrep)]);
+	  m=0;
+	  // Set the sensitivity matrix:
+	  for(d=0;d<*npar;d++){
+	    gradient[d]=gradient[d]+grad[d];
+	    score[d]=score[d]+grad[d];
+	    for(k=d;k<*npar;k++){
+	      sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	      m++;}}}}}
+    m=0;
+    // Set the variability matrix:
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
   return;
 }
+// Empirical Godambe matrix in the conditional spatio-temporal Gaussian case:
+void God_Cond_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		       int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		       double *sensmat, double *varimat)
+{
+  int d=0,h=0,i=0,j=0,k=0,m=0,n=0,t=0,v=0;
+  double *gradcor, *grad, *gradient,rho=0.0;
+
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    //Main loop, respect the pairs:
+ for(i=0;i<*ncoord;i++){
+   for(t=0;t<*ntime;t++){
+     for(j=i;j<*ncoord;j++){
+       if(i==j){// marginal temporal log-likelihood:
+	 for(v=t+1;v<*ntime;v++){
+	   if(mlagt[t][v]<=*maxtime){
+
+      //Compute the temporal correlation function for a given pair:
+      rho=CorFct(cormod,0,mlagt[t][v],parcor);
+      //Compute the gradient of the temporal correlation function for a given pair:
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,0,mlagt[t][v],parcor);
+      //Compute the gradient of the conditional likelihood:
+      Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(t+*ntime*i)+n* *ntime* *ncoord],
+		      data[(v+*ntime*i)+n* *ntime* *ncoord]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+	  else {
+	   for(v=0;v<*ntime;v++){// spatial-temporal log-likelihood:
+	   if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	        //Compute the temporal correlation function for a given pair:
+      rho=CorFct(cormod,mlags[i][j],mlagt[t][v],parcor);
+      //Compute the gradient of the temporal correlation function for a given pair:
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],mlagt[t][v],parcor);
+      //Compute the gradient of the conditional likelihood:
+      Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(t+*ntime*i)+n* *ntime* *ncoord],
+		      data[(v+*ntime*j)+n* *ntime* *ncoord]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}}}}
+
+
+
+    m=0;
+    //Set the variability matrix:
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical Godambe matrix in the difference Gaussian case:
+void God_Diff_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		    int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		    double *sensmat, double *varimat)
+{
+  int d=0,i=0,j=0,h=0,k=0,m=0,n=0;
+  double *gradcor, *grad, *gradient,rho=0.0;
+  // Set the gradient vectors:
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    // Compute the gradient of a log likelihood object
+    // Main loop, respect the pairs:
+         for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+         if(mlags[i][j]<*maxdist){
+      //Compute the correlation function
+      rho=CorFct(cormod,mlags[i][j],0,parcor);
+      //Compute the gradient for a given correlation model
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+      //Gradient of the log difference likelihood
+      Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(n+i* *nrep)], data[(n+j* *nrep)]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+    m=0;
+    //Set the variability matrix:
+
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical Godambe matrix in the difference spatio-temporal Gaussian case:
+void God_Diff_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		       int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		       double *sensmat, double *varimat)
+{
+  int d=0,h=0,i=0,j=0,k=0,m=0,n=0,t=0,v=0;
+  double *gradcor, *grad, *gradient,rho=0.0;
+
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    //Main loop, respect the pairs:
+    for(i=0;i<*ncoord;i++){
+   for(t=0;t<*ntime;t++){
+     for(j=i;j<*ncoord;j++){
+       if(i==j){// marginal temporal log-likelihood:
+	 for(v=t+1;v<*ntime;v++){
+	   if(mlagt[t][v]<=*maxtime){
+
+      //Compute the temporal correlation function for a given pair:
+      rho=CorFct(cormod,0,mlagt[t][v],parcor);
+      //Compute the gradient of the temporal correlation function for a given pair:
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,0,mlagt[t][v],parcor);
+      //Compute the gradient of the conditional likelihood:
+      Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(t+*ntime*i)+n* *ntime* *ncoord],
+		      data[(v+*ntime*i)+n* *ntime* *ncoord]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+else {
+     for(v=0;v<*ntime;v++){// spatial-temporal log-likelihood:
+	   if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	        //Compute the temporal correlation function for a given pair:
+      rho=CorFct(cormod,0,mlagt[t][v],parcor);
+      //Compute the gradient of the temporal correlation function for a given pair:
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,0,mlagt[t][v],parcor);
+      //Compute the gradient of the conditional likelihood:
+      Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(t+*ntime*i)+n* *ntime* *ncoord],
+		      data[(v+*ntime*i)+n* *ntime* *ncoord]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+	  }}}
+    m=0;
+    //Set the variability matrix:
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical Godambe matrix in the pairwise Gaussian case:
+void God_Pair_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		    int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		    double *sensmat, double *varimat)
+{
+  int d=0,i=0,j=0,h=0,k=0,m=0,n=0;
+  double *gradcor, *grad, *gradient,rho=0.0;
+  // Set the gradient vectors:
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    // Compute the gradient of a log likelihood object
+    // Main loop, respect the pairs:
+    for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+           if(mlags[i][j]<*maxdist){
+      //Compute the correlation function
+      rho=CorFct(cormod,mlags[i][j],0,parcor);
+      //Compute the gradient for a given correlation model
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+      //Gradient of the log pairwise likelihood
+      Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(n+i* *nrep)], data[(n+j* *nrep)]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+    m=0;
+    // Set the variability matrix:
+
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical Godambe matrix in the pairwise spatio-temporal Gaussian case:
+void God_Pair_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		       int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		       double *sensmat, double *varimat)
+{
+  int d=0,h=0,i=0,j=0,k=0,m=0,n=0,t=0,v=0;
+  double *gradcor, *grad, *gradient,rho=0.0;
+
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    //Main loop, respect the pairs:
+    for(i=0;i<*ncoord;i++){
+   for(t=0;t<*ntime;t++){
+     for(j=i;j<*ncoord;j++){
+       if(i==j){// marginal temporal log-likelihood:
+	 for(v=t+1;v<*ntime;v++){
+	   if(mlagt[t][v]<=*maxtime){
+      //Compute the temporal correlation function for a given pair:
+      rho=CorFct(cormod,mlags[i][j],mlagt[t][v],parcor);
+      //Compute the gradient of the temporal correlation function for a given pair:
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],mlagt[t][v],parcor);
+      //Compute the gradient of the conditional likelihood:
+      Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(t+*ntime*i)+n* *ntime* *ncoord],
+		      data[(v+*ntime*j)+n* *ntime* *ncoord]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+else{
+      for(v=0;v<*ntime;v++){// spatial-temporal log-likelihood:
+	   if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+      //Compute the temporal correlation function for a given pair:
+      rho=CorFct(cormod,mlags[i][j],mlagt[t][v],parcor);
+      //Compute the gradient of the temporal correlation function for a given pair:
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],mlagt[t][v],parcor);
+      //Compute the gradient of the conditional likelihood:
+      Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(t+*ntime*i)+n* *ntime* *ncoord],
+		      data[(v+*ntime*j)+n* *ntime* *ncoord]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+}}}
+    m=0;
+    //Set the variability matrix:
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical Godambe matrix in the pairwise Brown-Resnick case:
+void God_BrowResn(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		  int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		  double *sensmat, double *varimat)
+{
+  int d=0,i=0,j=0,h=0,k=0,m=0,n=0;
+  double *gradcor, *grad, *gradient,vario=0.0;
+  // Set the gradient vectors:
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    // Compute the gradient of a log likelihood object
+    // Main loop, respect the pairs:
+    for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+         if(mlags[i][j]<*maxdist){
+      //Compute the variogram function
+      vario=VarioFct(cormod,mlags[i][j],parcor,0);
+      //Compute the gradient for a given variogram model
+      GradVarioFct(vario,cormod,eps,flagcor,gradcor,mlags[i][j],parcor,0);
+      //Gradient of the log pairwise likelihood
+      Grad_Brow_Resn(vario,flagnuis,gradcor,grad,npar,nuis,
+		     data[(n+i * *nrep)], data[(n+j * *nrep)]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+    m=0;
+    // Set the variability matrix:
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical Godambe matrix in the pairwise spatio-temporal Brown-Resnick case:
+void God_BrowResn_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		     int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		     double *sensmat, double *varimat)
+{
+  int d=0,h=0,i=0,j=0,k=0,m=0,n=0,t=0,v=0;
+  double *gradcor,*grad,*gradient,vario=0.0;
+
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    //Main loop, respect the pairs:
+    for(h=0;h<*npairs;h++){
+      //Compute the temporal variogram function for a given pair:
+      vario=VarioFct(cormod,mlags[i][j],parcor,mlagt[t][v]);
+      //Compute the gradient of the temporal variogram function for a given pair:
+      GradVarioFct(vario,cormod,eps,flagcor,gradcor,mlags[i][j],parcor,mlagt[t][v]);
+      //Compute the gradient of the Brown-Resnick likelihood:
+      Grad_Brow_Resn(vario,flagnuis,gradcor,grad,npar,nuis,
+		     data[(t+*ntime*i)+n* *ntime* *ncoord],
+		     data[(v+*ntime*j)+n* *ntime* *ncoord]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}
+    m=0;
+    //Set the variability matrix:
+        for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical Godambe matrix in the pairwise Extremal Gaussian case:
+void God_Ext_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		   int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		   double *sensmat, double *varimat)
+{
+  int d=0,i=0,j=0,h=0,k=0,m=0,n=0;
+  double *gradcor, *grad, *gradient,rho=0.0;
+  // Set the gradient vectors:
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    // Compute the gradient of a log likelihood object
+    // Main loop, respect the pairs:
+      for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+         if(mlags[i][j]<*maxdist){
+      //Compute the correlation function
+      rho=CorFct(cormod,mlags[i][j],0,parcor);
+      //Compute the gradient for a given correlation model
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+      //Gradient of the log pairwise likelihood
+      Grad_Ext_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		     data[(n+i* *nrep)],data[(n+j* *nrep)]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+    m=0;
+    // Set the variability matrix:
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical Godambe matrix in the pairwise Extremal t case:
+void God_Ext_T(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+	       int *npar, int *nparc, double *parcor, double *nuis, double *score,
+	       double *sensmat, double *varimat)
+{
+  int d=0,i=0,j=0,h=0,k=0,m=0,n=0;
+  double *gradcor, *grad, *gradient,rho=0.0;
+  // Set the gradient vectors:
+  gradcor=(double *) R_alloc(*nparc,sizeof(double));
+  grad=(double *) R_alloc(*npar,sizeof(double));
+  gradient=(double *) R_alloc(*npar,sizeof(double));
+
+  for(n=0;n<*nrep;n++){
+    // Initialize the gradient vector
+    for(i=0;i<*npar;i++) gradient[i]=0;
+    // Compute the gradient of a log likelihood object
+    // Main loop, respect the pairs:
+     for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+             if(mlags[i][j]<*maxdist){
+      //Compute the correlation function
+      rho=CorFct(cormod,mlags[i][j],0,parcor);
+      //Compute the gradient for a given correlation model
+      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+      //Gradient of the log pairwise likelihood
+      Grad_Ext_T(rho,flagnuis,gradcor,grad,npar,nuis,
+		 data[(n+i* *nrep)], data[(n+j* *nrep)]);
+      m=0;
+      //Set the sensitivity matrix:
+      for(d=0;d<*npar;d++){
+	gradient[d]=gradient[d]+grad[d];
+	score[d]=score[d]+grad[d];
+	for(k=d;k<*npar;k++){
+	  sensmat[m]=sensmat[m]+grad[d]*grad[k];
+	  m++;}}}}}
+    m=0;
+    // Set the variability matrix:
+    for(h=0;h<*npar;h++)
+      for(k=h;k<*npar;k++){
+	varimat[m]=varimat[m]+gradient[h]*gradient[k];
+	m++;}}
+  return;
+}
+// Empirical estimation of the Senstive (H) and Variability (J) components of
+// the Godambe matrix:
+void GodambeMat_emp(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
+		    int *like, int *model, int *npar, int *nparc, double *parcor, double *nuis,
+		    double *score, double *sensmat, int *spt, double *varimat, int *type)
+{
+  //Select the model for computing the matrices H and J
+  switch(*model){
+  case 1:// Gaussian random field:
+    switch(*like){
+    case 1:// Conditional likelihood:
+      if(*spt) God_Cond_Gauss_st(cormod,data,eps,flagcor,flagnuis,npar,
+			         nparc,parcor,nuis,score,sensmat,varimat);
+      else God_Cond_Gauss(cormod,data,eps,flagcor,flagnuis,npar,
+			  nparc,parcor,nuis,score,sensmat,varimat);
+      break;
+    case 3:// Marginal likelihood:
+      switch(*type){
+      case 1:// Gradient of the log difference likelihood
+	if(*spt) God_Diff_Gauss_st(cormod,data,eps,flagcor,flagnuis,npar,
+				   nparc,parcor,nuis,score,sensmat,varimat);
+	else God_Diff_Gauss(cormod,data,eps,flagcor,flagnuis,npar,
+			    nparc,parcor,nuis,score,sensmat,varimat);
+	break;
+      case 2:// Gradient of the log pairwise likelihood
+	if(*spt) God_Pair_Gauss_st(cormod,data,eps,flagcor,flagnuis,npar,
+				   nparc,parcor,nuis,score,sensmat,varimat);
+	else God_Pair_Gauss(cormod,data,eps,flagcor,flagnuis,npar,
+			    nparc,parcor,nuis,score,sensmat,varimat);
+	break;}
+      break;}
+    break;
+  case 3:// Max-stable random field (Brown Resnick):
+    if(*spt) God_BrowResn_st(cormod,data,eps,flagcor,flagnuis,npar,
+			     nparc,parcor,nuis,score,sensmat,varimat);
+    else God_BrowResn(cormod,data,eps,flagcor,flagnuis,npar,
+		      nparc,parcor,nuis,score,sensmat,varimat);
+    break;
+  case 4:// Max-stable random field (Extremal Gaussian):
+    God_Ext_Gauss(cormod,data,eps,flagcor,flagnuis,npar,
+		   nparc,parcor,nuis,score,sensmat,varimat);
+    break;
+  case 5:// Max-stable random field (Extremal-t):
+    God_Ext_T(cormod,data,eps,flagcor,flagnuis,npar,
+	       nparc,parcor,nuis,score,sensmat,varimat);
+    break;}
+  return;
+}
+
 // The exact Senstive (H) and Variability (J) components of
 // the Godambe matrix:
-void GodambeMat(double *coordx, double *coordy, int *cormod, double *data, double *eps,
-		int *flagcor, int *flagnuis, int *grid, int *like, int *lonlat, int *model,
-		int *npar, int *nparc, double *parcor, double *nuis, double *score,
-		double *sensmat, int *spt, double *thr, int *type, double *varimat,
-		int *vartype, double *winc, double *winstp)
+void GodambeMat(double *coordx, double *coordy, int *cormod, double *data, int *dist,
+		      double *eps,int *flagcor, int *flagnuis, int *grid, int *like, int *model,
+		      int *npar, int *nparc, double *parcor, double *nuis, double *score,
+		      double *sensmat, int *spt, double *thr, int *type, double *varimat,
+		      int *vartype, double *winc, double *winstp)
 {
-  int *npair;
-  npair = (int *) R_alloc(1, sizeof(int));
-  *npair = 0;
-
   //---------- COMPUTATION OF THE GODAMBE MATRIX ---------//
+  int *np;np=(int *) R_alloc(1, sizeof(int));  //numbers of effective pairs
   switch(*vartype)
     {
     case 1://------------ START EMPIRICAL ESTIMATION ------------//
       GodambeMat_emp(cormod,data,eps,flagcor,flagnuis,like,
 		     model,npar,nparc,parcor,nuis,score,
-		     sensmat,varimat,type);
+		     sensmat,spt,varimat,type);
       break;//------------ END EMPIRICAL ESTIMATION ------------//
     case 2://------------ START SUB-SAMPLE ESTIMATION ------------//
-      Sensitivity(cormod,data,eps,flagcor,flagnuis,like,model,npair,
-		  npar,nparc,parcor,nuis,score,sensmat,spt,type);
-      if(*spt) Vari_SubSamp_st(cormod,data,eps,flagcor,flagnuis,
-			       like,npair,npar,nparc,nuis,
-			       parcor,type,varimat,winc,winstp);
-      else Vari_SubSamp(coordx,coordy,cormod,data,eps,flagcor,flagnuis,
-			grid,like,lonlat,model,npair,npar,nparc,nuis,parcor,
-			thr, type, varimat,winc,winstp);
+      Sensitivity(cormod,data,eps,flagcor,flagnuis,like,model,
+		  npar,nparc,parcor,nuis,np,score,sensmat,spt,type);
+      if(*spt) Vari_SubSamp_st(cormod,data,dist,eps,flagcor,flagnuis,
+			       like,npar,nparc,nuis,np,parcor,type,varimat,winc,winstp);
+      else Vari_SubSamp(coordx,coordy,cormod,data,dist,eps,flagcor,flagnuis,
+			grid,like,model,npar,nparc,nuis,np,parcor,thr, type, varimat,winc,winstp);
       break;//------------ END SUB-SAMPLE ESTIMATION ------------//
     case 3://------------ START THEORETICAL COMPUTATION ------------//
       switch(*like)
@@ -170,8 +615,7 @@ void GodambeMat(double *coordx, double *coordy, int *cormod, double *data, doubl
     }
   return;
 }
-
-
+// Theoretical H and J matrices for the difference case:
 void GodambeMat_Diff(double *coordx, double *coordy, int *cormod, double *eps, int *flagcor,
 		     int *flagnuis, int *model, int *npar, int *nparc, double *parcor,
 		     double *nuis, double *sensmat, double *varimat)
@@ -180,8 +624,6 @@ void GodambeMat_Diff(double *coordx, double *coordy, int *cormod, double *eps, i
   double *gradcor_ij, *grad_ij, *gradcor_lk, *grad_lk;
   double rho_ij=0.0, rho_lk=0.0, crosscor=0.0, *vario;
   int s=0, l=0, k=0 , i=0, j=0, m=0, n=0;
-  int ij=0, lk=0;
-
   gradcor_ij=(double *) R_alloc(*nparc, sizeof(double));
   gradcor_lk=(double *) R_alloc(*nparc, sizeof(double));
   grad_ij=(double *) R_alloc(*npar, sizeof(double));
@@ -189,23 +631,20 @@ void GodambeMat_Diff(double *coordx, double *coordy, int *cormod, double *eps, i
   vario=(double *) R_alloc(6, sizeof(double));
 
   //--------------- GAUSSIAN MODEL --------------------------------//
-  for(i=0;i<(*ncoord-1);i++)
-    {
-      for(j=(i+1);j<*ncoord;j++)
-	{
-	  lk=0;
-	  if(lags[ij]<=*maxdist)
+  for(i=0;i<(*ncoord-1);i++){
+  for(j=(i+1);j<*ncoord;j++){
+	  if(mlags[i][j]<=*maxdist)
 	    {// Compute the correlation function
-	      rho_ij=CorFct(cormod,lags[ij],0,parcor);
+	      rho_ij=CorFct(cormod,mlags[i][j],0,parcor);
 	      // Compute the gradient for a given correlation value
-	      GradCorrFct(rho_ij,cormod,eps,flagcor,gradcor_ij,lags[ij],0,parcor);
+	      GradCorrFct(rho_ij,cormod,eps,flagcor,gradcor_ij,mlags[i][j],0,parcor);
 	      // Compute the gradient of the variogram for the difference Gaussian likelihood
 	      Grad_Diff_Vario(rho_ij,flagnuis,gradcor_ij,grad_ij,npar,nuis);
 	      // COMPUTATION OF THE SENSITIVITY MATRIX
 	      Sens_Diff_Gauss_ij(grad_ij,npar,sensmat);
 
 	      // START COMPUTATION OF THE VARIABILITY MATRIX
-	      vario[0]=Variogram(cormod,lags[ij],0,nuis,parcor);
+	      vario[0]=Variogram(cormod,mlags[i][j],0,nuis,parcor);
 
 	      for(l=0;l<(*ncoord-1);l++)
 		{// Insert the case of great circle distance
@@ -214,16 +653,16 @@ void GodambeMat_Diff(double *coordx, double *coordy, int *cormod, double *eps, i
 
 		  for(k=(l+1);k<*ncoord;k++)
 		    {
-		      if(lags[lk]<=*maxdist)
+		      if(mlags[l][k]<=*maxdist)
 			{// Compute the correlation function
-			  rho_lk=CorFct(cormod,lags[lk],0,parcor);
+			  rho_lk=CorFct(cormod,mlags[l][k],0,parcor);
 			  // Compute the gradient of a given correlation model
 
-			  GradCorrFct(rho_lk,cormod,eps,flagcor,gradcor_lk,lags[lk],0,parcor);
+			  GradCorrFct(rho_lk,cormod,eps,flagcor,gradcor_lk,mlags[l][k],0,parcor);
 			  // Compute the gradient of the variogram for the LK difference Gaussian likelihood
 			  Grad_Diff_Vario(rho_lk,flagnuis,gradcor_lk,grad_lk,npar,nuis);
 
-			  vario[1]=Variogram(cormod,lags[lk],0,nuis,parcor);
+			  vario[1]=Variogram(cormod,mlags[l][k],0,nuis,parcor);
 			  vario[4]=Variogram(cormod,hypot(coordx[i]-coordx[k],coordy[i]-coordy[k]),0,nuis,parcor);
 			  vario[5]=Variogram(cormod,hypot(coordx[j]- coordx[k],coordy[j]-coordy[k]),0,nuis,parcor);
 
@@ -237,23 +676,16 @@ void GodambeMat_Diff(double *coordx, double *coordy, int *cormod, double *eps, i
 				s++;
 			      }
 			  // END COMPUTATION OF THE VARIABILITY MATRIX
-			}
-		      lk++;
-		    }
-		}
-	    }
-	  ij++;
-	}
-    }
+			}}}}}}
 
   return;
 }
 // Compute the Sensitivity matrix of a random field:
-void Sensitivity(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
-		 int *like, int *model, int *npair, int *npar, int *nparc, double *parcor,
-		 double *nuis, double *score, double *sensmat, int *spt, int *type)
+void Sensitivity(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, int *like,
+		 int *model, int *npar, int *nparc, double *parcor, double *nuis, int *np,double *score,
+		 double *sensmat, int *spt, int *type)
 {
-  int d=0,i=0,j=0,h=0;
+  int b=0,d=0,i=0,j=0,n=0;
   double rho=0,*grad,*gradcor,vario=0;
   grad=(double *) R_alloc(*npar,sizeof(double));// gradient of the ijth composite log-likelihood
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// gradient of the correlation
@@ -263,140 +695,143 @@ void Sensitivity(int *cormod, double *data, double *eps, int *flagcor, int *flag
       switch(*like)
 	{
 	case 1:// Conditional likelihood:
-	  if(*spt) Sens_Cond_Gauss_st(cormod,data,eps,flagcor,flagnuis,nuis,
-				      npair,npar,nparc,parcor,score,sensmat);
-	  else Sens_Cond_Gauss(cormod,data,eps,flagcor,flagnuis,nuis,
-			       npair,npar,nparc,parcor,score,sensmat);
+	  if(*spt) Sens_Cond_Gauss_st(cormod,data,eps,flagcor,flagnuis,nuis,np,
+				      npar,nparc,parcor,score,sensmat);
+	  else Sens_Cond_Gauss(cormod,data,eps,flagcor,flagnuis,nuis,np,
+			       npar,nparc,parcor,score,sensmat);
 	  break;
 	case 3: // Marginal likelihood:
 	  switch(*type)
 	    {
 	    case 1: // Sensitivity for the difference likelihood case
-	      if(*spt) Sens_Diff_Gauss_st(cormod,data,eps,flagcor,flagnuis,nuis,
-				          npair,npar,nparc,parcor,score,sensmat);
-	      else Sens_Diff_Gauss(cormod,data,eps,flagcor,flagnuis,nuis,
-				   npair,npar,nparc,parcor,score,sensmat);
+	      if(*spt) Sens_Diff_Gauss_st(cormod,data,eps,flagcor,flagnuis,nuis,np,
+				          npar,nparc,parcor,score,sensmat);
+	      else Sens_Diff_Gauss(cormod,data,eps,flagcor,flagnuis,nuis,np,
+				   npar,nparc,parcor,score,sensmat);
 	      break;
 	    case 2: // Sensitivity for the pairwise likelihood case
-	      if(*spt) Sens_Pair_Gauss_st(cormod,data,eps,flagcor,flagnuis,nuis,
-					  npair,npar,nparc,parcor,score,sensmat);
-	      else Sens_Pair_Gauss(cormod,data,eps,flagcor,flagnuis,nuis,
-				   npair,npar,nparc,parcor,score,sensmat);
+	      if(*spt) Sens_Pair_Gauss_st(cormod,data,eps,flagcor,flagnuis,nuis,np,
+					  npar,nparc,parcor,score,sensmat);
+	      else Sens_Pair_Gauss(cormod,data,eps,flagcor,flagnuis,nuis,np,
+				   npar,nparc,parcor,score,sensmat);
 	      break;
 	    }
 	  break;
 	}
       break;
     case 2:// Binary gaussian random field:
-      for(i=0;i<(*ncoord-1);i++)
-	for(j=(i+1);j<*ncoord;j++){
-	  if(lags[h]<=*maxdist)
-	    *npair+=1;
-	  h++;}
       break;
     case 3:// Brown Resnick random field:
-      for(i=0;i<(*ncoord-1);i++)
-	for(j=(i+1);j<*ncoord;j++){
-	  if(lags[h]<=*maxdist){
-	    vario=VarioFct(cormod,lags[h],parcor);
-	    GradVarioFct(vario,cormod,eps,flagcor,gradcor,lags[h],parcor);
-	    Grad_Brow_Resn(vario,flagnuis,gradcor,grad,npar,nuis,data[i],data[j]);
-	    *npair+=1;
-	    for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
-	  h++;}
+    for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+             if(mlags[i][j]<*maxdist){
+	vario=VarioFct(cormod,mlags[i][j],parcor,0);
+	GradVarioFct(vario,cormod,eps,flagcor,gradcor,mlags[i][j],parcor,0);
+	for(n=0;n<*nrep;n++){
+	  Grad_Brow_Resn(vario,flagnuis,gradcor,grad,npar,nuis,
+			 data[(n+i* *nrep)],data[(n+j* *nrep)]);
+	  for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+	  b++;}}}
+	  *np=b;
       break;
     case 4:// Extremal Gaussian random field:
-      for(i=0;i<(*ncoord-1);i++)
-	for(j=(i+1);j<*ncoord;j++){
-	  if(lags[h]<=*maxdist){
-	    rho=CorFct(cormod,lags[h],0,parcor);// Compute the correlation function
-	    // Compute the gradient for a given correlation model
-	    GradCorrFct(rho,cormod,eps,flagcor,gradcor,lags[h],0,parcor);
-	    Grad_Ext_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[i],data[j]);
-	    *npair+=1;
-	    for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
-	  h++;}
+    for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+                 if(mlags[i][j]<*maxdist){
+	rho=CorFct(cormod,mlags[i][j],0,parcor);// Compute the correlation function
+	//Compute the gradient for a given correlation model
+	GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+	for(n=0;n<*nrep;n++){
+	  Grad_Ext_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+			 data[(n+i* *nrep)],data[(n+j* *nrep)]);
+	  for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+	  b++;}}}
+	  *np=b;
     case 5:// Extremal-t random field:
-      for(i=0;i<(*ncoord-1);i++)
-	for(j=(i+1);j<*ncoord;j++){
-	  if(lags[h]<=*maxdist){
-	    rho=CorFct(cormod,lags[h],0,parcor);// Compute the correlation function
-	    // Compute the gradient for a given correlation model
-	    GradCorrFct(rho,cormod,eps,flagcor,gradcor,lags[h],0,parcor);
-	    Grad_Ext_T(rho,flagnuis,gradcor,grad,npar,nuis,data[i],data[j]);
-	    *npair+=1;
-	    for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
-	  h++;}
+    for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+                 if(mlags[i][j]<*maxdist){
+	rho=CorFct(cormod,mlags[i][j],0,parcor);// Compute the correlation function
+	//Compute the gradient for a given correlation model
+	GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+	for(n=0;n<*nrep;n++){
+	  Grad_Ext_T(rho,flagnuis,gradcor,grad,npar,nuis,
+		     data[(n+i* *nrep)],data[(n+j* *nrep)]);
+	  for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+	  b++;}}}
+	  *np=b;
       break;
     }
+
   return;
 }
 // Compute the Sensitivity matrix for the composite Gaussian difference likelihood:
 void Sens_Diff_Gauss(int *cormod, double *data,double *eps, int *flagcor, int *flagnuis,
-		     double *nuis, int *npair, int *npar, int *nparc, double *parcor,
-		     double *score, double *sensmat)
+		     double *nuis, int *np,int *npar, int *nparc, double *parcor, double *score,
+		     double *sensmat)
 {
   // Initialization variables:
-  int i=0, j=0, h=0, d=0;
+  int b=0,i=0,j=0,d=0,n=0;
   double rho=0.0, *grad, *gradcor, *gradient;
 
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// Correlation gradient
   gradient=(double *) R_alloc(*npar, sizeof(double));// Overall gradient
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
 
-  for(i=0;i<(*ncoord-1);i++)
-    for(j=(i+1);j<*ncoord;j++)
-      {
-	if(lags[h]<=*maxdist)
-	  {
-	    // Compute the correlation function for the elements i,j
-	    rho=CorFct(cormod,lags[h],0,parcor);
-	    // Compute the gradient for the given correlation
-	    GradCorrFct(rho,cormod,eps,flagcor,gradcor,lags[h],0,parcor);
-	    // Compute the gradient of the variogram for the given pair
-	    Grad_Diff_Vario(rho,flagnuis,gradcor,gradient,npar,nuis);
-	    // Compute the gradient of the Gaussian difference composite
-	    Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[i],data[j]);
-	    // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
-	    Sens_Diff_Gauss_ij(gradient,npar,sensmat);
-	    *npair+=1;
-	    for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];
-	  }
-	h++;
-      }
+     for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+             if(mlags[i][j]<*maxdist){
+    //Compute the correlation function for the elements i,j
+    rho=CorFct(cormod,mlags[i][j],0,parcor);
+    //Compute the gradient for the given correlation
+    GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+    //Compute the gradient of the variogram for the given pair
+    Grad_Diff_Vario(rho,flagnuis,gradcor,gradient,npar,nuis);
+    for(n=0;n<*nrep;n++){
+      //Compute the gradient of the Gaussian difference composite
+      Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(n+i* *nrep)],data[(n+j* *nrep)]);
+      //ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
+      Sens_Diff_Gauss_ij(gradient,npar,sensmat);
+      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+      b++;}}}
+      *np=b;
   return;
 }
 // Compute the Sensitivity matrix for the space time composite Gaussian difference likelihood:
-void Sens_Diff_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis,
-		        int *npair, int *npar, int *nparc, double *parcor, double *score, double *sensmat)
+void Sens_Diff_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis,int *np,
+		        int *npar, int *nparc, double *parcor, double *score, double *sensmat)
 {
   // Initialization variables:
-  int d=0, i=0, j=0, t=0, v=0;
+  int b=0,d=0,i=0,j=0,n=0,t=0,v=0;
   double rho=0.0, *grad, *gradcor, *gradient;
 
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// Correlation gradient
   gradient=(double *) R_alloc(*npar, sizeof(double));// Overall gradient
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
-  for(i=0;i<*ncoord;i++)
-    for(t=0;t<*ntime;t++)
+  for(i=0;i<*ncoord;i++){
+    for(t=0;t<*ntime;t++){
       for(j=i;j<*ncoord;j++){
 	if(i==j){// marginal temporal log-likelihood:
-	  for(v=t+1;v<*ntime;v++)
-	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	  for(v=t+1;v<*ntime;v++){
+	    if(mlagt[t][v]<=*maxtime){
 	      // Compute the temporal correlation function for given pair:
 	      rho=CorFct(cormod,0,mlagt[t][v],parcor);
 	      // Compute the gradient for the given temporal correlation
 	      GradCorrFct(rho,cormod,eps,flagcor,gradcor,0,mlagt[t][v],parcor);
 	      // Compute the gradient of the variogram for the given pair (temporal):
 	      Grad_Diff_Vario(rho,flagnuis,gradcor,gradient,npar,nuis);
-	      // Compute the gradient of the Gaussian difference composite
-	      Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[i],data[j]);
-	      // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR (temporal):
-	      Sens_Diff_Gauss_ij(gradient,npar,sensmat);
-	      *npair+=1;
-	      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}}
-	else// spatial-temporal log-likelihood:
-	  for(v=0;v<*ntime;v++)
+	      for(n=0;n<*nrep;n++){
+		//Compute the gradient of the Gaussian difference composite
+		Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+				data[(t+*ntime*i)+n* *ntime* *ncoord],
+				data[(v+*ntime*j)+n* *ntime* *ncoord]);
+		//ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR (temporal):
+		Sens_Diff_Gauss_ij(gradient,npar,sensmat);
+		for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+	      b++;}}}
+	else{// spatial-temporal log-likelihood:
+	  for(v=0;v<*ntime;v++){
 	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
 	      // Compute the spatial-temporal correlation function for a given pair
 	      rho=CorFct(cormod,mlags[i][j],mlagt[t][v],parcor);
@@ -404,37 +839,37 @@ void Sens_Diff_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, in
 	      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],mlagt[t][v],parcor);
 	      // Compute the gradient of the variogram for the given pair
 	      Grad_Diff_Vario(rho,flagnuis,gradcor,gradient,npar,nuis);
-	      // Compute the gradient of the Gaussian difference composite
-	      Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[(t+*ntime*i)],data[(v+*ntime*j)]);
-	      // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
-	      Sens_Diff_Gauss_ij(gradient,npar,sensmat);
-	      *npair+=1;
-	      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}}
+	      for(n=0;n<*nrep;n++){
+		//Compute the gradient of the Gaussian difference composite
+		Grad_Diff_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+				data[(t+*ntime*i)+n* *ntime* *ncoord],
+				data[(v+*ntime*j)+n* *ntime* *ncoord]);
+		//ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
+		Sens_Diff_Gauss_ij(gradient,npar,sensmat);
+		for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+	      b++;}}}}}}
+	      *np=b;
   return;
 }
 // Compute the Sensitivity matrix for a single Gaussian difference likelihood component:
 void Sens_Diff_Gauss_ij(double *gradient, int *npar, double *sensmat)
 {
   // Initialization variables:
-  int h=0,i=0, j=0;
+  int h=0,i=0,j=0;
 
   for(i=0;i<*npar;i++)
-    for(j=i;j<*npar;j++)
-      {
-	//sensmat[h]=sensmat[h]-0.5*gradient[i]*gradient[j];
-	sensmat[h]=sensmat[h]+0.5*gradient[i]*gradient[j];
-	h++;
-      }
+    for(j=i;j<*npar;j++){
+      sensmat[h]=sensmat[h]+0.5*gradient[i]*gradient[j];
+      h++;}
   return;
 }
 
 // Compute the Sensitivity matrix for the pairwise composite Gaussian likelihood:
 void Sens_Pair_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
-		     double *nuis, int *npair, int *npar, int *nparc, double *parcor,
-		     double *score, double *sensmat)
+		     double *nuis, int *np, int *npar, int *nparc, double *parcor,double *score, double *sensmat)
 {
   // Initialization variables:
-  int h=0, i=0, l=0, d=0, nsens=0, j=0;
+  int b=0,i=0,j=0,l=0,d=0,n=0,nsens=0;
   double rho=0.0, *grad, *gradcor, *sens;
 
   nsens=*npar * (*npar+1)/2;
@@ -442,77 +877,77 @@ void Sens_Pair_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
   sens=(double *) R_alloc(nsens, sizeof(double));// One sensitive contribute
 
-  for(i=0;i<(*ncoord-1);i++)
-    for(j=(i+1);j<*ncoord;j++)
-      {
-	if(lags[h]<=*maxdist)
-	  {
-	    // Compute the correlation function for the elements i,j
-	    rho=CorFct(cormod,lags[h],0,parcor);
-	    // Compute the gradient for the given correlation
-	    GradCorrFct(rho,cormod,eps,flagcor,gradcor,lags[h],0,parcor);
-	    // Compute the gradient of the log pairwise likelihood
-	    Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[i],data[j]);
-	    // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
-	    Sens_Pair_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
-	    *npair+=1;
-	    for(l=0;l<nsens;l++)
-	      sensmat[l]=sensmat[l]-sens[l];
-	    //sensmat[l]=sensmat[l]+sens[l];
-	    for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];
-	  }
-	h++;
-      }
+    for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+    //Compute the correlation function for the elements i,j
+      if(mlags[i][j]<*maxdist){
+    rho=CorFct(cormod,mlags[i][j],0,parcor);
+    //Compute the gradient for the given correlation
+    GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+    for(n=0;n<*nrep;n++){
+      //Compute the gradient of the log pairwise likelihood
+      Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(n+i* *nrep)],data[(n+j* *nrep)]);
+      //ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
+      Sens_Pair_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
+      for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]-sens[l];
+      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+      b++;}}}
+      *np=b;
   return;
 }
 // Compute the Sensitivity matrix for the space time pairwise composite Gaussian likelihood:
-void Sens_Pair_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis,
-			int *npair, int *npar, int *nparc, double *parcor, double *score, double *sensmat)
+void Sens_Pair_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis, int *np,
+			int *npar, int *nparc, double *parcor, double *score, double *sensmat)
 {
   // Initialization variables:
-  int  d=0, i=0, l=0, nsens=0, j=0, t=0, v=0;
+  int  b=0,d=0,i=0,l=0,n=0,nsens=0,j=0,t=0,v=0;
   double rho=0.0, *grad, *gradcor, *sens;
 
   nsens=*npar * (*npar+1)/2;
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// Correlation gradient
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
   sens=(double *) R_alloc(nsens, sizeof(double));// One sensitive contribute
-  for(i=0;i<*ncoord;i++)
-    for(t=0;t<*ntime;t++)
+  for(i=0;i<*ncoord;i++){
+    for(t=0;t<*ntime;t++){
       for(j=i;j<*ncoord;j++){
 	if(i==j){// marginal temporal log-likelihood:
-	  for(v=t+1;v<*ntime;v++)
-	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+	  for(v=t+1;v<*ntime;v++){
+	    if(mlagt[t][v]<=*maxtime){
 	      // Compute the temporal correlation function for for a given pair:
 	      rho=CorFct(cormod,0,mlagt[t][v],parcor);
 	      // Compute the gradient for the temporal correlation function:
 	      GradCorrFct(rho,cormod,eps,flagcor,gradcor,0,mlagt[t][v],parcor);
-	      // Compute the gradient of the log pairwise likelihood
-	      Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[(t+*ntime*i)],data[(v+*ntime*j)]);
-	      // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
-	      Sens_Pair_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
-	      *npair+=1;
-	      for(l=0;l<nsens;l++)
-		sensmat[l]=sensmat[l]-sens[l];
-	      //sensmat[l]=sensmat[l]+sens[l];
-	      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}}
-	else// marginal spatial-temporal log-likelihood:
-	  for(v=0;v<*ntime;v++)
+	      for(n=0;n<*nrep;n++){
+		//Compute the gradient of the log pairwise likelihood
+		Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+				data[(t+*ntime*i)+n* *ntime* *ncoord],
+				data[(v+*ntime*j)+n* *ntime* *ncoord]);
+		//ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
+		Sens_Pair_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
+		for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]-sens[l];
+		for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+	      b++;}}}
+	else {// marginal spatial-temporal log-likelihood:
+	  for(v=0;v<*ntime;v++){
 	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
 	      // Compute the spatial-temporal correlation function for a given pair:
 	      rho=CorFct(cormod,mlags[i][j],mlagt[t][v],parcor);
 	      // Compute the gradient of the patial-temporal correlation function:
 	      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],mlagt[t][v],parcor);
-	      // Compute the gradient of the log pairwise likelihood
-	      Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[(t+*ntime*i)],data[(v+*ntime*j)]);
-	      // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
-	      Sens_Pair_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
-	      *npair+=1;
-	      for(l=0;l<nsens;l++)
-		sensmat[l]=sensmat[l]-sens[l];
-	      //for(l=0;l<nsens;l++)
-	      //sensmat[l]=sensmat[l]+sens[l];
-	      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}}
+	      for(n=0;n<*nrep;n++){
+		//Compute the gradient of the log pairwise likelihood
+		Grad_Pair_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+				data[(t+*ntime*i)+n* *ntime* *ncoord],
+				data[(v+*ntime*j)+n* *ntime* *ncoord]);
+		//ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
+		Sens_Pair_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
+		for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]-sens[l];
+		for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+		b++;
+		}}}
+          }}}
+          *np=b;
   return;
 }
 // Compute the Sensitivity matrix for the Gaussian difference likelihood:
@@ -599,11 +1034,11 @@ void Sens_Pair_Gauss_ij(double rho, int *flag, double *gradcor, int *npar,
 }
 
 // Compute the Sensitivity matrix for the conditional composite Gaussian likelihood:
-void Sens_Cond_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis,
-		     int *npair, int *npar, int *nparc, double *parcor, double *score, double *sensmat)
+void Sens_Cond_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis, int *np,
+		     int *npar, int *nparc, double *parcor, double *score, double *sensmat)
 {
   // Initialization variables:
-  int d=0, h=0, i=0, l=0, nsens=0, j=0;
+  int b=0,d=0,i=0,j=0,l=0,n=0,nsens=0;
   double rho=0.0, *grad, *gradcor, *sens;
 
   nsens=*npar * (*npar+1)/2;
@@ -611,73 +1046,77 @@ void Sens_Cond_Gauss(int *cormod, double *data, double *eps, int *flagcor, int *
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
   sens=(double *) R_alloc(nsens, sizeof(double));// One sensitive contribute
 
-  for(i=0;i<(*ncoord-1);i++)
-    for(j=(i+1);j<*ncoord;j++)
-      {
-	if(lags[h]<=*maxdist){
-	    // Compute the correlation function for the elements i,j
-	    rho=CorFct(cormod,lags[h],0,parcor);
-	    // Compute the gradient for the given correlation
-	    GradCorrFct(rho,cormod,eps,flagcor,gradcor,lags[h],0,parcor);
-	    // Compute the gradient of the conditional likelihood:
-	    Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[i],data[j]);
-	    // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
-	    Sens_Cond_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
-	    *npair+=1;
-	    for(l=0;l<nsens;l++)
-	      sensmat[l]=sensmat[l]-sens[l];
-	    //sensmat[l]=sensmat[l]+sens[l];
-	    for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
-	h++;
-      }
+      for(i=0; i<(*ncoord-1);i++){
+    for(j=(i+1); j<*ncoord;j++){
+               if(mlags[i][j]<*maxdist){
+    //Compute the correlation function for the elements i,j
+    rho=CorFct(cormod,mlags[i][j],0,parcor);
+    //Compute the gradient for the given correlation
+    GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],0,parcor);
+    for(n=0;n<*nrep;n++){
+      //Compute the gradient of the conditional likelihood:
+      Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+		      data[(n+i* *nrep)],data[(n+j* *nrep)]);
+      //ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
+      Sens_Cond_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
+      for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]-sens[l];
+      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+      b++;}}}
+      *np=b;
   return;
 }
 // Compute the Sensitivity matrix for the space time conditional composite Gaussian likelihood:
-void Sens_Cond_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis,
-			int *npair, int *npar, int *nparc, double *parcor, double *score, double *sensmat)
+void Sens_Cond_Gauss_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis, double *nuis, int *np,
+			int *npar, int *nparc, double *parcor, double *score, double *sensmat)
 {
   // Initialization variables:
-  int d=0, i=0, l=0, nsens=0, j=0, t=0, v=0;
+  int b=0,d=0,i=0,l=0,n=0,nsens=0,j=0,t=0,v=0;
   double rho=0.0, *grad, *gradcor, *sens;
 
   nsens=*npar * (*npar+1)/2;
   gradcor=(double *) R_alloc(*nparc, sizeof(double));// Correlation gradient
   grad=(double *) R_alloc(*npar, sizeof(double));// ijth component of the gradient
   sens=(double *) R_alloc(nsens, sizeof(double));// One sensitive contribute
-  for(i=0;i<*ncoord;i++)
-    for(t=0;t<*ntime;t++)
-      for(j=i;j<*ncoord;j++){
-	if(i==j){// marginal temporal log-likelihood:
-	  for(v=t+1;v<*ntime;v++)
-	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
-	      // Compute the temporal correlation function for a given pair:
-	      rho=CorFct(cormod,0,mlagt[t][v],parcor);
-	      // Compute the gradient of the temporal correlation function for a given pair:
-	      GradCorrFct(rho,cormod,eps,flagcor,gradcor,0,mlagt[t][v],parcor);
-	      // Compute the gradient of the conditional likelihood:
-	      Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[(t+*ntime*i)],data[(v+*ntime*j)]);
-	      // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
-	      Sens_Cond_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
-	      *npair+=1;
-	      for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]-sens[l];
-	      //for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]+sens[l];
-	      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}}
-	else// marginal spatial-temporal log-likelihood:
-	  for(v=0;v<*ntime;v++)
+
+    for(i=0;i<*ncoord;i++){
+      for(t=0;t<*ntime;t++){
+	for(j=i;j<*ncoord;j++){
+	  if(i==j){// marginal temporal log-likelihood:
+	    for(v=t+1;v<*ntime;v++){
+	      if(mlagt[t][v]<=*maxtime){
+		//Compute the temporal correlation function for a given pair:
+		rho=CorFct(cormod,0,mlagt[t][v],parcor);
+		//Compute the gradient of the temporal correlation function for a given pair:
+		GradCorrFct(rho,cormod,eps,flagcor,gradcor,0,mlagt[t][v],parcor);
+		for(n=0;n<*nrep;n++){
+		  //Compute the gradient of the conditional likelihood:
+		  Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+				  data[(t+*ntime*i)+n* *ntime* *ncoord],
+				  data[(v+*ntime*j)+n* *ntime* *ncoord]);
+		  //ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
+		  Sens_Cond_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
+		  for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]-sens[l];
+		  for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+		  b++;}}}
+	else{// marginal spatial-temporal log-likelihood:
+	  for(v=0;v<*ntime;v++){
 	    if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
 	      // Compute the spatial-temporal correlation function for a given pair:
 	      rho=CorFct(cormod,mlags[i][j],mlagt[t][v],parcor);
 	      // Compute the gradient of the spatial-temporal correlation  for a given pair:
 	      GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],mlagt[t][v],parcor);
-	      // Compute the gradient of the conditional likelihood:
-	      Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,data[(t+*ntime*i)],data[(v+*ntime*j)]);
-	      // ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
-	      Sens_Cond_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
-	      *npair+=1;
-	      for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]-sens[l];
-	      //for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]+sens[l];
-	      for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}}
-  return;
+	      for(n=0;n<*nrep;n++){
+		//Compute the gradient of the conditional likelihood:
+		Grad_Cond_Gauss(rho,flagnuis,gradcor,grad,npar,nuis,
+				data[(t+*ntime*i)+n* *ntime* *ncoord],
+				data[(v+*ntime*j)+n* *ntime* *ncoord]);
+		//ADD TO THE SENSITIVITY MATRIX THE CONTRIBUTE OF THE GIVEN PAIR
+		Sens_Cond_Gauss_ij(rho,flagnuis,gradcor,npar,nparc,nuis,sens);
+		for(l=0;l<nsens;l++) sensmat[l]=sensmat[l]-sens[l];
+		for(d=0;d<*npar;d++) score[d]=score[d]+grad[d];}
+	      b++;}}}}}}
+	      *np=b;
+    return;
 }
 // Compute the Sensitivity matrix for a single Gaussian conditional likelihood:
 void Sens_Cond_Gauss_ij(double rho, int *flag, double *gradcor, int *npar,
@@ -761,229 +1200,11 @@ void Sens_Cond_Gauss_ij(double rho, int *flag, double *gradcor, int *npar,
  //---- END COMPUTATION OF THE SENSITIVITY MATRIX-----//
  return;
 }
-// Computes the variability matrix based on the sub-sampling method (only spatial):
-/*void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
-		  double *eps, int *flagcor, int *flagnuis, int *like, int *lonlat,
-                  int *model, int *npair, int *npar, int *nparc, double *nuis,
-		  double *parcor, double *thr, int *type, double *varimat,
-		  double *winc, double *winstp)
-{
-  double rho=0.0, lag=0.0, *gradcor, *gradient, psm=0, psj=0, *rangex, *rangey;
-  double *scoordx, *scoordy, *sdata, *sumgrad, *xgrid, *ygrid, *subvari;
-  double deltax=0.0, deltay=0.0, dimwinx=0.0, dimwiny=0.0, vario=0.0;
-  double winstx=winstp[0], winsty=winstp[0];
-  int *npts, nsubsam=0, numintx=0, numinty=0;
-  int h=0, i=0, l=0, m=0, n=0, nvari=0, nwpair=0, p=0, q=0, j=0;
 
-  nvari=*npar * (*npar+1)/2;
-
-  gradcor=(double *) R_alloc(*nparc, sizeof(double));
-  gradient=(double *) R_alloc(*npar, sizeof(double));
-  sumgrad=(double *) R_alloc(*npar, sizeof(double));
-  subvari=(double *) R_alloc(nvari, sizeof(double));
-
-  npts=(int *) R_alloc(1, sizeof(int));
-
-  rangex=(double *) R_alloc(2, sizeof(double));
-  rangey=(double *) R_alloc(2, sizeof(double));
-
-  scoordx=(double *) R_alloc(*ncoord, sizeof(double));
-  scoordy=(double *) R_alloc(*ncoord, sizeof(double));
-  sdata=(double *) R_alloc(*ncoord, sizeof(double));
-
-  Range(coordx,rangex,ncoord);// range of the x-coordinate
-  Range(coordy,rangey,ncoord);// range of the y-coordinate
-
-  // set the sub-sampling window based on prototype unit window (R_0)
-  // and scaling factor (lambda_n)
-  deltax=rangex[1]-rangex[0];// R_n = lambda_n * R_0
-  deltay=rangey[1]-rangey[0];
-
-  dimwinx=*winc * sqrt(deltax);// lambda*_n = constant * sqrt(lambda_n)
-  dimwiny=*winc * sqrt(deltay);
-  if(*winstp==0){ winstx=rangex[0]/dimwinx; // in case of regular grid
-    winsty=rangey[0]/dimwiny;}              // set to the minimum step
-  numintx=(int) deltax/(dimwinx*winstx)+1;
-  numinty=(int) deltay/(dimwiny*winsty)+1;
-
-  xgrid=(double *) R_alloc(numintx, sizeof(double));
-  ygrid=(double *) R_alloc(numinty, sizeof(double));
-
-  Seq(rangex,numintx,xgrid);
-  Seq(rangey,numinty,ygrid);
-
-  numintx=(deltax-dimwinx)/winstx+1;
-  numinty=(deltay-dimwiny)/winsty+1;
-
-  for(n=0;n<*nrep;n++)
-    {
-      for(h=0;h<nvari;h++)
-	subvari[h]=0;
-
-      for(i=0;i<numintx;i++)
-	for(j=0;j<numinty;j++)
-	  {
-	    *npts=0;
-	    SetSampling(coordx,coordy,data,n,npts,scoordx,
-			scoordy,sdata,xgrid[i]+dimwinx,xgrid[i],
-			ygrid[j]+dimwiny,ygrid[j]);
-	    //SetSampling(coordx,coordy,data,n,npts,scoordx,
-	    //	scoordy,sdata,xgrid[i+1],xgrid[i],
-	    //		ygrid[j+1],ygrid[j]);
-	    if(*npts>2){
-	      for(h=0;h<*npar;h++)//initialize the gradient of the sub-window
-		sumgrad[h]=0;
-	      nwpair=0;//initialize the number of pairs in the window
-	      switch(*model){
-	      case 1: // Gaussian random field:
-		  for(l=0;l<(*npts-1);l++)
-		    for(m=(l+1);m<*npts;m++){//compute the distance for the sub-pair
-		      if(*lonlat)
-			lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		      else
-			lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
-		      if(lag<=*maxdist){//check the distance
-			nwpair++;
-			rho=CorFct(cormod,lag,0,parcor);
-			GradCorrFct(rho,cormod,eps,flagcor,gradcor,lag,0,parcor);
-			switch(*like){//select the type of composite likelihood
-			case 1:// Conditional likelihood:
-			  switch(*type){
-			  case 2:
-			    Grad_Cond_Gauss(rho,flagnuis,gradcor,gradient,
-					    npar,nuis,sdata[l],sdata[m]);
-			    break;}
-			  break;
-			case 3: // Marginal likelihood:
-			  switch(*type){
-			  case 1: // Gradient of the log difference likelihood
-			    Grad_Diff_Gauss(rho,flagnuis,gradcor,gradient,
-					    npar,nuis,sdata[l],sdata[m]);
-			    break;
-			  case 2: // Gradient of the log pairwise likelihood
-			    Grad_Pair_Gauss(rho,flagnuis,gradcor,gradient,
-					    npar,nuis,sdata[l],sdata[m]);
-			    break;}
-			  break;}
-			for(h=0;h<*npar;h++)//update the sub-gradient
-			  sumgrad[h]=sumgrad[h]+gradient[h];}}
-		  break;
-	      case 2: // Binary-Gaussian random field:
-		psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
-		for(l=0;l<(*npts-1);l++)
-		    for(m=(l+1);m<*npts;m++){//compute the distance for the sub-pair
-		      if(*lonlat)
-			lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		      else
-			lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
-		      if(lag<=*maxdist){//check the distance
-			nwpair++;
-			rho=CorFct(cormod,lag,0,parcor);// compute the correlation
-			// compute the gradient of the correlation
-			GradCorrFct(rho,cormod,eps,flagcor,gradcor,lag,0,parcor);
-			psj=pbnorm(cormod,lag,0,nuis,parcor,*thr);
-			switch(*like){//select the type of composite likelihood
-			case 1:// Conditional likelihood:
-			  switch(*type){
-			  case 2:// Gradient of the log binnary Gauss conditional lik
-			    Grad_Cond_Bin(rho,psj,psm,flagnuis,gradcor,gradient,
-					  npar,nuis,thr,sdata[l],sdata[m]);
-			    break;}
-			  break;
-			case 3: // Marginal likelihood:
-			  switch(*type){
-			  case 1: // Gradient of the log difference likelihood
-			    Grad_Diff_Bin(rho,psj,psm,flagnuis,gradcor,gradient,
-					  npar,nuis,thr,sdata[l],sdata[m]);
-			    // Insert the gradient of binnary Gauss Diff
-			    break;
-			  case 2: // Gradient of the log pairwise likelihood
-			    Grad_Pair_Bin(rho,psj,psm,flagnuis,gradcor,gradient,
-					  npar,nuis,thr,sdata[l],sdata[m]);
-			    break;}
-			  break;}
-			for(h=0;h<*npar;h++)//update the sub-gradient
-			  sumgrad[h]=sumgrad[h]+gradient[h];}}
-		  break;
-	      case 3: // Brown-Resnick random field:
-		for(l=0;l<(*npts-1);l++)
-		    for(m=(l+1);m<*npts;m++){//compute the distance for the sub-pair
-		      if(*lonlat)
-			lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		      else
-			lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
-		      if(lag<=*maxdist){//check the distance
-			nwpair++;
-			vario=VarioFct(cormod,lag,parcor);// compute the covariance
-			// compute the gradient of the variogram:
-			GradVarioFct(vario,cormod,eps,flagcor,gradcor,lag,parcor);
-			switch(*like){//select the type of composite likelihood
-			case 3: // Marginal likelihood:
-			  switch(*type){
-			  case 2: // Gradient of the log pairwise likelihood
-			    Grad_Brow_Resn(vario,flagnuis,gradcor,gradient,
-					   npar,nuis,sdata[l],sdata[m]);
-			    break;}
-			  break;}
-			for(h=0;h<*npar;h++)//update the sub-gradient
-			  sumgrad[h]=sumgrad[h]+gradient[h];}}
-		  break;
-	      case 4: // Extremal Gaussian random field:
-		for(l=0;l<(*npts-1);l++)
-		    for(m=(l+1);m<*npts;m++){//compute the distance for the sub-pair
-		      if(*lonlat)
-			lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		      else
-			lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
-		      if(lag<=*maxdist){//check the distance
-			nwpair++;
-			rho=CorFct(cormod,lag,0,parcor);// compute the correlation
-			// compute the gradient of the correlation
-			GradCorrFct(rho,cormod,eps,flagcor,gradcor,lag,0,parcor);
-			Grad_Ext_Gauss(rho,flagnuis,gradcor,gradient,
-				       npar,nuis, sdata[l],sdata[m]);
-			for(h=0;h<*npar;h++)//update the sub-gradient
-			  sumgrad[h]=sumgrad[h]+gradient[h];}}
-		  break;
-	      case 5: // Extremal t random field:
-		for(l=0;l<(*npts-1);l++)
-		    for(m=(l+1);m<*npts;m++){//compute the distance for the sub-pair
-		      if(*lonlat)
-			lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		      else
-			lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
-		      if(lag<=*maxdist){//check the distance
-			nwpair++;
-			rho=CorFct(cormod,lag,0,parcor);// compute the correlation
-			// compute the gradient of the correlation
-			GradCorrFct(rho,cormod,eps,flagcor,gradcor,lag,0,parcor);
-			switch(*like){//select the type of composite likelihood
-			case 3: // Marginal likelihood:
-			  switch(*type){
-			  case 2: // Gradient of the log pairwise likelihood
-			    Grad_Ext_T(rho,flagnuis,gradcor,gradient,npar,nuis,
-				       sdata[l],sdata[m]);
-			    break;}
-			  break;}
-			for(h=0;h<*npar;h++)//update the sub-gradient
-			  sumgrad[h]=sumgrad[h]+gradient[h];}}
-		  break;
-	      }
-	      h=0;
-	      for(p=0;p<*npar;p++)//update the sub-variance
-		for(q=p;q<*npar;q++){
-		  subvari[h]=subvari[h]+sumgrad[p]*sumgrad[q]/nwpair;
-		  h++;}
-	      nsubsam++;}}//update the number of windows
-      for(h=0;h<nvari;h++)//update the global variance
-	varimat[h]=varimat[h]+(*npair * subvari[h]/nsubsam / *nrep);
-    }
-  return;
-}*/
 void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
-		  double *eps, int *flagcor, int *flagnuis, int *grid, int *like,
-		  int *lonlat, int *model, int *npair, int *npar, int *nparc,
-		  double *nuis, double *parcor, double *thr, int *type, double *varimat,
+		  int *dist,double *eps, int *flagcor, int *flagnuis, int *grid,
+            int *like, int *model, int *npar, int *nparc, double *nuis, int *np,
+		  double *parcor, double *thr, int *type, double *varimat,
 		  double *winc, double *winstp)
 {
   double rho=0.0, lag=0.0, *gradcor,*gradient, psm=0, ps, *rangex, *rangey;
@@ -1060,8 +1281,9 @@ void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
 	  case 1: // Gaussian random field:
 	    for(l=0;l<(*npts-1);l++){
 	      for(m=(l+1);m<*npts;m++){
-		if(*lonlat) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		else lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+           if(*dist==0) lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+		 if(*dist==1) lag=Dist_chordal(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
+           if(*dist==2) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
                 if(lag<*maxdist){
 		  nwpair++;
 		  rho=CorFct(cormod,lag,0,parcor);
@@ -1082,15 +1304,16 @@ void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
 		   Grad_Pair_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,sdata[l],sdata[m]);
 		   break;}
 		 break;}
-	       for(h=0;h<*npar;h++) sumgrad[h]=sumgrad[h]+gradient[h];// sum the gradient in the subwindow
+	       for(h=0;h<*npar;h++) {sumgrad[h]=sumgrad[h]+gradient[h]; }// sum the gradient in the subwindow
 		}}}
 	    break;
 	  case 2: // Binary-Gaussian random field:
 	    psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	    for(l=0;l<(*npts-1);l++){
 	      for(m=(l+1);m<*npts;m++){
-		if(*lonlat) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		else lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+           if(*dist==0) lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+		 if(*dist==1) lag=Dist_chordal(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
+           if(*dist==2) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
 		if(lag<*maxdist){
 		  nwpair++;
 		  rho=CorFct(cormod,lag,0,parcor);
@@ -1119,12 +1342,13 @@ void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
 	  case 3:// Brown-Resnick random field:
 	    for(l=0;l<(*npts-1);l++){
 	      for(m=(l+1);m<*npts;m++){
-		if(*lonlat) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		else lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+           if(*dist==0) lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+		 if(*dist==1) lag=Dist_chordal(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
+           if(*dist==2) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
 		if(lag<*maxdist){
 		  nwpair++;
-		  vario=VarioFct(cormod,lag,parcor);
-		  GradVarioFct(vario,cormod,eps,flagcor,gradcor,lag,parcor);
+		  vario=VarioFct(cormod,lag,parcor,0);
+		  GradVarioFct(vario,cormod,eps,flagcor,gradcor,lag,parcor,0);
 		  switch(*like){//select the type of composite likelihood
 		  case 3:// Marginal likelihood:
 		    switch(*type){
@@ -1138,8 +1362,9 @@ void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
 	  case 4:// Extremal Gaussian random field:
 	    for(l=0;l<(*npts-1);l++){
 	      for(m=(l+1);m<*npts;m++){
-		if(*lonlat) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		else lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+           if(*dist==0) lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+		 if(*dist==1) lag=Dist_chordal(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
+           if(*dist==2) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
 		if(lag<*maxdist){
 		  nwpair++;
 		  rho=CorFct(cormod,lag,0,parcor);
@@ -1151,8 +1376,9 @@ void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
 	  case 5:// Extremal t random field:
 	    for(l=0;l<(*npts-1);l++){
 	      for(m=(l+1);m<*npts;m++){
-		if(*lonlat) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
-		else lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+		 if(*dist==0) lag=hypot(scoordx[l]-scoordx[m],scoordy[l]-scoordy[m]);
+		 if(*dist==1) lag=Dist_chordal(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
+           if(*dist==2) lag=Dist_geodesic(scoordx[l],scoordy[l],scoordx[m],scoordy[m]);
 		if(lag<*maxdist){
 		  nwpair++;
 		  rho=CorFct(cormod,lag,0,parcor);
@@ -1171,13 +1397,13 @@ void Vari_SubSamp(double *coordx, double *coordy, int *cormod, double *data,
 	  for(p=0;p<*npar;p++)//update the sub-variance in the subwindow
 	    for(q=p;q<*npar;q++){subvari[h]=subvari[h]+sumgrad[p]*sumgrad[q]/nwpair;h++;}
 	}}}}
-  for(h=0;h<nvari;h++) varimat[h]= *npair * subvari[h]/(nsub* *nrep);//update variability matrix
+  for(h=0;h<nvari;h++) varimat[h]= np[0] * subvari[h]/(nsub* *nrep);//update variability matrix
   return;
 }
 // Computes the variability matrix based on the sub-sampling method (spatial-temporal):
-void Vari_SubSamp_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
-		     int *like,int *npair, int *npar, int *nparc, double *nuis, double *parcor,
-		     int *type, double *varimat, double *winc, double *winstp)
+void Vari_SubSamp_st(int *cormod, double *data, int *dist, double *eps, int *flagcor,
+		           int *flagnuis,int *like,int *npar, int *nparc, double *nuis,int *np, double *parcor,
+		           int *type,double *varimat, double *winc, double *winstp)
 {
   double beta, rho=0.0, lagt=0.0, *gradcor, *gradient;
   double *sdata, *sumgrad, *subvari, *sublagt;
@@ -1198,8 +1424,8 @@ void Vari_SubSamp_st(int *cormod, double *data, double *eps, int *flagcor, int *
     if(*winc>=*ntime) *winc=*ntime-step;} // if the length is too big
   //set the spatial-temporal windows:
   int wint = (int) *winc;
-  if(*winstp==0) *winstp=step; //defualt for the forward step:the minimum distance
-  else *winstp=*winstp*wint;   //otherwise a proportion of the temporal window
+  if(*winstp==0) *winstp=wint; //defualt for the forward step:the minimum distance
+  //else *winstp=*winstp*wint;   //otherwise a proportion of the temporal window
   sublagt=(double *) R_alloc(wint, sizeof(double));
   sublagt[0]=step;
   sdata=(double *) R_alloc(*ncoord*wint, sizeof(double));
@@ -1230,18 +1456,21 @@ void Vari_SubSamp_st(int *cormod, double *data, double *eps, int *flagcor, int *
 		     switch(*type){
 		     case 2:
 		      Grad_Cond_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				      sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
+				      sdata[(t+nstime*i)+n*nstime* *ncoord],
+				      sdata[(v+nstime*j)+n*nstime* *ncoord]);
 		      break;}
 		     break;
 		   case 3: // Marginal likelihood:
 		     switch(*type){
 		     case 1:// Gradient of the log difference likelihood
 		       Grad_Diff_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				       sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
+				       sdata[(t+nstime*i)+n*nstime* *ncoord],
+				       sdata[(v+nstime*j)+n*nstime* *ncoord]);
 		       break;
 		     case 2:// Gradient of the log pairwise likelihood
 		       Grad_Pair_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				       sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
+				       sdata[(t+nstime*i)+n*nstime* *ncoord],
+				       sdata[(v+nstime*j)+n*nstime* *ncoord]);
 		       break;}
 		     break;}
 		   //sum the gradiend in the subwindow
@@ -1258,18 +1487,21 @@ void Vari_SubSamp_st(int *cormod, double *data, double *eps, int *flagcor, int *
 		      switch(*type){
 		      case 2:
 			Grad_Cond_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-					sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
+					sdata[(t+nstime*i)+n*nstime* *ncoord],
+					sdata[(v+nstime*j)+n*nstime* *ncoord]);
 			break;}
 		      break;
 		    case 3:// Marginal likelihood:
 		      switch(*type){
 		      case 1:// Gradient of the log difference likelihood
 			Grad_Diff_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-					sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
+					sdata[(t+nstime*i)+n*nstime* *ncoord],
+					sdata[(v+nstime*j)+n*nstime* *ncoord]);
 			break;
 		      case 2:// Gradient of the log pairwise likelihood
 			Grad_Pair_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-					sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
+					sdata[(t+nstime*i)+n*nstime* *ncoord],
+					sdata[(v+nstime*j)+n*nstime* *ncoord]);
 			break;}
 		      break;}
 		     // sum the gradient in the subwindow
@@ -1277,114 +1509,6 @@ void Vari_SubSamp_st(int *cormod, double *data, double *eps, int *flagcor, int *
 	h=0;
 	for(p=0;p<*npar;p++)//update the sub-variance in the subwindow
 	  for(q=p;q<*npar;q++){subvari[h]=subvari[h]+sumgrad[p]*sumgrad[q]/nwpair;h++;}}}
-  for(h=0;h<nvari;h++) varimat[h]= *npair*subvari[h]/(nsub * *nrep);//update variability matrix
+  for(h=0;h<nvari;h++) varimat[h]= np[0]*subvari[h]/(nsub * *nrep);//update variability matrix
   return;
 }
-// Computes the variability matrix based on the sub-sampling method (spatial-temporal):
-/*void Vari_SubSamp_st(int *cormod, double *data, double *eps, int *flagcor, int *flagnuis,
-		     int *like,int *npair, int *npar, int *nparc, double *nuis, double *parcor,
-		     int *type, double *varimat, double *winc, double *winstp)
-{
-  double beta, rho=0.0, lagt=0.0, *gradcor, *gradient;
-  double *sdata, *sumgrad, *subvari, *sublagt;
-  double step=*minimtime;
-  int  nsubsam=0, nstime=0, nvari=0, nwpair=0;
-  int  h=0, i=0, k=0, n=0, p=0, q=0, j=0, t=0, v=0;
-  nvari=*npar * (*npar+1)/2;
-  gradcor=(double *) R_alloc(*nparc, sizeof(double));
-  gradient=(double *) R_alloc(*npar, sizeof(double));
-  sumgrad=(double *) R_alloc(*npar, sizeof(double));
-  subvari=(double *) R_alloc(nvari, sizeof(double));
-
-  if(*winstp==0) *winstp=step;//update with the minimum distance
-
-  if(!(*winc)){
-    beta=CorFct(cormod,0,1,parcor);
-    *winc=R_pow(2*beta/(1-R_pow(beta,2)),(double) 2/3)*R_pow(*ntime * 1.5,(double) 1/3);
-    if (*winc<2*step) *winc=2*step;
-    if (*winc>=*ntime) *winc=*ntime-step;}
-  //set the spatial-temporal windows:
-  int wint = (int) *winc;
-  sublagt=(double *) R_alloc(wint, sizeof(double));
-  sublagt[0]=step;
-  sdata=(double *) R_alloc(*ncoord*wint, sizeof(double));
-  //set the temporal distances for the sub-sample:
-  for(i=0;i<wint;i++){sublagt[i+1]=sublagt[i]+step;nstime++;}
-  nwpair=0.5*(*ncoord*nstime)*(*ncoord*nstime-1);
-  //start the sub-sampling procedure:
-  for(n=0;n<*nrep;n++){
-      for(h=0;h<nvari;h++)
-	subvari[h]=0;
-      //for(k=0;k<(*ntime-step * wint+step);k++){//loop for the number of sub-sampling:
-      for(k=0;k<((*ntime-wint)/winstp[0]+1);k++){//loop for the number of sub-sampling:
-      // set the sub-sample of the data:
-      SetSampling_st(data,sdata,ncoord,ntime,wint,k,n,nrep);
-      // set the gradient sub component:
-      for(i=0;i<*ncoord;i++){
-	for(t=0;t<nstime;t++){
-	  for(j=i;j<*ncoord;j++){
-	    if(i==j){
-	      for(v=t+1;v<nstime;v++){
-	        lagt=fabs(sublagt[t]-sublagt[v]);
-	        if(lagt<=*maxtime && mlags[i][j]<=*maxdist){
-		  rho=CorFct(cormod,0,lagt,parcor);
-		  GradCorrFct(rho,cormod,eps,flagcor,gradcor,0,lagt,parcor);
-		  switch(*like){
-		  case 1:// Conditional likelihood:
-		    switch(*type){
-		    case 2:
-		      Grad_Cond_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				      sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
-		      break;}
-		    break;
-		  case 3: // Marginal likelihood:
-		    switch(*type){
-		    case 1: // Gradient of the log difference likelihood
-		      Grad_Diff_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				      sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
-		      break;
-		    case 2: // Gradient of the log pairwise likelihood
-		      Grad_Pair_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				      sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
-		      break;}
-		    break;}
-		  for(h=0;h<*npar;h++) sumgrad[h]=sumgrad[h]+gradient[h];}}}
-	    else{
-	      for(v=0;v<nstime;v++){
-		lagt=fabs(sublagt[t]-sublagt[v]);
-		if(lagt<=*maxtime && mlags[i][j]<=*maxdist){
-		  rho=CorFct(cormod,mlags[i][j],lagt,parcor);
-		  GradCorrFct(rho,cormod,eps,flagcor,gradcor,mlags[i][j],lagt,parcor);
-		  switch(*like){
-		  case 1:// Conditional likelihood:
-		    switch(*type){
-		    case 2:
-		      Grad_Cond_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				      sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
-		      break;}
-		    break;
-		  case 3: // Marginal likelihood:
-		    switch(*type){
-		    case 1: // Gradient of the log difference likelihood
-		      Grad_Diff_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				      sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
-		      break;
-		    case 2: // Gradient of the log pairwise likelihood
-		      Grad_Pair_Gauss(rho,flagnuis,gradcor,gradient,npar,nuis,
-				      sdata[(t+nstime*i)+n* *nrep],sdata[(v+nstime*j)+n* *nrep]);
-		      break;}
-		    break;}
-		  //updates the partial gradient:
-		  for(h=0;h<*npar;h++) sumgrad[h]=sumgrad[h]+gradient[h];}}}}}}
-      //computes the squared score:
-      h=0;
-      for(p=0;p<*npar;p++)
-	for(q=p;q<*npar;q++){
-	  subvari[h]=subvari[h]+sumgrad[p]*sumgrad[q]/nwpair;
-	  h++;}
-      nsubsam++;}}
-  //updates the variability components:
-  for(h=0;h<nvari;h++)
-    varimat[h]=varimat[h]+(*npair * subvari[h]/nsubsam / *nrep);
-  return;
-}*/
