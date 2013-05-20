@@ -1,17 +1,17 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Emails: simone.padoan@stat.unipd.it,
-### moreno.bevilacqua@unibg.it
-### Institutions: Department of Statistical Science,
-### University of Padua and Department of Information
-### Technology and Mathematical Methods, University
-### of Bergamo.
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estadistica
+### Universidad de Valparaiso
 ### File name: WeightedLeastSquare.r
 ### Description:
 ### This file contains a set of procedures in order
 ### to estimate the parameters of some covariance
 ### function models for a given dataset.
-### Last change: 08/01/2012.
+### Last change: 28/03/2013.
 ####################################################
 
 
@@ -54,17 +54,19 @@ print.WLS <- function(x, digits = max(3, getOption("digits") - 3), ...)
     invisible(x)
   }
 
-WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
-                    likelihood, lonlat, margins, maxdist, maxtime, model, numblock,
-                    param, parscale, paramrange, replicates, start, threshold, type,
-                    varest, vartype, weighted, winconst, winstp)
+
+WlsInit <- function(coordx, coordy, coordt, corrmodel, data, distance, fcall, fixed, grid,
+                    likelihood, margins, maxdist, maxtime, model, numblock, param, parscale,
+                    paramrange, replicates, start, taper, tapsep, threshold, type, varest, vartype,
+                    weighted, winconst, winstp)
   {
     ### Initialization parameters:
-    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, fcall, fixed,
-                           grid, likelihood, lonlat, margins, maxdist, maxtime,
-                           model, numblock, param, parscale, paramrange, replicates,
-                           start, threshold, "WLeastSquare", type, varest, vartype,
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, distance, fcall, fixed,
+                           grid, likelihood, margins, maxdist, maxtime,model, numblock,
+                           param, parscale, paramrange, replicates, start, taper, tapsep,
+                           threshold, "WLeastSquare", type, varest, vartype,
                            weighted, winconst, winstp)
+
 
     if(!is.null(initparam$error))
       stop(initparam$error)
@@ -93,9 +95,6 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
     if(initparam$numstart > 0){
       initparam$param <- initparam$param[seq(1,initparam$numparam)[-pmatch(initparam$namesstart,initparam$namesparam)]]
       initparam$fixed <- c(initparam$fixed, initparam$start)}
-      #for(i in 1 : initparam$numstart){
-      #      initparam$param <- initparam$param[!names(initparam$param)==initparam$namesstart[i]]
-      #      initparam$fixed <- c(initparam$fixed, initparam$start[initparam$namesstart[i]])}}
     ### Define an internal function for the model fitting by least squares method:
     Lsquare <- function(bins, bint, corrmodel, fixed, fun, lenbins, moments,
                         namescorr, namesnuis, numbins, numbint, param)
@@ -106,7 +105,7 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
         #computes the weighted least squares:
         result <- .C(fun, as.double(bins), as.double(bint), as.integer(corrmodel),
                      as.double(lenbins), as.double(moments), as.integer(numbins),
-                     as.integer(numbint), as.double(nuisance), as.double(paramcorr),
+                    as.integer(numbint), as.double(nuisance), as.double(paramcorr),
                      res=double(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
         return(result)
       }
@@ -118,7 +117,6 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
     moments <- double(numvario) # vector of spatial moments
     lenbins <- integer(numvario) # vector of spatial bin sizes
     ### Checks the type of variogram
-    fname <- 'Binned_Variogram'
     if(model=='ExtGauss' || model=='BrowResn' || model=='ExtT'){
       fname <- 'Binned_Madogram'
       data <- Dist2Dist(data, to='Uniform')}
@@ -131,7 +129,8 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
       binst <- double(numbinst)      # spatial-temporal bins
       momentst <- double(numbinst)   # vector of spatial-temporal moments
       lenbinst <- integer(numbinst)  # vector of spatial-temporal bin sizes
-      fname <- 'Binned_Variogram_st'
+      if(type=="Tapering") fname <- 'Binned_Variogram_st2'
+      else                 fname <- 'Binned_Variogram_st'
       # Compute the spatial-temporal moments:
       .C(fname, bins, bint, as.double(initparam$data), lenbins, lenbinst, lenbint,
          moments, momentst, momentt, as.integer(numbins), as.integer(numbint),
@@ -141,6 +140,11 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
       moments <- moments[indbin]
       lenbins <- lenbins[indbin]
       numbins <- sum(indbin)
+      indbint <- lenbint>0
+      bint <- bint[indbint]
+      momentt <- momentt[indbint]
+      lenbint <- lenbint[indbint]
+      numbint <- sum(indbint)
       indbinst <- lenbinst>0
       momentst <- momentst[indbinst]
       lenbinst <- lenbinst[indbinst]
@@ -160,13 +164,15 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
       numbint <- numbint+1
     }
     else{### Computes the spatial variogram:
+      if(type=="Tapering") fname <- 'Binned_Variogram2'
+      else                 fname <- 'Binned_Variogram'
       numbint <- 1 # number of temporal bins
       bint <- double(numbint) # vector temporal bins
       momentt <- double(1) # vector of temporal moments
       momentst <- double(1)   # vector of spatial-temporal moments
       lenbint <- integer(1) # vector of temporal bin sizes
       lenbinst <- integer(1)  # vector of spatial-temporal bin sizes
-      .C(fname, bins, as.double(data), lenbins, moments, as.integer(numbins),
+        .C(fname, bins, as.double(data), lenbins, moments, as.integer(numbins),
          PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
       centers <- bins[1:numvario]+diff(bins)/2
       indbin <- lenbins>0
@@ -179,7 +185,6 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
       if(!is.na(initparam$param['scale']))
          initparam$param['scale'] <- centers[max(variogram) == variogram]}
     ###### ----------- END Estimation of the empirical variogram ---------- #####
-
     ###### ---------- START model fitting by least squares method ----------######
     if(model=='Gaussian') # Gaussian spatial or spatial-temporal case:
       fname <- 'LeastSquare_G'
@@ -225,8 +230,8 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
   }
 
 
-WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
-                         grid=FALSE, lonlat=FALSE, maxdist=NULL, maxtime=NULL, model='Gaussian',
+WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl",
+                         fixed=NULL,grid=FALSE, maxdist=NULL, maxtime=NULL, model='Gaussian',
                          optimizer='Nelder-Mead', numbins=NULL, replicates=1, start=NULL,
                          weighted=FALSE)
   {
@@ -235,9 +240,9 @@ WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixe
 
     call <- match.call()
     ### Check the parameters given in input:
-    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, "Fitting", fixed, grid, 'None',
-                             lonlat, "Frechet", maxdist, maxtime, model, NULL, optimizer, NULL,
-                             replicates, start, NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp', weighted)
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, distance,"Fitting", fixed, grid, 'None',
+                             "Frechet", maxdist, maxtime, model, NULL, optimizer, NULL, replicates, start, NULL,
+                             NULL, NULL, 'WLeastSquare', FALSE, 'SubSamp', weighted)
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
@@ -269,11 +274,10 @@ WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixe
     variogramst <- NULL
     ### Initializes the parameter values:
     parscale <- NULL
-    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, "Fitting", fixed, grid,
-                           'None', lonlat, "Frechet", maxdist, maxtime, model, NULL, NULL,
-                           parscale, optimizer=='L-BFGS-B', replicates, start, NULL,
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, distance, "Fitting", fixed, grid,
+                           'None', "Frechet", maxdist, maxtime, model, NULL, NULL,
+                           parscale, optimizer=='L-BFGS-B', replicates, start,NULL, NULL, NULL,
                            'WLeastSquare', 'WLeastSquare', FALSE, 'SubSamp', FALSE, 1, 1)
-
     if(!is.null(initparam$error))
       stop(initparam$error)
     ###### ----------- START Estimation of the empirical variogram ---------- #####
