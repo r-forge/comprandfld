@@ -1,24 +1,24 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Emails: simone.padoan@stat.unipd.it,
-### moreno.bevilacqua@unibg.it
-### Institutions: Department of Statistical Science,
-### University of Padua and Department of Information
-### Technology and Mathematical Methods, University
-### of Bergamo.
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estadistica
+### Universidad de Valparaiso
 ### File name: EmpiricalEstimators.r
 ### Description:
 ### This file contains a set of procedures in order
 ### to estimate the empircal covariance or the extreme
 ### dependence structures for a given dataset.
-### Last change: 12/03/2012.
+### Last change: 28/03/2013.
 ####################################################
 
 ### Procedures are in alphabetical order.
 
-EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, grid=FALSE,
-                       gev=c(0,1,0), lonlat=FALSE, maxdist=NULL, maxtime=NULL,
-                       numbins=NULL, replicates=1, type='variogram')
+EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, distance="Eucl",
+                       grid=FALSE, gev=c(0,1,0), maxdist=NULL, maxtime=NULL, numbins=NULL,
+                       replicates=1, type='variogram')
   {
     call <- match.call()
     corrmodel <- 'gauss'
@@ -43,10 +43,9 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, grid
       if(is.numeric(coordt))
         if(length(coordt)>1) corrmodel <- 'gneiting'
     # Checks the input:
-    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, "Fitting", NULL, grid,
-                             'None', lonlat, "Frechet", maxdist, maxtime, model, NULL,
-                             'Nelder-Mead', NULL, replicates, NULL, NULL, 0, 'WLeastSquare',
-                             FALSE, 'SubSamp', FALSE)
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, distance, "Fitting", NULL, grid,
+                             'None', "Frechet", maxdist, maxtime, model, NULL, 'Nelder-Mead', NULL,
+                             replicates, NULL, NULL,NULL, 0, 'WLeastSquare', FALSE, 'SubSamp', FALSE)
     # Checks if there are errors in the input:
     if(!is.null(checkinput$error))
       stop(checkinput$error)
@@ -63,10 +62,10 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, grid
     ### END -- Specific checks of the Empirical Variogram
 
     ### Initialization parameters:
-    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data, "Fitting",
-                           NULL, grid, 'None', lonlat, "Frechet", maxdist,
+    initparam <- InitParam(coordx, coordy, coordt, corrmodel, data,distance, "Fitting",
+                           NULL, grid, 'None', "Frechet", maxdist,
                            maxtime, model, NULL, NULL, FALSE, FALSE, replicates,
-                           NULL, 0, 'WLeastSquare', 'WLeastSquare', FALSE,
+                           NULL, NULL, NULL, 0, 'WLeastSquare', 'WLeastSquare', FALSE,
                            'SubSamp', FALSE, 1, 1)
     # Checks if there are inconsistences:
     if(!is.null(initparam$error))
