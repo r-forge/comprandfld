@@ -1,17 +1,17 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Emails: simone.padoan@stat.unipd.it,
-### moreno.bevilacqua@unibg.it
-### Institutions: Department of Statistical Science,
-### University of Padua and Department of Information
-### Technology and Mathematical Methods, University
-### of Bergamo.
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estadistica
+### Universidad de Valparaiso
 ### File name: CompositeLikelihood.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 02/03/2012.
+### Last change: 28/03/2013.
 ####################################################
 
 
@@ -19,8 +19,8 @@
 
 ### Optim call for Composite log-likelihood maximization
 
-CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, fixed, grid,
-                           likelihood, lonlat, lower, model, namescorr, namesnuis, namesparam,
+CompLikelihood <- function(coordx, coordy, corrmodel, data, distance, flagcorr, flagnuis, fixed, grid,
+                           likelihood, lower, model, namescorr, namesnuis, namesparam,
                            numparam, numparamcorr, optimizer, param, spacetime, threshold, type,
                            upper, varest, vartype, winconst, winstp)
   {
@@ -30,7 +30,6 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
         param <- c(param, fixed)
         paramcorr <- param[namescorr]
         nuisance <- param[namesnuis]
-
         result <- .C(fun, as.integer(corrmodel), as.double(data), as.double(nuisance),
                      as.double(paramcorr), as.double(threshold), res=double(1),
                      PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
@@ -38,46 +37,21 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
       }
     fname <- NULL
     hessian <- FALSE
-    if(spacetime){# if its spatial-temporal random field:
-      if(all(model==1,likelihood==1,type==2))
-      fname <- 'Comp_Cond_Gauss_st'
-      if(all(model==1,likelihood==3,type==1))
-      fname <- 'Comp_Diff_Gauss_st'
-      if(all(model==1,likelihood==3,type==2))
-      fname <- 'Comp_Pair_Gauss_st'
-      if(all(model==2,likelihood==1,type==2)){
-      fname <- 'Comp_Cond_BinGauss_st'
-      if(varest & vartype==2) hessian <- TRUE}
-      if(all(model==2,likelihood==3,type==1)){
-      fname <- 'Comp_Diff_BinGauss_st'
-      if(varest & vartype==2) hessian <- TRUE}
-      if(all(model==2,likelihood==3,type==2)){
-      fname <- 'Comp_Pair_BinGauss_st'
-      if(varest & vartype==2) hessian <- TRUE}}
-    else{# if spatial random field:
-      if(all(model==1,likelihood==1,type==2))
-      fname <- 'Comp_Cond_Gauss'
-      if(all(model==1,likelihood==3,type==1))
-      fname <- 'Comp_Diff_Gauss'
-      if(all(model==1,likelihood==3,type==2))
-      fname <- 'Comp_Pair_Gauss'
-      if(all(model==2,likelihood==1,type==2))
-      fname <- 'Comp_Cond_BinGauss'
-      if(all(model==2,likelihood==3,type==1))
-      fname <- 'Comp_Diff_BinGauss'
-      if(all(model==2,likelihood==3,type==2)){
-      fname <- 'Comp_Pair_BinGauss'
-      if(varest & vartype==2) hessian <- TRUE}
-      if(all(model==3,likelihood==3,type==2)){
-      fname <- 'Comp_Brow_Resn'
-      if(varest & vartype==2) hessian <- TRUE}
-      if(all(model==4,likelihood==3,type==2)){
-      fname <- 'Comp_Ext_Gauss'
-      if(varest & vartype==2) hessian <- TRUE}
-      if(all(model==5,likelihood==3,type==2)){
-      fname <- 'Comp_Ext_T'
-      if(varest & vartype==2) hessian <- TRUE}}
+    if(all(model==1,likelihood==1,type==2)) fname <- 'Comp_Cond_Gauss'
+    if(all(model==1,likelihood==3,type==1)) fname <- 'Comp_Diff_Gauss'
+    if(all(model==1,likelihood==3,type==2)) fname <- 'Comp_Pair_Gauss'
+    if(all(model==2,likelihood==1,type==2)) fname <- 'Comp_Cond_BinGauss'
+    if(all(model==2,likelihood==3,type==1)) fname <- 'Comp_Diff_BinGauss'
+    if(all(model==2,likelihood==3,type==2)){ fname <- 'Comp_Pair_BinGauss'
+                                             if(varest & vartype==2) hessian <- TRUE}
+    if(all(model==3,likelihood==3,type==2)){ fname <- 'Comp_Brow_Resn'
+                                             if(varest & vartype==2) hessian <- TRUE}
+    if(all(model==4,likelihood==3,type==2)){ fname <- 'Comp_Ext_Gauss'
+                                             if(varest & vartype==2) hessian <- TRUE}
+    if(all(model==5,likelihood==3,type==2)){ fname <- 'Comp_Ext_T'
+                                             if(varest & vartype==2) hessian <- TRUE}
 
+    if(spacetime) fname <- paste(fname,"_st",sep="")
     if(optimizer=='L-BFGS-B')
       CompLikelihood <- optim(param, comploglik, corrmodel=corrmodel, control=list(fnscale=-1,
                               factr=1, pgtol=1e-14, maxit=1e8), data=data, fixed=fixed,
@@ -97,7 +71,8 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
         CompLikelihood$convergence <- 'Iteration limit reached'
       else
         CompLikelihood$convergence <- "Optimization may have failed"
-    # Compute the nugget in the binnary case:
+
+    # Compute the nugget in the binary case:
     if(model==2) fixed["nugget"] <- 1-CompLikelihood$par["sill"]
         ### Computation of the variance-covariance matrix:
         if(varest)
@@ -109,7 +84,6 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
             eps <- (.Machine$double.eps)^(1/3)
             param <- c(CompLikelihood$par, fixed)
             score <- double(numparam)
-
             paramcorr <- param[namescorr]
             nuisance <- param[namesnuis]
             if(hessian) sensmat <- -as.double(CompLikelihood$hessian[lower.tri(CompLikelihood$hessian, diag=TRUE)])
@@ -117,13 +91,15 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
             varimat <- double(dmat)
             # Set the window parameter:
             .C('GodambeMat',as.double(coordx),as.double(coordy),as.integer(corrmodel),
-               as.double(data),as.double(eps),as.integer(flagcorr),as.integer(flagnuis),
-               as.integer(grid),as.integer(likelihood),as.integer(lonlat),as.integer(model),
+               as.double(data),as.integer(distance),as.double(eps),as.integer(flagcorr),
+               as.integer(flagnuis),as.integer(grid),as.integer(likelihood),as.integer(model),
                as.integer(numparam),as.integer(numparamcorr),as.double(paramcorr),as.double(nuisance),
                score,sensmat,as.integer(spacetime),as.double(threshold),as.integer(type),varimat,
                as.integer(vartype),as.double(winconst),as.double(winstp),
                PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
             # Set score vectore:
+            CompLikelihood$winconst<-winconst
+            CompLikelihood$winstp<-winstp
             CompLikelihood$score <- score
             # Set sensitivity matrix:
             CompLikelihood$sensmat <- matrix(rep(0,dimmat),ncol=numparam)
@@ -157,7 +133,6 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, flagcorr, flagnuis, 
               {
                 penalty <- CompLikelihood$varimat %*% isensmat
                 CompLikelihood$clic <- -2 * (CompLikelihood$value - sum(diag(penalty)))
-
                 CompLikelihood$varcov <- isensmat %*% penalty
                 CompLikelihood$stderr <- diag(CompLikelihood$varcov)
                 if(any(CompLikelihood$stderr < 0))
