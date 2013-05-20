@@ -7,9 +7,9 @@
   Binary and max-stable random field.
 }
 \usage{
-EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, grid=FALSE,
-           gev=c(0,1,0), lonlat=FALSE, maxdist=NULL, maxtime=NULL,
-           numbins=NULL, replicates=1, type='variogram')
+EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, distance='Eucl',
+           grid=FALSE, gev=c(0,1,0), maxdist=NULL, maxtime=NULL, numbins=NULL,
+           replicates=1, type='variogram')
 }
 \arguments{
   \item{data}{A \eqn{d}{d}-dimensional vector (a single spatial realisation) or a (\eqn{n \times d}{n x d})-matrix
@@ -31,12 +31,12 @@ EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, grid=FALSE,
   \item{cloud}{Logical; if \code{TRUE} the variogram cloud is computed,
   otherwise if \code{FALSE} (the default) the empirical (binned)
   variogram is returned.}
+  \item{distance}{String; the name of the spatial distance. The default
+    is \code{Eucl}, the euclidean distance. See the Section
+    \bold{Details} of \code{\link{FitComposite}}.}
   \item{grid}{Logical; if \code{FALSE} (the default) the data
     are interpreted as spatial or spatial-temporal realisations on a set of non-equispaced spatial sites.}
   \item{gev}{A numeric vector with the three GEV parameters;}
-  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
-    and \code{coordy} are interpreted as Cartesian coordinates
-    otherwise they are considered as longitude and latitude.}
   \item{maxdist}{A numeric value denoting the spatial maximum distance,
    see the Section \bold{Details}.}
    \item{maxtime}{A numeric value denoting the temporal maximum distance,
@@ -114,6 +114,7 @@ EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE, grid=FALSE,
   \item{cloud}{If the variogram cloud is returned (\code{TRUE}) or the
   empirical variogram (\code{FALSE});}
   \item{centers}{The centers of the spatial bins;}
+  \item{distance}{The type of spatial distance;}
   \item{extcoeff}{The spatial extremal coefficient function. Available only if
   \code{type} is equal to \code{madogram} or \code{Fmadogram} (for the moment available only for a spatial random field);}
   \item{lenbins}{The number of pairs in each spatial bin;}
@@ -141,15 +142,20 @@ Cressie, N. A. C. (1993) \emph{Statistics for Spatial Data}. New York: Wiley.
   Heagerty, P. J., and Zeger, S. L. (1998). Lorelogram: A Regression
   Approach to Exploring Dependence in Longitudinal Categorical
   Responses.
-  \emph{Journal of the American Statistical Association}, \bold{93}(441), 150--162
+  \emph{Journal of the American Statistical Association},
+  \bold{93}(441), 150--162
+
+  Smith, R. L. (1990) Max-Stable Processes and Spatial Extremes.
+  \emph{Unpublished manuscript}, University of North California.
 }
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
-  \url{http://homes.stat.unipd.it/padoan};
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
-   \url{www.unibg.it/pers/?moreno.bevilacqua}.}
+\author{Simone Padoan, \email{simone.padoan@unibocconi.it},
+  \url{http://faculty.unibocconi.it/simonepadoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
+  \url{http://staff.deuv.cl/bevilacqua/}.}
+
 
  \examples{
 library(CompRandFld)
@@ -195,21 +201,21 @@ plot(fit$centers, fit$variograms, xlab='h', ylab=expression(gamma(h)),
 ### Example 2. Empirical estimation of the variogram from a
 ### spatio-temporal Gaussian random fields with Gneiting
 ### correlation function.
-### One spatial replication is simulated
+### One spatio-temporal replication is simulated
 ###
 ###############################################################
 
 set.seed(331)
 # Define the temporal sequence:
-times <- seq(1,15,1)
+times <- seq(1,10,1)
 
 # Simulation of a spatio-temporal Gaussian random field:
 data <- RFsim(x, y, times, corrmodel="gneiting",
-              param=list(mean=0,scale_s=3,scale_t=3,sill=sill,
-              nugget=0,power_s=1,power_t=1,sep=0.2))$data
+              param=list(mean=0,scale_s=0.4,scale_t=1,sill=sill,
+              nugget=0,power_s=1,power_t=1,sep=0.5))$data
 
 # Empirical spatio-temporal variogram estimation:
-fit <- EVariogram(data, x, y, times, maxtime=10)
+fit <- EVariogram(data, x, y, times, maxtime=5,maxdist=4)
 
 # Results: Marginal spatial empirical  variogram
 par(mfrow=c(2,2), mai=c(.5,.5,.3,.3), mgp=c(1.4,.5, 0))
@@ -247,7 +253,7 @@ persp(c(0,fit$centers), c(0,fit$bint), st.vario,
 
 ################################################################
 ###
-### Example 3. Empirical estimation of the mandogram from a
+### Example 3. Empirical estimation of the madogram from a
 ### max-stable random field (Extremal Gaussian model) with
 ### exponential correlation.
 ### n iid spatial replications are simulated.
@@ -274,51 +280,28 @@ plot(fit$centers, fit$extcoeff, xlab='h', ylab=expression(theta(h)),
      ylim=c(1, 2), xlim=c(0, fit$srange[2]), pch=20,
      main="extremal coefficient")
 
+
 ################################################################
 ###
 ### Example 4. Empirical estimation of the lorelogram from a
-### Binary-Gaussian random field with exponential correlation.
-### One spatial replication is simulated.
-###
-###
-###############################################################
-
-set.seed(1221)
-# Simulation of the Binary-Gaussian random field:
-data <- RFsim(x, y, corrmodel="exponential", model="BinaryGauss",
-              param=list(mean=mean,sill=sill,scale=scale,nugget=nugget),
-              threshold=0)$data
-
-# Empirical lorelogram estimation:
-fit <- EVariogram(data, x, y, numbins=20, maxdist=7, type="lorelogram")
-
-# Results:
-plot(fit$centers, fit$variograms, xlab='Distance', ylab="Lorelogram",
-     ylim=c(min(fit$variograms), max(fit$variograms)),
-     xlim=c(0, max(fit$centers)), pch=20, main="Spatial Lorelogram")
-
-
-################################################################
-###
-### Example 5. Empirical estimation of the lorelogram from a
 ### spatio-temporal Binary-Gaussian random field with double
 ### exponential correlation.
-### One spatial replication is simulated.
+### One spatio-temporal replication is simulated.
 ###
 ###############################################################
 
 set.seed(5351)
 # Define the temporal sequence:
-times <- seq(1,15,1)
+times <- seq(1,10,1)
 
 # Simulation of othe space-time Binary Gaussian random field:
 
 data <- RFsim(x, y, times, corrmodel="exp_exp", model="BinaryGauss",
-        threshold=0, param=list(nugget=nugget,mean=mean,scale_t=1.5,
-        scale_s=1.5,sill=0.8))$data
+        threshold=0, param=list(nugget=nugget,mean=mean,scale_t=1,
+        scale_s=1,sill=1))$data
 
 # Empirical lorelogram estimation:
-fit <- EVariogram(data, x, y, times, type="lorelogram", maxtime=8)
+fit <- EVariogram(data, x, y, times, type="lorelogram", maxtime=6,maxdist=4)
 
 # Building space-time lorelogram
 st.vario <- matrix(fit$variogramst,length(fit$centers),length(fit$bint))
