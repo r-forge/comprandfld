@@ -1,17 +1,16 @@
 ####################################################
-### Authors: Simone Padoan and Moreno Bevilacqua.
-### Emails: simone.padoan@stat.unipd.it,
-### moreno.bevilacqua@unibg.it
-### Institutions: Department of Statistical Science,
-### University of Padua and Department of Information
-### Technology and Mathematical Methods, University
-### of Bergamo.
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estadistica
+### Universidad de Valparaiso
 ### File name: Fitting.r
 ### Description:
 ### This file contains a set of procedures
 ### for maximum composite-likelihood fitting of
 ### random fields.
-### Last change: 02/03/2012.
+### Last change: 28/03/2013.
 ####################################################
 
 
@@ -19,32 +18,29 @@
 
 ### Fitting procedure:
 
-FitComposite <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixed=NULL,
-                         grid=FALSE, likelihood='Marginal', lonlat=FALSE, margins='Gev',
+FitComposite <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl",
+                         fixed=NULL,grid=FALSE, likelihood='Marginal', margins='Gev',
                          maxdist=NULL, maxtime=NULL, model='Gaussian', optimizer='Nelder-Mead',
-                         replicates=1, start=NULL, taper=NULL, threshold=NULL, type='Pairwise',
-                         varest=FALSE, vartype='SubSamp', weighted=FALSE, winconst, winstp)
+                         replicates=1, start=NULL, taper=NULL, tapsep=NULL, threshold=NULL,
+                         type='Pairwise',varest=FALSE, vartype='SubSamp', weighted=FALSE, winconst, winstp)
 {
     call <- match.call()
     ### Check the parameters given in input:
-    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, "Fitting",
-                             fixed, grid, likelihood, lonlat, margins, maxdist,
-                             maxtime, model, NULL, optimizer, NULL, replicates,
-                             start, taper, threshold, type, varest, vartype, weighted)
+    checkinput <- CheckInput(coordx, coordy, coordt, corrmodel, data, distance, "Fitting",
+                             fixed, grid, likelihood, margins, maxdist, maxtime, model,
+                             NULL, optimizer, NULL, replicates, start, taper, tapsep, threshold,
+                             type, varest, vartype, weighted)
 
     if(!is.null(checkinput$error))
       stop(checkinput$error)
-
     ### Initialization global variables:
     FitComposite <- NULL
     score <- sensmat <- varcov <- varimat <- parscale <- NULL
-
     ### Initialization parameters:
-    initparam <- WlsInit(coordx, coordy, coordt, corrmodel, data, "Fitting", fixed, grid,
-                         likelihood, lonlat, margins, maxdist, maxtime, model, NULL, NULL,
-                         parscale, optimizer=='L-BFGS-B', replicates, start, threshold,
+    initparam <- WlsInit(coordx, coordy, coordt, corrmodel, data, distance, "Fitting", fixed, grid,
+                         likelihood, margins, maxdist, maxtime, model, NULL, NULL,
+                         parscale, optimizer=='L-BFGS-B', replicates, start, taper, tapsep, threshold,
                          type, varest, vartype, weighted, winconst, winstp)
-
     if(!is.null(initparam$error))
       stop(initparam$error)
     ### Model fitting section
@@ -52,7 +48,7 @@ FitComposite <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixe
     if(likelihood=='Full')
       {
           # Fitting by log-likelihood maximization:
-          fitted <- Likelihood(initparam$corrmodel,initparam$data,initparam$fixed,initparam$flagcorr,
+         fitted <- Likelihood(initparam$corrmodel,initparam$data,initparam$fixed,initparam$flagcorr,
                                initparam$flagnuis,grid,initparam$lower,initparam$model,initparam$namescorr,
                                initparam$namesnuis,initparam$namesparam,initparam$numcoord,initparam$numpairs,
                                initparam$numparamcorr,initparam$numrep,initparam$numtime,optimizer,
@@ -62,12 +58,12 @@ FitComposite <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixe
     # Composite likelihood:
     if(likelihood=='Marginal' || likelihood=='Conditional')
       {
-          fitted <- CompLikelihood(initparam$coordx, initparam$coordy, initparam$corrmodel, initparam$data,
-                                   initparam$flagcorr, initparam$flagnuis, initparam$fixed, grid, initparam$likelihood,
-                                   lonlat, initparam$lower, initparam$model, initparam$namescorr, initparam$namesnuis,
-                                   initparam$namesparam, initparam$numparam, initparam$numparamcorr, optimizer,
-                                   initparam$param, initparam$spacetime, initparam$threshold, initparam$type,
-                                   initparam$upper, varest, initparam$vartype, initparam$winconst, initparam$winstp)
+          fitted <- CompLikelihood(initparam$coordx,initparam$coordy,initparam$corrmodel,initparam$data,
+                                   initparam$distance,initparam$flagcorr,initparam$flagnuis,initparam$fixed,grid,
+                                   initparam$likelihood,initparam$lower,initparam$model,initparam$namescorr,initparam$namesnuis,
+                                   initparam$namesparam,initparam$numparam,initparam$numparamcorr,optimizer,
+                                   initparam$param,initparam$spacetime,initparam$threshold,initparam$type,
+                                   initparam$upper,varest,initparam$vartype,initparam$winconst,initparam$winstp)
       }
     # Delete the global variables:
     .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
@@ -79,18 +75,19 @@ FitComposite <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixe
                          convergence = fitted$convergence,
                          corrmodel = corrmodel,
                          data = initparam$data,
+                         distance = distance,
                          fixed = initparam$fixed,
                          grid = grid,
                          iterations = fitted$counts,
                          likelihood = likelihood,
                          logCompLik = fitted$value,
-                         lonlat = lonlat,
                          message = fitted$message,
                          model = model,
                          numcoord=initparam$numcoord,
                          numrep=initparam$numrep,
                          numtime=initparam$numtime,
                          param = fitted$par,
+                         nozero = initparam$setup$nozero,
                          score = fitted$score,
                          srange = initparam$srange,
                          stderr = fitted$stderr,
@@ -101,8 +98,8 @@ FitComposite <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, fixe
                          trange = initparam$trange,
                          threshold = initparam$threshold,
                          type = type,
-                         winconst = initparam$winconst,
-                         winstp = initparam$winstp)
+                         winconst = fitted$winconst,
+                         winstp = fitted$winstp)
 
     structure(c(FitComposite, call = call), class = c("FitComposite"))
   }
