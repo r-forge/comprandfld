@@ -3,7 +3,7 @@
 // Composite conditional log-likelihood for the spatial Gaussian model:
 void Comp_Cond_Gauss(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
-  int i=0, h=0, j=0, n=0;
+  int i=0, j=0, n=0;
   double s1=0.0, s12=0.0;
   double det=0.0, u=0.0, u2=0.0, v=0.0, v2=0.0;
   // Checks the validity of the the nuisance and correlation parameters (nugget, sill and corr):
@@ -15,8 +15,8 @@ void Comp_Cond_Gauss(int *cormod, double *data, double *nuis, double *par, doubl
   for(i=0; i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
       // Pairwise distances
-      if(lags[h]<=*maxdist){
-	s12=nuis[2]*CorFct(cormod, lags[h], 0, par); //sill * corr
+      if(mlags[i][j]<=*maxdist){
+	s12=nuis[2]*CorFct(cormod, mlags[i][j], 0, par); //sill * corr
 	det=pow(s1,2)-pow(s12,2);
 	for(n=0;n<*nrep;n++){
 	  u=data[(n+i * *nrep)]-nuis[0]; //data[si] - mean
@@ -24,13 +24,13 @@ void Comp_Cond_Gauss(int *cormod, double *data, double *nuis, double *par, doubl
 	  u2=pow(u,2);
 	  v2=pow(v,2);
 	  *res+= -log(2*M_PI)-log(det)+log(s1)+
-	    (u2+v2)*(0.5/s1-s1/det)+2*s12*u*v/det;}}
-      h++;}
+	    (u2+v2)*(0.5/s1-s1/det)+2*s12*u*v/det;}}}
   // Checks the return values
   if(!R_FINITE(*res))
     *res = LOW;
   return;
 }
+
 // Composite conditional log-likelihood for the spatial-temporal Gaussian model:
 void Comp_Cond_Gauss_st(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
@@ -77,10 +77,11 @@ void Comp_Cond_Gauss_st(int *cormod, double *data, double *nuis, double *par, do
     *res = LOW;
   return;
 }
+
 // Composite conditional log-likelihood for the spatial Binary Gaussian model:
 void Comp_Cond_BinGauss(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
-  int i=0, h=0, j=0, n=0;
+  int i=0, j=0, n=0;
   double u=0.0, v=0.0;
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
@@ -91,16 +92,16 @@ void Comp_Cond_BinGauss(int *cormod, double *data, double *nuis, double *par, do
   //compute the composite-likelihood:
   for(i=0; i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
-      if(lags[h]<=*maxdist){
-	psj=pbnorm(cormod,lags[h],0,nuis,par,*thr);
+      if(mlags[i][j]<=*maxdist){
+	psj=pbnorm(cormod,mlags[i][j],0,nuis,par,*thr);
 	psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	for(n=0;n<*nrep;n++){
 	  u=data[(n+i * *nrep)];v=data[(n+j * *nrep)];
 	  *res+=2*(((u*v)*log(psj)+(1-u)*(1-v)*log(1-2*psm+psj)+(u*(1-v)+(1-u)*v)*log(psm-psj)))-
-	    ((u+v)*log(psm)+log(1-psm)*(2-u-v));}}
-      h++;}
+	    ((u+v)*log(psm)+log(1-psm)*(2-u-v));}}}
   return;
 }
+
 // Composite conditional log-likelihood for the binary spatial-temporal Gaussian model:
 void Comp_Cond_BinGauss_st( int *cormod, double *data, double *nuis, double *par,double *thr, double *res)
 {
@@ -140,10 +141,11 @@ void Comp_Cond_BinGauss_st( int *cormod, double *data, double *nuis, double *par
     *res = LOW;
  return;
 }
+
 // Composite marginal (difference) log-likelihood for the spatial Gaussian model:
 void Comp_Diff_Gauss(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
-  int i=0, h=0, j=0, n=0;
+  int i=0, j=0, n=0;
   double vario=0.0;
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr):
   if(nuis[1]<0 || nuis[2]<=0 || CheckCor(cormod,par)==-2){
@@ -152,19 +154,19 @@ void Comp_Diff_Gauss(int *cormod, double *data, double *nuis, double *par, doubl
   for(i=0; i<(*ncoord-1);i++)
     for(j=(i+1);j<*ncoord;j++){
       // Pairwise distances
-      if(lags[h]<=*maxdist){
+      if(mlags[i][j]<=*maxdist){
 	// Variogram: nugget+sill*(1-corr)
-	vario=Variogram(cormod,lags[h],0,nuis,par);
+	vario=Variogram(cormod,mlags[i][j],0,nuis,par);
 	for(n=0;n<*nrep;n++)
 	  *res+= -0.5*(log(2*M_PI)+log(vario)+
 		       pow(data[(n+i * *nrep)]-
-			   data[(n+j * *nrep)],2)/(2*vario));}
-      h++;}
+			   data[(n+j * *nrep)],2)/(2*vario));}}
   // Checks the return values
   if(!R_FINITE(*res))
     *res = LOW;
   return;
 }
+
 // Composite marginal (difference) log-likelihood for the spatial-temporal Gaussian model:
 void Comp_Diff_Gauss_st(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
@@ -199,10 +201,11 @@ void Comp_Diff_Gauss_st(int *cormod, double *data, double *nuis, double *par, do
  if(!R_FINITE(*res))
     *res = LOW;
 }
+
 // Composite marginal (difference) log-likelihood for the binary spatial Gaussian model:
 void Comp_Diff_BinGauss( int *cormod, double *data, double *nuis, double *par, double *thr,double *res)
 {
-  int i=0, h=0, j=0, n=0;
+  int i=0, j=0, n=0;
   double diff=0.0;
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
@@ -213,15 +216,16 @@ void Comp_Diff_BinGauss( int *cormod, double *data, double *nuis, double *par, d
   // Computes the compostite log-likelihood:
   for(i=0; i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
-      if(lags[h]<=*maxdist){
-	psj=pbnorm(cormod,lags[h],0,nuis,par,*thr);
+      if(mlags[i][j]<=*maxdist){
+	psj=pbnorm(cormod,mlags[i][j],0,nuis,par,*thr);
 	psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	for(n=0;n<*nrep;n++){
 	  diff=data[(n+i * *nrep)]-data[(n+j * *nrep)];
 	  *res+= (1-R_pow(diff,2))*log(1-2*(psm-psj))+R_pow(diff,2)*log(psm-psj);}}
-      h++;}
+}
   return;
 }
+
 // Composite marginal (difference) log-likelihood for binary the spatial-temporal Gaussian model:
 void Comp_Diff_BinGauss_st(int *cormod, double *data, double *nuis, double *par,double *thr, double *res)
 {
@@ -258,10 +262,11 @@ void Comp_Diff_BinGauss_st(int *cormod, double *data, double *nuis, double *par,
     *res = LOW;
  return;
 }
+
 // Composite marginal (pariwise) log-likelihood for the spatial Gaussian model:
 void Comp_Pair_Gauss(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
-  int i=0, h=0, j=0, n=0;
+  int i=0, j=0, n=0;
   double s1=0.0, s12=0.0;
   double det=0.0, u=0.0, u2=0.0, v=0.0, v2=0.0;
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr):
@@ -273,8 +278,8 @@ void Comp_Pair_Gauss(int *cormod, double *data, double *nuis, double *par, doubl
   for(i=0;i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
       // Pairwise distances
-      if(lags[h]<=*maxdist){
-	s12=nuis[2]*CorFct(cormod,lags[h],0,par); //sill * corr
+      if(mlags[i][j]<=*maxdist){
+	s12=nuis[2]*CorFct(cormod,mlags[i][j],0,par); //sill * corr
 	det=pow(s1,2)-pow(s12,2);
 	for(n=0;n<*nrep;n++){
 	  u=data[(n+i * *nrep)]-nuis[0]; //data[si] - mean
@@ -282,13 +287,13 @@ void Comp_Pair_Gauss(int *cormod, double *data, double *nuis, double *par, doubl
 	  u2=R_pow(u,2);
 	  v2=R_pow(v,2);
 	  *res+= -0.5*(2*log(2*M_PI)+log(det)+
-		       (s1*(u2+v2)-2*s12*u*v)/det);}}
-      h++;}
+		       (s1*(u2+v2)-2*s12*u*v)/det);}}}
   // Checks the return values
   if(!R_FINITE(*res))
     *res = LOW;
   return;
 }
+
 // Composite marginal (pariwise) log-likelihood for the spatial-temporal Gaussian model:
 void Comp_Pair_Gauss_st(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
@@ -334,10 +339,11 @@ void Comp_Pair_Gauss_st(int *cormod, double *data, double *nuis, double *par, do
  if(!R_FINITE(*res))
     *res = LOW;
 }
+
 // Composite marginal pairwise log-likelihood for the binary spatial Gaussian model:
 void Comp_Pair_BinGauss( int *cormod, double *data, double *nuis, double *par, double *thr,double *res)
 {
-  int i=0, h=0, j=0, n=0;
+  int i=0, j=0, n=0;
   double u=0.0, v=0.0;
   double psm=0.0;//probability of marginal success
   double psj=0.0;//probability of joint success
@@ -348,15 +354,16 @@ void Comp_Pair_BinGauss( int *cormod, double *data, double *nuis, double *par, d
   //compute the composite log-likelihood:
   for(i=0; i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
-      if(lags[h]<=*maxdist){
-	psj=pbnorm(cormod,lags[h],0,nuis,par,*thr);
+      if(mlags[i][j]<=*maxdist){
+	psj=pbnorm(cormod,mlags[i][j],0,nuis,par,*thr);
 	psm=pnorm((nuis[0]-*thr)/sqrt(nuis[2]+nuis[1]),0,1,1,0);
 	for(n=0;n<*nrep;n++){
 	  u=data[(n+i * *nrep)];v=data[(n+j * *nrep)];
 	  *res+=((u*v)*log(psj)+(1-u)*(1-v)*log(1-2*psm+psj)+(u*(1-v)+(1-u)*v)*log(psm-psj));}}
-      h++;}
+}
   return;
 }
+
 // Composite marginal (pariwise) log-likelihood for the binary spatial-temporal Gaussian model:
 void Comp_Pair_BinGauss_st(int *cormod, double *data, double *nuis, double *par, double *thr,double *res)
 {
@@ -393,10 +400,11 @@ void Comp_Pair_BinGauss_st(int *cormod, double *data, double *nuis, double *par,
     *res = LOW;
  return;
 }
+
 // Composite pariwise log-likelihood for the max-stable spatial extremal Gaussian model:
 void Comp_Ext_Gauss(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
-  int i=0, h=0, j=0, n=0;
+  int i=0, j=0, n=0;
   double a=0.0, rho=0.0, d2V=0.0, dxV=0.0, dyV=0.0;
   double x=0.0, x2=0.0, xy2=0, y=0.0, y2=0.0, V=0.0;
   // Checks the validity of the nuisance and correlation parameters (nugget, sill and corr):
@@ -406,8 +414,8 @@ void Comp_Ext_Gauss(int *cormod, double *data, double *nuis, double *par, double
   for(i=0;i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
       // Pairwise distances
-      if(lags[h]<=*maxdist){
-	rho=nuis[0]*CorFct(cormod,lags[h],0,par);//rho=sill*corr
+      if(mlags[i][j]<=*maxdist){
+	rho=nuis[0]*CorFct(cormod,mlags[i][j],0,par);//rho=sill*corr
 	if(rho>.99999996){
 	  for(n=0;n<*nrep;n++){
 	    x=data[(n+i * *nrep)]; //data[si]
@@ -426,17 +434,17 @@ void Comp_Ext_Gauss(int *cormod, double *data, double *nuis, double *par, double
 	    dxV=-0.5*(x*rho-a-y)/(x2*a);
 	    dyV=-0.5*(y*rho-a-x)/(y2*a);
 	    d2V=0.5*(1-rho*rho)/(a*a*a);
-	    *res+=V+log(d2V+dxV*dyV);}}}
-      h++;}
+	    *res+=V+log(d2V+dxV*dyV);}}}}
   // Checks the return values
   if(!R_FINITE(*res))
     *res = LOW;
   return;
 }
+
 // Composite pariwise log-likelihood for the max-stable spatial extremal-t model:
 void Comp_Ext_T(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
-  int i=0, h=0, j=0, n=0;
+  int i=0, j=0, n=0;
   double a=0.0, ac=0.0, aci=0.0, c=0.0, df=nuis[0], df1=nuis[0]+1;
   double d1tx=0.0, d1ty=0.0, dtx=0.0, dty=0.0, d2V=0.0, dxV=0.0, dyV=0.0;
   double opdf=1+1/nuis[0], ptx=0.0, pty=0.0, rho=0.0, x=0.0, x2=0.0;
@@ -445,11 +453,11 @@ void Comp_Ext_T(int *cormod, double *data, double *nuis, double *par, double *th
   if(df<=0 || nuis[1]<=0 || nuis[1]>1 || CheckCor(cormod,par)==-2){
     *res=LOW; return;}
   // Computes the log-likelihood:
-  for(i=0;i<(*ncoord-1);i++)
+    for(i=0;i<(*ncoord-1);i++){
     for(j=(i+1); j<*ncoord;j++){
       // Pairwise distances
-      if(lags[h]<=*maxdist){
-	rho=nuis[1]*CorFct(cormod,lags[h],0,par);//rho=sill*corr
+      if(mlags[i][j]<=*maxdist){
+	rho=nuis[1]*CorFct(cormod,mlags[i][j],0,par);//rho=sill*corr
 	a=sqrt(df1/(1-pow(rho, 2)));
 	for(n=0;n<*nrep;n++){
 	  x=data[(n+i * *nrep)]; //data[si]
@@ -476,21 +484,35 @@ void Comp_Ext_T(int *cormod, double *data, double *nuis, double *par, double *th
 	  dyV=pty/y2+dty*aci/y2d-dtx*ac/xyd;
 	  d2V=ac*(dtx*opdf+d1tx*ac/df)/x2d/y+
 	    aci*(dty*opdf+d1ty*aci/df)/y2d/x;
-	  *res+=V+log(d2V+dxV*dyV);}}//log-likelihood
-      h++;}
+	  *res+=V+log(d2V+dxV*dyV);}}}}//log-likelihood}
   // Checks the return values
   if(!R_FINITE(*res))
     *res = LOW;
   return;
 }
+
+// Brown-Resnick bivariate log-likelihood:
+double BrowResnllik(double a, double c, double x, double y)
+{
+  // Defines useful componets:
+  double axy=a*x*y,x2=x*x,y2=y*y,ax2=a*x2,ay2=a*y2;
+  double lyx=log(y/x)/a,z=c+lyx,w=c-lyx;
+  double px=pnorm(z,0,1,1,0),py=pnorm(w,0,1,1,0);
+  double dx=dnorm(z,0,1,0),dy=dnorm(w,0,1,0);
+  // Defines the likelihood components:
+  double V=-px/x-py/y;
+  double dxV=px/x2+dx/ax2-dy/axy;
+  double dyV=py/y2+dy/ay2-dx/axy;
+  double d2V=(w*dx*y+z*dy*x)/(ax2*ay2);
+  // Defines the pairwise loglikelihood:
+  return V+log(d2V+dxV*dyV);
+}
+
 // Pairwise log-likelihood for the max-stable spatial Brown-Resnick model:
 void Comp_Brow_Resn(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
 {
-  int i=0, j=0, h=0, n=0;
-  double a=0.0, ao2=0.0, ax2=0.0, axy=0.0, ay2=0.0, d2V=0.0;
-  double dx=0.0, dxV=0.0, dy=0.0, dyV=0.0, lyx=0.0, px=0.0;
-  double py=0.0, vario=0.0, V=0.0, x=0.0, y=0.0, x2=0.0;
-  double y2=0.0, w=0.0, z=0.0;
+  int n=0,i=0,j=0;;
+  double a=0.0,ao2=0.0,vario=0.0,x=0.0,y=0.0;
   // Checks the validity of the variogram parameters:
   if(CheckCor(cormod,par)==-2){
     *res=LOW; return;}
@@ -498,37 +520,58 @@ void Comp_Brow_Resn(int *cormod, double *data, double *nuis, double *par, double
   for(i=0;i<(*ncoord-1);i++)
     for(j=(i+1); j<*ncoord;j++){
       // Pairwise distances
-      if(lags[h]<=*maxdist){
-	vario=VarioFct(cormod,lags[h],par);//vario~log(n)(1-rho(n))
-	a=sqrt(vario);// Husler-Reiss coefficient (lambda)
-	ao2=0.5*a;
-	for(n=0;n<*nrep;n++){
-	  // Defines useful componets:
-	  x=data[(n+i * *nrep)]; //data[si];
-	  y=data[(n+j * *nrep)]; //data[sj];
-	  axy=a*x*y;
-	  x2=pow(x,2);
-	  y2=pow(y,2);
-	  ax2=a*x2;
-	  ay2=a*y2;
-	  lyx=log(y/x)/a;
-	  z=ao2+lyx;
-	  w=ao2-lyx;
-	  px=pnorm(z,0,1,1,0);
-	  py=pnorm(w,0,1,1,0);
-	  dx=dnorm(z,0,1,0);
-	  dy=dnorm(w,0,1,0);
-	  // Defines the likelihood components:
-	  V=-px/x-py/y;
-	  dxV=px/x2+dx/ax2-dy/axy;
-	  dyV=py/y2+dy/ay2-dx/axy;
-	  d2V=(w*dx*y+z*dy*x)/(ax2*ay2);
-	  // defines the pairwise loglikelihood:
-	  *res+=V+log(d2V+dxV*dyV);}}
-      h++;}
-  // Checks the return values
-  if(!R_FINITE(*res))
-    *res = LOW;
+      if(mlags[i][j]<=*maxdist){
+    //Pairwise distances
+    vario=VarioFct(cormod,mlags[i][j],par,0);//vario~log(n)(1-rho(n))
+    a=sqrt(vario);// Husler-Reiss coefficient (lambda)
+    ao2=0.5*a;
+    for(n=0;n<*nrep;n++){
+      //Select the data:
+     x=data[(n+i * *nrep)]; //data[si]
+     y=data[(n+j * *nrep)]; //data[sj]
+      *res+=BrowResnllik(a,ao2,x,y);}}}
+  //Checks the return values
+  if(!R_FINITE(*res)) *res = LOW;
   return;
 }
 
+// Pairwise log-likelihood for the max-stable spatio-temporal Brown-Resnick model:
+void Comp_Brow_Resn_st(int *cormod, double *data, double *nuis, double *par, double *thr, double *res)
+{
+  int n=0,i=0,j=0,t=0,v=0;
+  double a=0.0,ao2=0.0,vario=0.0,x=0.0,y=0.0;
+  // Checks the validity of the variogram parameters:
+  if(CheckCor(cormod,par)==-2){
+    *res=LOW; return;}
+ // Computes the log-likelihood:
+    for(i=0;i<*ncoord;i++){
+    for(t=0;t<*ntime;t++){
+      for(j=i;j<*ncoord;j++){
+	if(i==j){
+	  for(v=t+1;v<*ntime;v++){
+	       if(mlagt[t][v]<=*maxtime){
+    //Pairwise distances
+    vario=VarioFct(cormod,0,par,mlagt[t][v]);//vario~log(n)(1-rho(n))
+    a=sqrt(vario);// Husler-Reiss coefficient (lambda)
+    ao2=0.5*a;
+    for(n=0;n<*nrep;n++){
+      //Select the data:
+      x=data[(t+*ntime*i)+n* *nrep];
+      y=data[(v+*ntime*i)+n* *nrep];
+      *res+=BrowResnllik(a,ao2,x,y);}}}
+      }
+      else {
+           for(v=0;v<*ntime;v++){
+	      if(mlagt[t][v]<=*maxtime && mlags[i][j]<=*maxdist){
+           vario=VarioFct(cormod,mlagt[i][j],par,mlagt[t][v]);//vario~log(n)(1-rho(n))
+           a=sqrt(vario);// Husler-Reiss coefficient (lambda)
+           ao2=0.5*a;
+           for(n=0;n<*nrep;n++){
+           x=data[(t+*ntime*i)+n* *nrep];
+           y=data[(v+*ntime*j)+n* *nrep];
+           *res+=BrowResnllik(a,ao2,x,y);
+	         }}}}}}}
+  //Checks the return values
+  if(!R_FINITE(*res)) *res=LOW;
+  return;
+}
