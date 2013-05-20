@@ -7,10 +7,11 @@
   The procedure initializes the parameters for the fitting procedure.
 }
 \usage{
-InitParam(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
-          likelihood, lonlat, margins, maxdist, maxtime, model, numblock,
-          param, parscale, paramrange, replicates, start, threshold,
-          type, typereal, varest, vartype, weighted, winconst, winstp)
+InitParam(coordx, coordy, coordt, corrmodel, data, distance, fcall, fixed,
+          grid,likelihood, margins, maxdist, maxtime, model, numblock,
+          param, parscale, paramrange, replicates, start, taper, tapsep,
+          threshold, type, typereal, varest, vartype, weighted,
+          winconst,winstp)
 }
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
@@ -24,6 +25,8 @@ InitParam(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
   \item{corrmodel}{String; the name of a correlation model.}
   \item{data}{A numeric vector or a (\eqn{n \times d}{n x d})-matrix or (\eqn{d \times d
       \times n}{d x d x n})-matrix of observations.}
+  \item{distance}{String; the name of the spatial distance. The default is \code{Eucl},
+            the euclidean distance. See the Section \bold{Details}.}
   \item{fcall}{String; "fitting" to call the fitting procedure and
     "simulation" to call the simulation procedure.}
   \item{fixed}{A named list giving the values of the parameters that
@@ -34,9 +37,6 @@ InitParam(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
       \times n}{d x d x n})-matrix is considered.}
   \item{likelihood}{String; the configuration of the composite
     likelihood.}
-  \item{lonlat}{Logical; if \code{FALSE} (the default), \code{coordx}
-    and \code{coordy} are interpreted as Cartesian coordinates
-    otherwise they are considered as longitude and latitude.}
   \item{margins}{String; the type of the marginal distribution of the
     max-stable field.}
   \item{maxdist}{Numeric; an optional positive value indicating the maximum
@@ -60,6 +60,10 @@ InitParam(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
    \item{start}{A named list with the initial values of the
     parameters that are used by the numerical routines in maximization
     procedure.}
+  \item{taper}{String; the name of the type of covariance matrix.
+     It can be   \code{Standard} (the default value) or
+    \code{Tapering} for taperd covariance matrix.}
+   \item{tapsep}{Numeric; an optional  value indicating the separabe parameter in the space time quasi taper (see \bold{Details}).}
    \item{threshold}{Numeric; a value indicating a threshold for the
     binary random field.}
   \item{type}{String; the type of likelihood objects. Temporary value set
@@ -80,10 +84,10 @@ InitParam(coordx, coordy, coordt, corrmodel, data, fcall, fixed, grid,
 
 \seealso{\code{\link{FitComposite}}}
 
-\author{Simone Padoan, \email{simone.padoan@stat.unipd.it},
-  \url{http://homes.stat.unipd.it/padoan},
-  Moreno Bevilacqua, \email{moreno.bevilacqua@unibg.it},
-   \url{www.unibg.it/pers/?moreno.bevilacqua}.
-}
+\author{Simone Padoan, \email{simone.padoan@unibocconi.it},
+  \url{http://faculty.unibocconi.it/simonepadoan};
+  Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
+  \url{http://staff.deuv.cl/bevilacqua/}.}
+
 
 \keyword{Composite}
