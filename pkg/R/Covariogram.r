@@ -1,18 +1,18 @@
 ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
-### Emails: simone.padoan@stat.unipd.it,
-### moreno.bevilacqua@unibg.it
-### Institutions: Department of Statistical Science,
-### University of Padua and Department of Information
-### Technology and Mathematical Methods, University
-### of Bergamo.
+### Emails: simone.padoan@unibocconi.it,
+### moreno.bevilacqua@uv.cl
+### Institutions: Department of Decision Sciences,
+### University Bocconi of Milan and
+### Departamento de Estadistica
+### Universidad de Valparaiso
 ### File name: Covariogram.r
 ### Description:
 ### This file contains a set of procedures
 ### to compute and plot the estimated covariance
 ### function and the variogram after fitting a
 ### random field by composite-likelihood.
-### Last change: 26/03/2012.
+### Last change: 28/03/2013.
 ####################################################
 
 
@@ -174,7 +174,7 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                   zlab="Covariance", ltheta=90,
                   shade=0.75, ticktype="detailed", phi=30,
                   theta=30,main="Space-time covariance",
-                  zlim=c(0,max(covariance)), cex.axis=.8, cex.lab=.8)
+                  , cex.axis=.8, cex.lab=.8,zlim=c(0,max(covariance))) #
             if(plagt){
                 par(mai=c(.5,.5,.3,.3),mgp=c(1.6,.6,0))
                 plot(lagt, covariance[fix.lags,], xlab="Time",
@@ -228,18 +228,18 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                   ylab="Time", zlab=vario.zlab, ltheta=90,
                   shade=0.75, ticktype="detailed", phi=30,
                   theta=30,main=vario.main, cex.axis=.8,
-                  zlim=c(0,max(variogram)), cex.lab=.8)
+                   cex.lab=.8)  #zlim=c(0,max(variogram))
             if(plagt){
                 par(mai=c(.5,.5,.3,.3),mgp=c(1.6,.6,0))
                 plot(lagt, variogram[fix.lags,], xlab="Time",cex.axis=.8,cex.lab=.8,
-                     ylab=vario.ylab, type="l", ylim=c(0,max(nuisance["nugget"]+
+                     ylab=vario.ylab, type="l", ylim=c(min(0,min(variogram)),max(nuisance["nugget"]+
                      nuisance["sill"],tup)), main=paste(vario.ylab,": temporal profile",
                      sep=""),...)
                 if(isvario) points(lagt, evario[fix.lags,],...)}
             if(plags){
                 par(mai=c(.5,.5,.3,.3),mgp=c(1.6,.6,0))
                 plot(lags, variogram[,fix.lagt], xlab="Distance",cex.axis=.8,cex.lab=.8,
-                     ylab=vario.ylab, type="l", ylim=c(0,max(nuisance["nugget"]+
+                     ylab=vario.ylab, type="l", ylim=c(min(0,min(variogram)),max(nuisance["nugget"]+
                      nuisance["sill"],sup)), main=paste(vario.ylab,": spatial profile",
                      sep=""),...)
                 if(isvario) points(lags, evario[,fix.lagt],...)}}
