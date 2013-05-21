@@ -7,11 +7,11 @@
   The procedure initializes the parameters for the fitting procedure.
 }
 \usage{
-InitParam(coordx, coordy, coordt, corrmodel, data, distance, fcall, fixed,
-          grid,likelihood, margins, maxdist, maxtime, model, numblock,
-          param, parscale, paramrange, replicates, start, taper, tapsep,
-          threshold, type, typereal, varest, vartype, weighted,
-          winconst,winstp)
+InitParam(coordx, coordy, coordt, corrmodel, data, distance, fcall,
+          fixed, grid,likelihood, margins, maxdist, maxtime, model,
+          numblock, param, parscale, paramrange, replicates, start,
+          taper, tapsep, threshold, type, typereal, varest, vartype,
+          weighted, winconst, winstp)
 }
 \arguments{
  \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
