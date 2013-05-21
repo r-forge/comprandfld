@@ -8,7 +8,5 @@ Depends: R (>= 2.12.0)
 Description: The aim of this package is to collect a set of procedures for the analysis of Random Fields by Composite Likelihood methods. Spatial analysis often involves dealing with large dataset. Therefore even simple studies may be too computationally demanding. Composite likelihood based methods are emerging as useful tools for mitigating such computational problems and show satisfactory results when compared with other techniques such as, for example the tapering method. Moreover, composite likelihood (and related quantities) have some good properties similar to those of the standard likelihood.
 Suggests: RandomFields, spam, scatterplot3d, fields, mapproj
 License: GPL (>= 2)
-URL: http://cran.r-project.org/web/packages/CompRandFld/index.html,
-https://r-forge.r-project.org/projects/comprandfld/,
-http://faculty.unibocconi.it/simonepadoan
+URL: http://faculty.unibocconi.it/simonepadoan
 Repository: CRAN
