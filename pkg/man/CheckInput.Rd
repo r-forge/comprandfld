@@ -7,10 +7,11 @@
   The procedure controls the the validity of the input inserted by the users.
 }
 \usage{
-CheckInput(coordx, coordy, coordt, corrmodel, data, distance, fcall, fixed,
-           grid, likelihood, margins, maxdist, maxtime, model, numblock,
-           optimizer, param, replicates, start, taper, tapsep, threshold, type,
-           varest, vartype, weighted)
+CheckInput(coordx, coordy, coordt, corrmodel, data, distance,
+           fcall, fixed, grid, likelihood, margins, maxdist,
+           maxtime, model, numblock, optimizer, param, replicates,
+           start, taper, tapsep, threshold, type, varest, vartype,
+           weighted)
 }
 \arguments{
    \item{coordx}{A numeric (\eqn{d \times 2}{d x 2})-matrix (where
