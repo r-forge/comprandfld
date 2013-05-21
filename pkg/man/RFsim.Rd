@@ -163,15 +163,15 @@ image.plot(x,y,log(sim$data))
 ###############################################################
 
 # Define the spatial-coordinates of the points:
-x <- seq(0, 1, 0.1)
-y <- seq(0, 1, 0.1)
+#x <- seq(0, 1, 0.1)
+#y <- seq(0, 1, 0.1)
 # Define the temporal-coordinates:
-times <- seq(1, 10, 1)
-
+#times <- seq(1, 10, 1)
+#
 # Simulation of a spatial Gaussian random field:
-sim <- RFsim(x, y, times, corrmodel="exp_exp", grid=TRUE,
-             param=list(nugget=0,mean=0,scale_s=0.3,
-             scale_t=0.5,sill=1))
+#sim <- RFsim(x, y, times, corrmodel="exp_exp", grid=TRUE,
+#             param=list(nugget=0,mean=0,scale_s=0.3,
+#             scale_t=0.5,sill=1))
 
 # For a simple animation movie
 # library(animation)
@@ -191,17 +191,17 @@ sim <- RFsim(x, y, times, corrmodel="exp_exp", grid=TRUE,
 ###
 ###############################################################
 
-lon_region<-c(-60,60)
-lat_region<-c(-60,60)
-
-lon<-seq(min(lon_region),max(lon_region),2)
-lat<-seq(min(lat_region),max(lat_region),2)
-
-data<-RFsim(coordx=lon,coordy=lat,corrmodel="exponential",
-         distance="Geod",grid=TRUE,param=list(nugget=0,mean=0
-         ,scale=8000,sill=1))$data
-
-image.plot(lon,lat,data,xlab="Longitude",ylab="Latitude")
-map(database="world",xlim=lon_region,ylim=lat_region,add=TRUE)
+#lon_region<-c(-60,60)
+#lat_region<-c(-60,60)
+#
+#lon<-seq(min(lon_region),max(lon_region),2)
+#lat<-seq(min(lat_region),max(lat_region),2)
+#
+#data<-RFsim(coordx=lon,coordy=lat,corrmodel="exponential",
+#         distance="Geod",grid=TRUE,param=list(nugget=0,mean=0
+#         ,scale=8000,sill=1))$data
+#
+#image.plot(lon,lat,data,xlab="Longitude",ylab="Latitude")
+#map(database="world",xlim=lon_region,ylim=lat_region,add=TRUE)
 }
 \keyword{Simulation}
