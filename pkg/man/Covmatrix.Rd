@@ -8,8 +8,9 @@
   and a set of spatial (temporal or spatio-temporal) points.
 }
 \usage{
-Covmatrix(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl",
-          grid=FALSE, iskrig=FALSE, maxdist=NULL, maxtime=NULL, param ,
+Covmatrix(coordx, coordy=NULL, coordt=NULL, corrmodel,
+          distance="Eucl", grid=FALSE, iskrig=FALSE,
+          maxdist=NULL, maxtime=NULL, param ,
           taper=NULL, tapsep=NULL, type="Standard")
 }
 
