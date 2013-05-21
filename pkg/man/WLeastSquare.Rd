@@ -206,21 +206,20 @@ print(fit)
 ###############################################################
 
 # Define the temporal sequence:
-time <- seq(1, 25, 1)
+#time <- seq(1, 25, 1)
 
 # Simulation of the Gaussian random field:
-data <- RFsim(x, y, time, corrmodel="exp_exp", param=list(mean=mean,
-             scale_s=scale,scale_t=1,sill=sill,nugget=nugget))$data
+#data <- RFsim(x, y, time, corrmodel="exp_exp", param=list(mean=mean,
+#             scale_s=scale,scale_t=1,sill=sill,nugget=nugget))$data
 
-
-fix=list(nugget=nugget)
-ini=list(scale_s=scale,scale_t=1,sill=1)
+#fix<-list(nugget=nugget)
+#ini<-list(scale_s=scale,scale_t=1,sill=1)
 # Weighted least square estimation:
-fit <- WLeastSquare(data, x, y, time, corrmodel="exp_exp", maxdist=5,
-                    maxtime=5,fixed=fix,start=ini)
+#fit <- WLeastSquare(data, x, y, time, corrmodel="exp_exp", maxdist=5,
+#                    maxtime=5,fixed=fix,start=ini)
 
 # Results
-print(fit)
+#print(fit)
 }
 
 \keyword{LeastSquare}
