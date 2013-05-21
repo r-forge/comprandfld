@@ -11,11 +11,12 @@
   the empirical estimates.
 }
 \usage{
-Covariogram(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.vario=FALSE,
-            answer.extc=FALSE, answer.range=FALSE, fix.lags=NULL, fix.lagt=NULL,
-            show.cov=FALSE, show.vario=FALSE, show.extc=FALSE, show.range=FALSE,
-            add.cov=FALSE, add.vario=FALSE, add.extc=FALSE, pract.range=95,
-            vario, \dots)
+Covariogram(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE,
+            answer.vario=FALSE, answer.extc=FALSE,
+            answer.range=FALSE, fix.lags=NULL, fix.lagt=NULL,
+            show.cov=FALSE, show.vario=FALSE, show.extc=FALSE,
+            show.range=FALSE, add.cov=FALSE, add.vario=FALSE,
+            add.extc=FALSE, pract.range=95, vario, \dots)
 }
 \arguments{
   \item{fitted}{A fitted object obtained from the
