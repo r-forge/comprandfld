@@ -6,7 +6,8 @@
   from one model to another.
 }
 \usage{
-Dist2Dist(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, shape=NULL)
+Dist2Dist(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL,
+          shape=NULL)
 }
 \arguments{
   \item{data}{A numeric vector or a matrix of extreme values.}
