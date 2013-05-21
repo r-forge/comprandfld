@@ -277,18 +277,18 @@ image.plot(xx, xx, matrix(pr$varpred[i,],ncol=length(xx)),col=colour,
 ###
 ###############################################################
 
-pr_tap<-Kri(loc=loc_to_pred,time=times_to_pred,coordx=coords,coordt=times,
-       corrmodel=corrmodel, param=param,type="Tapering",maxdist=0.4,maxtime=4,
-       taper="Wendland2_Wendland2",data=data)
+#pr_tap<-Kri(loc=loc_to_pred,time=times_to_pred,coordx=coords,coordt=times,
+#       corrmodel=corrmodel, param=param,type="Tapering",maxdist=0.4,maxtime=4,
+#       taper="Wendland2_Wendland2",data=data)
 
-par(mfrow=c(3,2))
+#par(mfrow=c(3,2))
 
-for(i in 1:3){
-image.plot(xx, xx, matrix(pr_tap$pred[i,],ncol=length(xx)),col=colour,
-           main = paste("Tapered Kriging Time=" , i),ylab="")
-image.plot(xx, xx, matrix(pr_tap$varpred[i,],ncol=length(xx)),col=colour,
-           main = paste("Tapered Std error Time=" , i),ylab="")
-}
+#for(i in 1:3){
+#image.plot(xx, xx, matrix(pr_tap$pred[i,],ncol=length(xx)),col=colour,
+#           main = paste("Tapered Kriging Time=" , i),ylab="")
+#image.plot(xx, xx, matrix(pr_tap$varpred[i,],ncol=length(xx)),col=colour,
+#           main = paste("Tapered Std error Time=" , i),ylab="")
+#}
 }
 
 \keyword{Composite}
