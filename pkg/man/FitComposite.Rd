@@ -12,11 +12,13 @@
   variances and allows to fix any of the parameters.
 }
 \usage{
-FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance='Eucl', fixed=NULL,
-             grid=FALSE, likelihood='Marginal', margins='Gev', maxdist=NULL, maxtime=NULL,
-             model='Gaussian', optimizer='Nelder-Mead',replicates=1, start=NULL, taper=NULL,
-             tapsep=NULL, threshold=NULL,type='Pairwise', varest=FALSE, vartype='SubSamp',
-             weighted=FALSE, winconst, winstp)
+FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
+             distance='Eucl', fixed=NULL, grid=FALSE,
+             likelihood='Marginal', margins='Gev', maxdist=NULL,
+             maxtime=NULL, model='Gaussian', optimizer='Nelder-Mead',
+             replicates=1, start=NULL, taper=NULL, tapsep=NULL,
+             threshold=NULL,type='Pairwise', varest=FALSE,
+             vartype='SubSamp', weighted=FALSE, winconst, winstp)
 }
 \arguments{
   \item{data}{A \eqn{d}{d}-dimensional vector (a single spatial realisation) or a (\eqn{n \times d}{n x d})-matrix
