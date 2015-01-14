@@ -1,4 +1,3 @@
-
 #include "header.h"
 
 // check the validity of the parameters' range:
@@ -406,6 +405,7 @@ double CorFunWend3(double lag,double scale)
 // Computation of the upper (lower) triangular spatial correlation matrix:
 void CorrelationMat(double *rho, int *cormod, double *nuis, double *par)
 {
+    
   int i=0,j=0,h=0;// check the paramaters range:
   if(nuis[1]<0 || nuis[2]<=0 || CheckCor(cormod,par)==-2){
     rho[0]=-2;
@@ -413,8 +413,10 @@ void CorrelationMat(double *rho, int *cormod, double *nuis, double *par)
      for(i=0;i<(*ncoord-1);i++){
 	    for(j=(i+1);j<*ncoord;j++){
     rho[h]=CorFct(cormod,mlags[i][j],0,par);
+           
     h++;
     }}
+   
   return;
 }
 
@@ -848,16 +850,6 @@ double DGneiting_GC_pw_s(double h,double u, double power_s,double power_t,
 }
 
 }
-
-
-
-
-
-
-
-
-
-
 
  double DIaco_sc_t(double h,double u, double power_s,double power_t,double scale_s,double scale_t,double power2)
 {

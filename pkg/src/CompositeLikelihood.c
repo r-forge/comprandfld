@@ -287,7 +287,8 @@ void Comp_Pair_Gauss(int *cormod, double *data, double *nuis, double *par, doubl
 	  u2=R_pow(u,2);
 	  v2=R_pow(v,2);
 	  *res+= -0.5*(2*log(2*M_PI)+log(det)+
-		       (s1*(u2+v2)-2*s12*u*v)/det);}}}
+		       (s1*(u2+v2)-2*s12*u*v)/det);
+    }}}
   // Checks the return values
   if(!R_FINITE(*res))
     *res = LOW;

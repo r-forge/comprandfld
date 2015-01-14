@@ -41,7 +41,7 @@ double F77_NAME(bvnmvn)(double *lower, double *upper, int* infin, double *correl
 File name: CorrelationFunction.c
 Description: procedures for computation of correlation functions
 Start
- ---------------------------------------------------------------*/
+---------------------------------------------------------------*/
 
 double CheckCor(int *cormod, double *par);
 
@@ -56,7 +56,6 @@ double CorFunGenCauchy(double lag, double power1, double power2, double scale);
 double CorFunSferical(double lag, double scale);
 
 double CorFunStable(double lag, double power, double scale);
-
 
 		       //double CorFunDobStable(double lag, double power_s, double power_t,
 		       //double scale_s, double scale_t, double tsep);
@@ -582,4 +581,4 @@ void SpaceTime_Dist(double *coordx,double *coordy,double *coordt,int *grid,int *
 File name: Utility.c
 Description: procedures for the computation of useful quantities.
 End
- ---------------------------------------------------------------*/
+---------------------------------------------------------------*/
