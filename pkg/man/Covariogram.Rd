@@ -191,32 +191,32 @@ Covariogram(fit, show.cov=TRUE, show.range=TRUE, show.extc=TRUE,
 ###############################################################
 
 # Define the spatial-coordinates of the points:
-x <- runif(20, 0, 1)
-y <- runif(20, 0, 1)
+#x <- runif(20, 0, 1)
+#y <- runif(20, 0, 1)
 # Define the temporal sequence:
-time <- seq(0, 30, 1)
+#time <- seq(0, 30, 1)
 
 # Simulation of the spatio-temporal Gaussian random field:
-data <- RFsim(x, y, time, corrmodel="exp_exp",param=list(mean=mean,
-              nugget=nugget,scale_s=0.5,scale_t=1,sill=sill))$data
+#data <- RFsim(x, y, time, corrmodel="exp_exp",param=list(mean=mean,
+#              nugget=nugget,scale_s=0.5,scale_t=1,sill=sill))$data
 
 # Maximum composite-likelihood fitting of the space-time Gaussian random field:
-fit <- FitComposite(data, x, y, time, corrmodel="exp_exp", maxtime=5,
-                    likelihood="Marginal",type="Pairwise", fixed=list(
-                    nugget=nugget, mean=mean),start=list(scale_s=0.2,
-                    scale_t=1, sill=sill))
+#fit <- FitComposite(data, x, y, time, corrmodel="exp_exp", maxtime=5,
+#                    likelihood="Marginal",type="Pairwise", fixed=list(
+#                    nugget=nugget, mean=mean),start=list(scale_s=0.2,
+#                    scale_t=1, sill=sill))
 
 # Empirical estimation of spatio-temporal covariance:
-vario <- EVariogram(data, x, y, time, maxtime=10)
+#vario <- EVariogram(data, x, y, time, maxtime=10)
 
 # Plot of the fitted space-time covariace
-Covariogram(fit,show.cov=TRUE)
+#Covariogram(fit,show.cov=TRUE)
 
 # Plot of the fitted space-time variogram
-Covariogram(fit,vario=vario,show.vario=TRUE)
+#Covariogram(fit,vario=vario,show.vario=TRUE)
 
 # Plot of covariance, variogram and spatio and temporal profiles:
-Covariogram(fit,vario=vario,fix.lagt=1,fix.lags=1,show.vario=TRUE,pch=20)
+#Covariogram(fit,vario=vario,fix.lagt=1,fix.lags=1,show.vario=TRUE,pch=20)
 
 ################################################################
 ###
