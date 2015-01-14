@@ -144,7 +144,7 @@ Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, sha
         Dist2Dist <- .C('Dist2Dist', as.double(data), as.double(param[1,]), as.double(param[2,]),
                         as.double(param[3,]), as.integer(numdata), as.integer(numcoord),
                         as.double(loc), as.double(scale), as.double(shape), as.integer(type),
-                        res=double(numdata * numcoord), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+                        res=double(numdata * numcoord), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)$res
       }
     # Transform from standard Frechet to the GEV distribution:
     if(from=='sFrechet')
@@ -157,7 +157,7 @@ Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, sha
         Dist2Dist <- .C('Dist2Dist', as.double(data), as.double(param[1]), as.double(param[2]),
                         as.double(param[3]), as.integer(numdata), as.integer(numcoord),
                         as.double(loc), as.double(scale), as.double(shape), as.integer(type),
-                        res=double(numdata * numcoord), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+                        res=double(numdata * numcoord), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)$res
       }
     # Transform from standard Gumbel to the GEV distribution:
     if(from=='sGumbel')
@@ -170,7 +170,7 @@ Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, sha
         Dist2Dist <- .C('Dist2Dist', as.double(data), as.double(param[1]), as.double(param[2]),
                         as.double(param[3]), as.integer(numdata), as.integer(numcoord),
                         as.double(loc), as.double(scale), as.double(shape), as.integer(type),
-                        res=double(numdata * numcoord), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+                        res=double(numdata * numcoord), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)$res
       }
     if(from=='sWeibull')
       {
@@ -182,7 +182,7 @@ Dist2Dist <- function(data, from='Gev', to='sFrechet', loc=NULL, scale=NULL, sha
         Dist2Dist <- .C('Dist2Dist', as.double(data), as.double(param[1]), as.double(param[2]),
                         as.double(param[3]), as.integer(numdata), as.integer(numcoord),
                         as.double(loc), as.double(scale), as.double(shape), as.integer(type),
-                        res=double(numdata * numcoord), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+                        res=double(numdata * numcoord), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)$res
       }
 
     dim(Dist2Dist) <- dimdata
@@ -194,7 +194,7 @@ GevLogLik <- function(data, numdata, param)
   {
     ### Compute the log-likelihood:
     result <- .C('GevLogLik', as.double(data), as.integer(numdata), as.double(param),
-                 res=double(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+                 res=double(1), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)$res
     return(result)
   }
 

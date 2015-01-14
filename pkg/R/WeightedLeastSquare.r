@@ -106,7 +106,7 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, distance, fcall, fi
         result <- .C(fun, as.double(bins), as.double(bint), as.integer(corrmodel),
                      as.double(lenbins), as.double(moments), as.integer(numbins),
                     as.integer(numbint), as.double(nuisance), as.double(paramcorr),
-                     res=double(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+                     res=double(1), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)$res
         return(result)
       }
     fname <- NULL ### the function name (variogram and least square)
@@ -132,9 +132,13 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, distance, fcall, fi
       if(type=="Tapering") fname <- 'Binned_Variogram_st2'
       else                 fname <- 'Binned_Variogram_st'
       # Compute the spatial-temporal moments:
-      .C(fname, bins, bint, as.double(initparam$data), lenbins, lenbinst, lenbint,
-         moments, momentst, momentt, as.integer(numbins), as.integer(numbint),
-         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      EV=.C(fname, bins=bins, bint=bint, as.double(initparam$data), lenbins=lenbins,
+      lenbinst=lenbinst, lenbint=lenbint,moments=moments, momentst=momentst,
+      momentt=momentt, as.integer(numbins), as.integer(numbint),
+         PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+         bins=EV$bins;bint=EV$bint;
+         lenbins<-EV$lenbins;lenbint<-EV$lenbint;lenbinst<-EV$lenbinst;
+         moments<-EV$moments;momentst<-EV$momentst;momentt<-EV$momentt
       indbin <- lenbins>0
       bins <- bins[indbin]
       moments <- moments[indbin]
@@ -172,8 +176,9 @@ WlsInit <- function(coordx, coordy, coordt, corrmodel, data, distance, fcall, fi
       momentst <- double(1)   # vector of spatial-temporal moments
       lenbint <- integer(1) # vector of temporal bin sizes
       lenbinst <- integer(1)  # vector of spatial-temporal bin sizes
-        .C(fname, bins, as.double(data), lenbins, moments, as.integer(numbins),
-         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      EV=.C(fname, bins=bins, as.double(data), lenbins=lenbins, moments=moments, as.integer(numbins),
+         PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+      bins<-EV$bins;lenbins<-EV$lenbins;moments<-EV$moments
       centers <- bins[1:numvario]+diff(bins)/2
       indbin <- lenbins>0
       bins <- bins[indbin]
@@ -264,7 +269,7 @@ WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, dist
         result <- .C(fun, as.double(bins), as.double(bint), as.integer(corrmodel),
                      as.double(lenbins), as.double(moments), as.integer(numbins),
                      as.integer(numbint), as.double(nuisance), as.double(paramcorr),
-                     res=double(1), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+                     res=double(1), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)$res
        return(result)
       }
     ### Initializes global variables:
@@ -301,9 +306,14 @@ WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, dist
       lenbinst <- integer(numbinst)  # vector of spatial-temporal bin sizes
       fname <- 'Binned_Variogram_st'
       # Compute the spatial-temporal moments:
-      .C(fname, bins, bint, as.double(initparam$data), lenbins, lenbinst, lenbint,
-         moments, momentst, momentt, as.integer(numbins), as.integer(numbint),
-         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      EV=.C(fname, bins=bins, bint=bint, as.double(initparam$data), lenbins=lenbins, lenbinst=lenbinst,
+      lenbint=lenbint,moments=moments,momentst=momentst,momentt=momentt,
+      as.integer(numbins), as.integer(numbint),PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+      bins <- EV$bins
+      binst <- EV$binst
+      bint <- EV$bint;
+      lenbins<-EV$lenbins;lenbinst<-EV$lenbinst;lenbint<-EV$lenbint;
+      moments<-EV$moments;momentt<-EV$momentt;momentst<-EV$momentst;
       indbin <- lenbins>0
       centers <- bins[1:numvario]+diff(bins)/2
       bins <- bins[indbin]
@@ -349,8 +359,9 @@ WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, dist
       momentst <- double(1)   # vector of spatial-temporal moments
       lenbint <- integer(1) # vector of temporal bin sizes
       lenbinst <- integer(1)  # vector of spatial-temporal bin sizes
-      .C(fname, bins, as.double(initparam$data), lenbins, moments, as.integer(numbins),
-         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      EV=.C(fname, bins=bins, as.double(initparam$data), lenbins=lenbins, moments=moments, as.integer(numbins),
+         PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+      bins<-EV$bins;lenbins<-EV$lenbins;moments<-EV$moments
       indbin <- lenbins>0
       centers <- bins[1:numvario]+diff(bins)/2
       bins <- bins[indbin]
@@ -393,7 +404,7 @@ WLeastSquare <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, dist
                       hessian=FALSE)
     ###### ---------- END model fitting by weighted least squares method ----------######
     ### Removes the global variobales:
-    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
     ### Set the output:
     WLeastSquare <- list(bins=bins,
                          bint=bint,

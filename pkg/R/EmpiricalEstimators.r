@@ -106,9 +106,12 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, dist
       if(cloud) fname <- 'Cloud_Variogram_st' else fname <- 'Binned_Variogram_st'
       if(type=="lorelogram") fname <- "Binned_Lorelogram_st"
       # Compute the spatial-temporal moments:
-      .C(fname, bins, bint, as.double(initparam$data), lenbins, lenbinst, lenbint,
-         moments, momentst, momentt, as.integer(numbins), as.integer(numbint),
-         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      EV=.C(fname, bins=bins, bint=bint, as.double(initparam$data),
+            lenbins=lenbins, lenbinst=lenbinst, lenbint=lenbint,moments=moments, momentst=momentst,momentt=momentt,
+            as.integer(numbins), as.integer(numbint),PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+      bins<-EV$bins;bint<-EV$bint;
+      moments<-EV$moments;  momentst<-EV$momentst;  momentt<-EV$momentt;
+      lenbins<-EV$lenbins;lenbint<-EV$lenbint;lenbinst<-EV$lenbinst;
       centers <- bins[1:numvario]+diff(bins)/2
       if(type=="lorelogram"){
       elorel <- matrix(momentst,nrow=numvario,ncol=numbint,byrow=TRUE)
@@ -151,8 +154,11 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, dist
       # Computes the spatial-temporal variogram:
       variogramst <- momentst/lenbinst}
     else{# Computes the spatial moments
-      .C(fname, bins, as.double(initparam$data), lenbins, moments, as.integer(numbins),
-         PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+      EV=.C(fname, bins=bins, as.double(initparam$data), lenbins=lenbins, moments=moments, as.integer(numbins),
+         PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+       bins<-EV$bins
+       moments<-EV$moments
+       lenbins<-EV$lenbins
       # Computes the spatial variogram:
       indbin <- lenbins>0
       bins <- bins[indbin]
@@ -174,7 +180,7 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, dist
       extcoeff <- (1 + 2 * variograms) / (1 - 2 * variograms)
       extcoeff[extcoeff>2] <- NA}
 
-    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
 
     EVariogram <- list(bins=bins,
                        bint=bint,

@@ -50,10 +50,10 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
         cova[cova==(nuisance['sill'])] <- nuisance['sill']+nuisance['nugget']
         varcovtap <- new("spam",entries=cova*setup$taps,colindices=setup$ja,
                          rowpointers=setup$ia,dimension=as.integer(rep(dimat,2)))
-        cholvctap <- try(chol.spam(varcovtap),silent=TRUE)
+        cholvctap <- try(spam::chol.spam(varcovtap),silent=TRUE)
         if(class(cholvctap)=="try-error") return(lliktap)
         logdet <- c(determinant(cholvctap)$modulus)
-        inv <- solve.spam(cholvctap)
+        inv <- spam::solve.spam(cholvctap)
         slot(varcovtap,"entries") <- inv[setup$idx]*setup$taps
         lliktap= -0.5*(const+2*logdet+drop(t(stdata)%*%varcovtap%*%stdata))
         return(lliktap)
@@ -89,8 +89,9 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
         # Standardizes the data:
         stdata <- data-nuisance['mean']
         # Computes the vector of the correlations:
-        .C(corrmat,corr,as.integer(corrmodel),as.double(nuisance),
-           as.double(paramcorr),PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+        cc=.C(corrmat,corr=corr,as.integer(corrmodel),as.double(nuisance),
+           as.double(paramcorr),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+        corr<-cc$corr
         if(corr[1]==-2) return(loglik)
         # Computes the correlation matrix:
         cova <- corr*nuisance['sill']
@@ -99,7 +100,6 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
                             ident=ident,nuisance=nuisance,setup=setup))
         return(loglik)
       }
-
 
           ### END Defining the objective functions
     # Call to the objective functions:
@@ -114,8 +114,9 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
         # Standardizes the data:
         stdata <- data-nuisance['mean']
         # Computes the vector of the correlations:
-        .C(corrmat,corr,as.integer(corrmodel),as.double(nuisance),
-           as.double(paramcorr),PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+        cc=.C(corrmat,corr=corr,as.integer(corrmodel),as.double(nuisance),
+           as.double(paramcorr),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+        corr<-cc$corr
         if(corr[1]==-2) return(loglik)
         # Computes the correlation matrix:
         cova <- corr*nuisance['sill']
@@ -151,9 +152,9 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
         corr <- double(numpairs)
         tapcorr <- double(numpairs)
         tapmod <- setup$tapmodel
-        .C(corrmat, tapcorr,as.integer(tapmod),as.double(c(0,0,1)),
-           as.double(1),PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
-        setup$taps<-tapcorr
+        tp=.C(corrmat, tapcorr=tapcorr,as.integer(tapmod),as.double(c(0,0,1)),
+           as.double(1),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+        setup$taps<-tp$tapcorr
         }
     # Optimize the log-likelihood:
     if(optimizer=='L-BFGS-B')
@@ -196,8 +197,9 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
         eps<-(.Machine$double.eps)^(1/3)
         numfish<-numparam*(numparam-1)/2+numparam# set variance-covariance matrix size
         # computing the off diagonal elements of the correlation matrix
-        .C(corrmat,corr,as.integer(corrmodel),as.double(nuisance),as.double(paramcorr),
-           PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+        cc=.C(corrmat,corr=corr,as.integer(corrmodel),as.double(nuisance),as.double(paramcorr),
+           PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+        corr<-cc$corr
         varian<-corr*nuisance['sill']# computes covariance components
         if(!spacetime) dname<-"DCorrelationMat"
         else dname<-"DCorrelationMat_st"
@@ -220,10 +222,11 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
             colnames(gradient) <- gnames
             dcorr <- double(numpairstot*numparamcorr)
             # correlation gradient vector
-            .C(dname,as.integer(corrmodel),dcorr,as.double(eps),
+            dc=.C(dname,as.integer(corrmodel),dcorr=dcorr,as.double(eps),
                as.integer(flagcor),as.integer(numparamcorr),
                as.double(paramcorr),corr,PACKAGE='CompRandFld',
-               DUP=FALSE,NAOK=TRUE)
+               DUP=TRUE,NAOK=TRUE)
+            dcorr<-dc$dcorr
             dim(dcorr) <- c(numpairstot,numparamcorr)
             # Computing the gradient matrices:
             if(flagnuis[2]) gradient[,namesnuis[2],] <- ident
@@ -278,7 +281,7 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
             covtap <- new("spam",entries=varcov[setup$idx]*setup$taps,colindices=setup$ja,
                           rowpointers=setup$ia,dimension=as.integer(rep(dimat,2)))
             cholcovtap <- chol(covtap) # Chol. decomp. of the covariance tapered matrix
-            invtap<-as.matrix(solve.spam(cholcovtap)) # inverse of the Chol. decomp. cov tap
+            invtap<-as.matrix(spam::solve.spam(cholcovtap)) # inverse of the Chol. decomp. cov tap
             covtap <- as.matrix(covtap)
             HH <- double(numfish)# upper triang matrix (with diag) of sensitivity matrix
             JJ <- double(numfish)# upper triang matrix (with diag) of variability matrix
@@ -289,10 +292,11 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
             else dname<-"DCorrelationMat_st_tap"
             dcorr <- double(numpairs*numparamcorr)
             # correlation gradient vector
-            .C(dname,as.integer(corrmodel),dcorr,as.double(eps),
+            dc=.C(dname,as.integer(corrmodel),dcorr=dcorr,as.double(eps),
                as.integer(flagcor),as.integer(numparamcorr),
                as.double(paramcorr),corr,PACKAGE='CompRandFld',
-               DUP=FALSE,NAOK=TRUE)
+               DUP=TRUE,NAOK=TRUE)
+            dcorr<-dc$dcorr
             dim(dcorr) <- c(numpairs,numparamcorr)
             if(flagnuis[2]) gradient[,namesnuis[2]] <- ident[setup$idx]
             if(flagnuis[3]) gradient[,namesnuis[3]] <- corr

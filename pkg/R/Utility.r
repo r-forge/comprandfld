@@ -1088,11 +1088,16 @@ InitParam <- function(coordx, coordy, coordt, corrmodel, data, distance, fcall, 
     if(is.null(maxdist)) srange<-c(srange,double(1)) else {srange<-c(srange,as.double(maxdist))}                # cutoff<-TRUE
     if(is.null(maxtime)) trange<-c(trange,double(1)) else {trange<-c(trange,as.double(maxtime))}                # cutoff<-TRUE
     isinit <- as.integer(1)
-    .C('SetGlobalVar',as.double(coordx),as.double(coordy),as.double(coordt),as.integer(grid),ia,idx,
-       isinit,ja,as.integer(numcoord),as.integer(numcoordx), as.integer(numcoordy),numpairs,as.integer(replicates),
-       srange, as.double(tapsep), as.integer(numtime),trange,as.integer(tapering),as.integer(tapmodel),
-       as.integer(distance),as.integer(weighted),PACKAGE='CompRandFld', DUP=FALSE, NAOK=TRUE)
-     if(tapering){ nozero=numpairs/(numcoord*numtime)^2
+    SG=.C('SetGlobalVar',as.double(coordx),as.double(coordy),as.double(coordt),as.integer(grid),ia=ia,idx=idx,
+       isinit=isinit,ja=ja,as.integer(numcoord),as.integer(numcoordx),as.integer(numcoordy),numpairs=numpairs,as.integer(replicates),
+       srange=srange, as.double(tapsep), as.integer(numtime),trange=trange,as.integer(tapering),as.integer(tapmodel),
+       as.integer(distance),as.integer(weighted),PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+     srange<-SG$srange
+     trange<-SG$trange
+     ja<-SG$ja;ia<-SG$ia;idx<-SG$idx
+     isinit<-SG$isinit
+     numpairs<-SG$numpairs
+     if(tapering){ nozero<-numpairs/(numcoord*numtime)^2
                    idx <- idx[1:numpairs]
                    ja <- ja[1:numpairs]}
     ### Returned list of objects:

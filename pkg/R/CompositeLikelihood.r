@@ -32,7 +32,7 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, distance, flagcorr, 
         nuisance <- param[namesnuis]
         result <- .C(fun, as.integer(corrmodel), as.double(data), as.double(nuisance),
                      as.double(paramcorr), as.double(threshold), res=double(1),
-                     PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)$res
+                     PACKAGE='CompRandFld', DUP=TRUE , NAOK=TRUE)$res
         return(result)
       }
     fname <- NULL
@@ -90,13 +90,16 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, distance, flagcorr, 
             else sensmat <- double(dmat)
             varimat <- double(dmat)
             # Set the window parameter:
-            .C('GodambeMat',as.double(coordx),as.double(coordy),as.integer(corrmodel),
+            GOD=.C('GodambeMat',as.double(coordx),as.double(coordy),as.integer(corrmodel),
                as.double(data),as.integer(distance),as.double(eps),as.integer(flagcorr),
                as.integer(flagnuis),as.integer(grid),as.integer(likelihood),as.integer(model),
                as.integer(numparam),as.integer(numparamcorr),as.double(paramcorr),as.double(nuisance),
-               score,sensmat,as.integer(spacetime),as.double(threshold),as.integer(type),varimat,
-               as.integer(vartype),as.double(winconst),as.double(winstp),
-               PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+               score=score,sensmat=sensmat,as.integer(spacetime),as.double(threshold),as.integer(type),
+               varimat=varimat,as.integer(vartype),as.double(winconst),as.double(winstp),
+               PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+            score<-GOD$score
+            sensmat<-GOD$sensmat
+            varimat<-GOD$varimat
             # Set score vectore:
             CompLikelihood$winconst<-winconst
             CompLikelihood$winstp<-winstp

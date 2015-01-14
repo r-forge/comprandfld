@@ -4,7 +4,7 @@
 ### moreno.bevilacqua@uv.cl
 ### Institutions: Department of Decision Sciences,
 ### University Bocconi of Milan and
-### Departamento de Estad“stica
+### Departamento de Estad?stica
 ### Universidad de Valparaiso
 ### File name: Statistics.r
 ### Description:
@@ -84,16 +84,18 @@ HypoTest <- function(object1, object2, ..., statistic)
           paramcorr <- param[initparam$namescorr]
           nuisance <- param[initparam$namesnuis]
           # compute the gradient and the components of the Godambe matrix:
-          .C('GodambeMat',as.double(model2$coordx),as.double(model2$coordy),
+          GD=.C('GodambeMat',as.double(model2$coordx),as.double(model2$coordy),
              as.integer(initparam$corrmodel),as.double(model2$data),as.integer(initparam$distance),
              as.double(eps),as.integer(initparam$flagcorr),as.integer(initparam$flagnuis),
              as.integer(model2$grid),as.integer(initparam$likelihood),
              as.integer(initparam$model),as.integer(numparam),
              as.integer(initparam$numparamcorr),as.double(paramcorr),as.double(nuisance),
-             score,sensmat,as.integer(spacetime),as.double(model2$threshold),
-             as.integer(initparam$type),varimat,as.integer(initparam$vartype),
+             score=score,sensmat=sensmat,as.integer(spacetime),as.double(model2$threshold),
+             as.integer(initparam$type),varimat=varimat,as.integer(initparam$vartype),
              as.double(initparam$winconst),as.double(initparam$winstp),
-             PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+             PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+             
+             sensmat<-GD$sensmat; varimat<-GD$varimat;score<-GD$score
           # define the sensitivity and variability matrices:
           H <- matrix(rep(0,dimmat),ncol=numparam)# H - sensitivity matrix
           J <- matrix(rep(0,dimmat),ncol=numparam)# J - variability matrix
@@ -116,7 +118,7 @@ HypoTest <- function(object1, object2, ..., statistic)
               H[1,1] <- sensmat
               J[1,1] <- varimat}
           # Delete global variables:
-          .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+          .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
           return(list(score=score, sensmat=H, varimat=J))
       }
       # compute the statistic:

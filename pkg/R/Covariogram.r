@@ -30,31 +30,31 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
     # define the bivariate Gaussian distribution:
     vpbnorm <- function(corrmodel,lags,lagt,nuisance,numlags,numlagt,param,threshold)
     {
-        rho <- double(numlags*numlagt)
-        .C("vpbnorm",  as.integer(corrmodel), as.double(lags), as.double(lagt),
+        rho=double(numlags*numlagt)
+        p=.C("vpbnorm",  as.integer(corrmodel), as.double(lags), as.double(lagt),
            as.integer(numlags), as.integer(numlagt), as.double(nuisance),
-           as.double(param), rho, as.double(threshold), PACKAGE='CompRandFld',
-           DUP=FALSE, NAOK=TRUE)
-        return(rho)
+           as.double(param), rho=double(numlags*numlagt), as.double(threshold), PACKAGE='CompRandFld',
+           DUP=TRUE, NAOK=TRUE)
+        return(p$rho)
     }
     # define the correlation function:
     CorrelationFct <- function(corrmodel, lags, lagt, numlags, numlagt, param)
     {
-        corr <- double(numlags*numlagt)
-        .C('VectCorrelation', corr, as.integer(corrmodel), as.double(lags),
+        corr=double(numlags*numlagt)
+        p=.C('VectCorrelation', corr=double(numlags*numlagt), as.integer(corrmodel), as.double(lags),
            as.integer(numlags), as.integer(numlagt), as.double(param),
-           as.double(lagt), PACKAGE='CompRandFld', DUP=FALSE, NAOK=TRUE)
-        return(corr)
+           as.double(lagt), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+        return(p$corr)
     }
     # define the extremal coefficient function:
     ExtremalCoeff <- function(corrmodel, lags, model, nuisance, numlags, param)
     {
-        extc <- double(numlags)
+        
 
-        .C('ExtCoeff', as.integer(corrmodel), extc, as.double(lags),
+        p=.C('ExtCoeff', as.integer(corrmodel), extc=double(numlags), as.double(lags),
            as.integer(model), as.integer(numlags), as.double(nuisance),
-           as.double(param), PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
-        return(extc)
+           as.double(param), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+        return(p$extc)
      }
     # Pratical range in the Gaussian case:
     PracRangeNorm <- function(corrmodel, lags, lagt, nuisance, numlags, numlagt, param, pract.range)
@@ -216,7 +216,7 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
                                  ncol=nbint,byrow=TRUE)
                 evario <- rbind(c(zero,vario$variogramt),cbind(vario$variograms,evario))
                 evario.grid <- expand.grid(c(0,vario$centers),c(0,vario$bint))
-                scatterplot3d(evario.grid[,1],evario.grid[,2], c(evario),
+                scatterplot3d::scatterplot3d(evario.grid[,1],evario.grid[,2], c(evario),
                               type="h",highlight.3d=TRUE,cex.axis=.7,cex.lab=.7,
                               main=paste("Empirical",vario.main),xlab="Distance",
                               ylab="Time",zlab=vario.zlab,mar=c(2,2,2,2),mgp=c(0,0,0))

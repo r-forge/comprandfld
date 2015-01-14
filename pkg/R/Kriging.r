@@ -48,17 +48,17 @@ Kri<- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl
     numloc <- nrow(loc)
     tloc <- length(time);if(!tloc) tloc <- 1
     locx <- loc[,1];locy <- loc[,2]
-    corri <- double(covmatrix$numcoord*covmatrix$numtime*numloc*tloc)
     fix <- covmatrix$numcoord*covmatrix$numtime*numloc
     pred <- NULL
     varpred <- NULL
     k <- 0
     if(type=="Standard") {
     ## Computing correlation between the locations to predict and the locations observed
-    .C('Corr_c',corri, as.double(covmatrix$coordx),as.double(covmatrix$coordy),as.double(covmatrix$coordt),
-    as.integer(corrmodel),as.integer(covmatrix$grid),as.double(locx),as.double(locy),as.integer(covmatrix$numcoord),
+    cc=.C('Corr_c',corri=double(covmatrix$numcoord*covmatrix$numtime*numloc*tloc), as.double(covmatrix$coordx),as.double(covmatrix$coordy),
+    as.double(covmatrix$coordt),as.integer(corrmodel),as.integer(covmatrix$grid),as.double(locx),as.double(locy),as.integer(covmatrix$numcoord),
     as.integer(numloc),as.integer(tloc),as.integer(covmatrix$numtime),as.double(corrparam),as.integer(covmatrix$spacetime),
-    as.double(time),as.integer(distance),PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+    as.double(time),as.integer(distance),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+    corri<-cc$corri
     ## cholesky decomposition
     cholvarcov <- try(chol(covmatrix$covmatrix),silent=TRUE)
     if(!is.matrix(cholvarcov)) return("Covariance matrix is not positive definite")
@@ -85,14 +85,16 @@ Kri<- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl
     }}
 
     if(type=="Tapering")  {
-    corri_tap=double(covmatrix$numcoord*covmatrix$numtime*numloc*tloc)
-    .C('Corr_c_tap',corri, corri_tap, as.double(covmatrix$coordx),as.double(covmatrix$coordy),as.double(covmatrix$coordt),
+    
+    ct=.C('Corr_c_tap',corri=double(covmatrix$numcoord*covmatrix$numtime*numloc*tloc), corri_tap=double(covmatrix$numcoord*covmatrix$numtime*numloc*tloc), as.double(covmatrix$coordx),as.double(covmatrix$coordy),as.double(covmatrix$coordt),
     as.integer(corrmodel),as.integer(tapmod),as.integer(covmatrix$grid),as.double(locx),as.double(locy),
     as.integer(covmatrix$numcoord),as.integer(numloc),as.integer(tloc),as.integer(covmatrix$numtime),as.double(corrparam),
-    as.integer(covmatrix$spacetime),as.double(time),as.integer(distance),PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
-    cholvarcov <- try(chol.spam(covmatrix$covmatrix),silent=TRUE)
+    as.integer(covmatrix$spacetime),as.double(time),as.integer(distance),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+    corri_tap<-ct$corri_tap
+    corri<-ct$corri
+    cholvarcov <- try(spam::chol.spam(covmatrix$covmatrix),silent=TRUE)
     if(class(cholvarcov)=="try-error") return("Covariance matrix is not positive definite")
-    invcov<- solve.spam(cholvarcov)
+    invcov<- spam::solve.spam(cholvarcov)
     for(i in 1:tloc){
     ck <- window(corri,start=1+k,end=fix+k)
     ck_tap <- window(corri_tap,start=1+k,end=fix+k)
@@ -116,7 +118,7 @@ Kri<- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl
       }
     }
      # Delete the global variables:
-    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
 
    if(tloc==1)  {c(pred);c(varpred)}
     # Return the objects list:

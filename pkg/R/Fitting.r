@@ -66,7 +66,7 @@ FitComposite <- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, dist
                                    initparam$upper,varest,initparam$vartype,initparam$winconst,initparam$winstp)
       }
     # Delete the global variables:
-    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
     ### Set the output object:
     FitComposite <- list(clic = fitted$clic,
                          coordx = initparam$coordx,

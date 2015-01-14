@@ -4,7 +4,7 @@
 ### moreno.bevilacqua@uv.cl
 ### Institutions: Department of Decision Sciences,
 ### University Bocconi of Milan and
-### Departamento de Estad“stica
+### Departamento de Estad?stica
 ### Universidad de Valparaiso
 ### File name: Simulation.r
 ### Description:
@@ -27,11 +27,11 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl", 
                          threshold)
     {
         # Compute the correlation function:
-        corr <- double(.5*(numcoord*numtime)*(numcoord*numtime-1))
         if(!spacetime) fname <- "CorrelationMat" else fname <- "CorrelationMat_st"
-        .C(fname, corr, as.integer(corrmodel), as.double(nuisance), as.double(paramcorr),
-           PACKAGE='CompRandFld', DUP=FALSE, NAOK=TRUE)
+        CV=.C(fname, cr=double(.5*(numcoord*numtime)*(numcoord*numtime-1)), as.integer(corrmodel), as.double(nuisance), as.double(paramcorr),
+           PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
         # Builds the covariance matrix:
+        corr<-CV$cr
         varcov <- (nuisance['nugget'] + nuisance['sill']) * diag(numcoord*numtime)
         corr <- corr * nuisance['sill']
         varcov[lower.tri(varcov)] <- corr
@@ -117,12 +117,12 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl", 
                                             param=initparam$param[initparam$namessim],grid=grid,
                                             n=initparam$numblock,pch='')
             # Compute compotentwise maxima:
-              .C("ComputeMaxima",as.double(initparam$param["df"]),maxima,
+              mx=.C("ComputeMaxima",as.double(initparam$param["df"]),mx=maxima,
                  as.integer(initparam$model),as.integer(initparam$numblock),
                  as.integer(initparam$numcoord),onesim,
-                 PACKAGE='CompRandFld',DUP=FALSE,NAOK=TRUE)
+                 PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
             # Update:
-            sim <- c(sim,maxima)}
+            sim <- c(sim,mx$mx)}
         # Formatting of output:
         if(grid){
             if(replicates==1) sim <- array(sim, c(initparam$numcoordx, initparam$numcoordy))
@@ -131,7 +131,7 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl", 
             if(replicates==1) sim <- c(sim)
             else sim <- matrix(sim, nrow=replicates,ncol=initparam$numcoord, byrow=TRUE)}}
     # Delete the global variables:
-     .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP = FALSE, NAOK=TRUE)
+     .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
     # Return the objects list:
     RFsim <- list(coordx = initparam$coordx,
                   coordy = initparam$coordy,
