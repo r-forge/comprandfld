@@ -108,7 +108,7 @@ and non-separable models.
 
     \item \code{gencauchy} (generalised \code{cauchy})\cr
 
-    \deqn{R(h) = ( 1+h^\alpha )^(-\beta/ \alpha)}
+    \deqn{R(h) = ( 1+h^\alpha )^{-\frac{\beta}{\alpha}}}
     The parameter \eqn{\alpha} is in (0,2], and \eqn{\beta}
     is positive. \cr
 
@@ -147,13 +147,13 @@ and non-separable models.
     \item Non-separable models:
     \enumerate{
       \item \code{gneiting} (non-separabel space time model)
-    \deqn{R(h, u) = exp(-h^\nu /( 1+u^\lambda)^(0.5 sep \nu))/( 1+u^\lambda)}
+    \deqn{R(h, u) = \frac{e^{ \frac{-h^\nu} { (1+u^\lambda)^{0.5 \gamma \nu }}}}  {1+u^\lambda}}
     The parameters \eqn{\nu} and \eqn{\lambda} take values
-    in \eqn{[0,2]}; the parameter \eqn{sep } take values in \eqn{[0,1]}.
-    For \eqn{sep=0} it is a separable model.
+    in \eqn{[0,2]}; the parameter \eqn{\gamma} take values in \eqn{[0,1]}.
+    For \eqn{\gamma=0} it is a separable model.
 
 	\item \code{gneiting_GC} (non-separabel space time model with great circle distances)
-    \deqn{R(h, u) = exp(-u^\lambda /( 1+h^\nu)^(0.5 sep \lambda))/( 1+h^\nu); }
+    \deqn{R(h, u) = \frac{ e^{  \frac{-u^\lambda }{1+h^\nu)^{0.5 \gamma \lambda}} }} { 1+h^\nu} }
 
 
     \item \code{iacocesare} (non-separabel space time model)
@@ -164,16 +164,16 @@ and non-separable models.
 
 
        \item \code{porcu} (non-separabel space time model)
-    \deqn{R(h, u) = (0.5 (1+h^\nu)^(sep) +0.5 (1+u^\lambda)^(sep))^(-1/sep)}
+    \deqn{R(h, u) = (0.5 (1+h^\nu)^\gamma +0.5 (1+u^\lambda)^\gamma)^{-\gamma^{-1}}}
     The parameters \eqn{\nu} and \eqn{\lambda} take values
-    in \eqn{[0,2]}; the paramete \eqn{sep } take values in \eqn{[0,1]}.
-    The limit of the correlation model  as \eqn{sep} tends to zero  leads to a  separable model.
+    in \eqn{[0,2]}; the paramete \eqn{\gamma} take values in \eqn{[0,1]}.
+    The limit of the correlation model  as \eqn{\gamma} tends to zero  leads to a  separable model.
 
        \item \code{porcu2} (non-separabel space time model)
-    \deqn{R(h, u) = exp(-h^\nu ( 1+u^\lambda)^(0.5 sep \nu))/( 1+u^\lambda)^(1.5)}
+    \deqn{R(h, u) =\frac{ e^{ -h^\nu ( 1+u^\lambda)^{0.5 \gamma \nu}}} { (1+u^\lambda)^{1.5}}}
     The parameters \eqn{\nu} and \eqn{\lambda} take values
-    in \eqn{[0,2]}; the parameter \eqn{sep } take values in \eqn{[0,1]}.
-    For \eqn{sep=0} it is a separable model.
+    in \eqn{[0,2]}; the parameter \eqn{\gamma } take values in \eqn{[0,1]}.
+    For \eqn{\gamma=0} it is a separable model.
       }
       \item Separable models.\cr
 
@@ -212,14 +212,14 @@ and non-separable models.
     \itemize{\item  \code{Wendlandi_Wendlandj}: spatial \code{Wendlandi}
       taper and temporal \code{Wendlandj} taper with i,j=1,2,3.}
 
-    \item Space-time non separable quasi-taper with dynamically space-time compact support is:
+    \item Space-time non separable adaptive-taper with dynamically space-time compact support is:
       \itemize{\item \code{qt_time} and \code{qt_space}. In The case of \code{qt_time} the space-time quasi taper is:
-      \deqn{T(h,u) = (arg)^(-6) (1+7 x) (1-x)^7 1_{[0,maxtime/arg]}(u)}
-      \deqn{arg=(1+h/maxdist)^\beta, x=u arg/maxtime}
+      \deqn{T(h,u) = (arg)^{-6} (1+7 x) (1-x)^7 1_{[0,\frac{maxtime}{arg}]}(u)}
+      \deqn{arg=(1+\frac{h}{maxdist} )^\beta, x=u \frac{ arg}{maxtime} }
       }
       where \eqn{0<=\beta<=1} is a fixed parameter of separability (\code{tapsep}), \code{maxtime } the fixed temporal compact support and \code{maxdist} the
       fixed spatial scale parameter.
-      The quasi-taper \code{qt_space} is the same taper but changing the time with the space.
+      The adaptive-taper \code{qt_space} is the same taper but changing the time with the space.
 
 }
 
@@ -228,12 +228,12 @@ and non-separable models.
    Let \code{R(h)} be a  spatial correlation model given in standard notation.
    Then the covariance model
    applied with arbitrary variance and scale equals to:
-  \deqn{C(h)=sill +nugget ,   if h=0 }    \cr
-  \deqn{C(h)=sill * R( h / scale,,...)  ,   if h>0 }
+  \deqn{C(h)=sill +nugget ,   \quad if \quad h=0 }    \cr
+  \deqn{C(h)=sill * R( \frac{h}{scale},...)  ,  \quad if \quad h>0 }
   Similarly if \code{R(h,u)} is a spatio-temporal correlation model given in standard notation,
    then the covariance model is:
-  \deqn{C(h,u)=sill +nugget ,   if h=0,u=0 }    \cr
-  \deqn{C(h,u)=sill * R( h / scale_s,u / scale_t,...)  ,   if h>0 or u>0 }
+  \deqn{C(h,u)=sill +nugget ,  \quad if \quad  h=0,u=0 }    \cr
+  \deqn{C(h,u)=sill * R( \frac{h}{scale_s},\frac{u}{scale_t},...)  ,  \quad if \quad h>0 \quad or \quad u>0 }
 
 
   Here \sQuote{...} stands for additional parameters.
@@ -245,15 +245,15 @@ and non-separable models.
 
     Let \code{R(h)} be a spatial taper  given in standard notation.
    Then the taper function applied with an arbitrary compact support (maxdist) equals to:
-  \deqn{T(h)= R( h / maxdist)}
+  \deqn{T(h)= R( \frac{h}{maxdist})}
   Similarly if \code{R(h,u)} is a spatio-temporal taper given in standard notation, then the taper
   function applied with  arbitrary compact supports (maxdist, maxtime)  equals to:
 
-  \deqn{T(h,u)= R( h / maxdist,u / maxtime)}
+  \deqn{T(h,u)= R( \frac{h}{maxdist},\frac{u}{maxtime})}
 
 
   Then the tapered covariance matrix is obtained as:
-       \deqn{C_tap(h,u)= T(h,u)C(h,u) }
+       \deqn{C_{tap}(h,u)= T(h,u)C(h,u) }
 
 
 }

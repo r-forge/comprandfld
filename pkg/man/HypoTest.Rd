@@ -186,15 +186,18 @@ data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
 
 # Maximum composite-likelihood fitting of the random field, full model:
 fit1 <- FitComposite(data, x, y, corrmodel=corrmodel, maxdist=5,
-                    varest=TRUE,fixed=list(nugget=1))
+                    varest=TRUE,start=list(power=power,scale=scale,sill=sill),
+                    fixed=list(nugget=1))
 
 # Maximum composite-likelihood fitting of the random field, first nasted model:
 fit2 <- FitComposite(data, x, y, corrmodel=corrmodel, maxdist=5,
-                    varest=TRUE,fixed=list(nugget=1,sill=1))
+                    varest=TRUE,start=list(power=power,scale=scale),
+                    fixed=list(nugget=1,sill=1))
 
 # Maximum composite-likelihood fitting of the random field, second nasted model:
 fit3 <- FitComposite(data, x, y, corrmodel=corrmodel, maxdist=5,
-                    varest=TRUE,fixed=list(nugget=1,sill=1,mean=0,power=1.3))
+                    varest=TRUE,start=list(scale=scale),
+                    fixed=list(nugget=1,sill=1,mean=0,power=1.3))
 
 # Hypothesis testing results:
 # composite Wald-type statistic:

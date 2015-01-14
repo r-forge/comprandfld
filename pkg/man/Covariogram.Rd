@@ -108,7 +108,7 @@ set.seed(31231)
 # Set the coordinates of the points:
 x <- runif(100, 0, 10)
 y <- runif(100, 0, 10)
-
+coords=cbind(x,y)
 
 ################################################################
 ###
@@ -124,15 +124,22 @@ corrmodel <- "exponential"
 mean <- 0
 sill <- 1
 nugget <- 0
-scale <- 3
+scale <- 2
 
 # Simulation of the Gaussian random field:
-data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
+data <- RFsim(coordx=coords, corrmodel=corrmodel, param=list(mean=mean,
               sill=sill, nugget=nugget, scale=scale))$data
 
 # Maximum composite-likelihood fitting of the Gaussian random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel,
-                    type='Difference')
+
+start=list(scale=scale,sill=sill,mean=mean(data))
+fixed=list(nugget=nugget)
+# Maximum composite-likelihood fitting of the random field:
+fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel,likelihood="Marginal",
+                     type="Pairwise",start=start,fixed=fixed,maxdist=6)
+
+# Results:
+print(fit)
 
 # Empirical estimation of the variogram:
 vario <- EVariogram(data, x, y)
@@ -140,7 +147,7 @@ vario <- EVariogram(data, x, y)
 # Plot of covariance and variogram functions:
 par(mfrow=c(1,2))
 Covariogram(fit, show.cov=TRUE, show.range=TRUE,
-            show.vario=TRUE, vario=vario)
+            show.vario=TRUE, vario=vario,pch=20)
 
 
 ################################################################
@@ -154,23 +161,24 @@ Covariogram(fit, show.cov=TRUE, show.range=TRUE,
 
 set.seed(1126)
 # Simulation of the max-stable random field:
-data <- RFsim(x, y, corrmodel=corrmodel, model="ExtGauss", replicates=20,
+data <- RFsim(coordx=coords, corrmodel=corrmodel, model="ExtGauss", replicates=20,
               param=list(mean=mean,sill=sill,nugget=nugget,scale=scale))$data
 
+start=list(sill=sill,scale=scale)
 # Maximum composite-likelihood fitting of the max-stable random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel, model='ExtGauss',
+fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel, model='ExtGauss',
                     replicates=20, varest=TRUE, vartype='Sampling',
-                    margins="Frechet")
+                    margins="Frechet",start=start)
 
 data <- Dist2Dist(data, to='sGumbel')
 
 # Empirical estimation of the madogram:
-vario <- EVariogram(data, x, y, type='madogram', replicates=20)
+vario <- EVariogram(data, coordx=coords, type='madogram', replicates=20)
 
 # Plot of correlation and extremal coefficient functions:
 par(mfrow=c(1,2))
 Covariogram(fit, show.cov=TRUE, show.range=TRUE, show.extc=TRUE,
-            vario=vario, pract.range=84)
+            vario=vario, pract.range=84,pch=20)
 
 
 ################################################################
@@ -186,7 +194,7 @@ Covariogram(fit, show.cov=TRUE, show.range=TRUE, show.extc=TRUE,
 x <- runif(20, 0, 1)
 y <- runif(20, 0, 1)
 # Define the temporal sequence:
-time <- seq(0, 50, 1)
+time <- seq(0, 30, 1)
 
 # Simulation of the spatio-temporal Gaussian random field:
 data <- RFsim(x, y, time, corrmodel="exp_exp",param=list(mean=mean,
@@ -208,7 +216,7 @@ Covariogram(fit,show.cov=TRUE)
 Covariogram(fit,vario=vario,show.vario=TRUE)
 
 # Plot of covariance, variogram and spatio and temporal profiles:
-Covariogram(fit,vario=vario,fix.lagt=1,fix.lags=1,show.vario=TRUE)
+Covariogram(fit,vario=vario,fix.lagt=1,fix.lags=1,show.vario=TRUE,pch=20)
 
 ################################################################
 ###
@@ -239,7 +247,7 @@ fit <- FitComposite(data, x, y, corrmodel=corrmodel, model="BinaryGauss",
 vario <- EVariogram(data, x, y, type="lorelogram", maxdist=2)
 
 # Plot of fitted and empirical lorelograms:
-Covariogram(fit, vario=vario, show.vario=TRUE, lags=seq(0.1,2,0.1))
+Covariogram(fit, vario=vario, show.vario=TRUE, lags=seq(0.1,2,0.1),pch=20)
 }
 
 \keyword{Composite}

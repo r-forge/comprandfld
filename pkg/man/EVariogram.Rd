@@ -163,8 +163,8 @@ library(RandomFields)
 set.seed(514)
 
 # Set the coordinates of the sites:
-x <- runif(200, 0, 10)
-y <- runif(200, 0, 10)
+x <- runif(150, 0, 10)
+y <- runif(150, 0, 10)
 
 
 ################################################################
@@ -207,7 +207,7 @@ plot(fit$centers, fit$variograms, xlab='h', ylab=expression(gamma(h)),
 
 set.seed(331)
 # Define the temporal sequence:
-times <- seq(1,10,1)
+times <- seq(1,7,1)
 
 # Simulation of a spatio-temporal Gaussian random field:
 data <- RFsim(x, y, times, corrmodel="gneiting",
@@ -281,60 +281,7 @@ plot(fit$centers, fit$extcoeff, xlab='h', ylab=expression(theta(h)),
      main="extremal coefficient")
 
 
-################################################################
-###
-### Example 4. Empirical estimation of the lorelogram from a
-### spatio-temporal Binary-Gaussian random field with double
-### exponential correlation.
-### One spatio-temporal replication is simulated.
-###
-###############################################################
 
-#set.seed(5351)
-# Define the temporal sequence:
-#times <- seq(1,10,1)
-
-# Simulation of othe space-time Binary Gaussian random field:
-
-#data <- RFsim(x, y, times, corrmodel="exp_exp", model="BinaryGauss",
-#        threshold=0, param=list(nugget=nugget,mean=mean,scale_t=1,
-#        scale_s=1,sill=1))$data
-
-# Empirical lorelogram estimation:
-#fit <- EVariogram(data, x, y, times, type="lorelogram", maxtime=6,maxdist=4)
-
-# Building space-time lorelogram
-#st.vario <- matrix(fit$variogramst,length(fit$centers),length(fit$bint))
-#tempvario <- rbind(fit$variogramt,st.vario)
-#st.vario <- cbind(c(NA,fit$variograms),tempvario)
-
-#par(mfrow=c(2,2))
-
-# Results:
-# Marginal spatial empirical lorelogram
-#plot(fit$centers, fit$variograms, xlab='h', ylab="lorelogram",
-#     xlim=c(0, max(fit$centers)), pch=20,main="Marginal spatial lorelgram")
-
-# Marginal temporal empirical  lorelogram
-#plot(fit$bint, fit$variogramt, xlab='t', ylab="lorelogram",
-#     xlim=c(0,max(fit$bint)), pch=20,main="Marginal temporal lorelogram")
-
-# 3d Spatio-temporal lorelogram:
-#require(scatterplot3d)
-#st.grid <- expand.grid(c(0,fit$centers), c(0,fit$bint))
-
-#scatterplot3d(st.grid[,1], st.grid[,2], c(st.vario),
-#              highlight.3d=TRUE, xlab = "h", ylab = "t",
-#              zlab="Lorelogram",pch=20, main="Space-time lorelogram",
-#              cex.axis=.7, mar=c(2,2,2,2), mgp=c(0,0,0),cex.lab=.7)
-
-# smoothed version:
-#par(mai=c(.2,.2,.2,.2),mgp=c(1.2,.5, 0))
-#persp(c(0,fit$centers),c(0,fit$bint),st.vario,
-#      xlab = "h", ylab = "t", zlab ="Lorelogram",
-#      ltheta=90, shade=0.75, ticktype="detailed",
-#      phi=30,theta=30, main="Space-time lorelogram",
-#      cex.axis=.8, cex.lab=.8)
 }
 
 \keyword{Variogram}

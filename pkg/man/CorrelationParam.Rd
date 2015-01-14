@@ -21,5 +21,22 @@ CorrelationParam(corrmodel)
   Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
   \url{http://staff.deuv.cl/bevilacqua/}.}
 
+\examples{
+require(CompRandFld)
+################################################################
+###
+### Example 1. Parameters of the  Matern correlation model
+###
+###############################################################
 
+CorrelationParam("matern")
+
+################################################################
+###
+### Example 1. Parameters of the  Gneiting correlation model
+###
+###############################################################
+
+CorrelationParam("gneiting")
+}
 \keyword{Composite}

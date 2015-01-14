@@ -505,9 +505,9 @@ sill <- 1
 nugget <- 0
 scale <- 1.5
 param<-list(mean=mean,sill=sill,nugget=nugget,scale=scale)
-
+coords=cbind(x,y)
 # Simulation of the spatial Gaussian random field:
-data <- RFsim(x, y, corrmodel=corrmodel, param=param)$data
+data <- RFsim(coordx=coords, corrmodel=corrmodel, param=param)$data
 
 # Fixed parameters
 fixed<-list(mean=mean,nugget=nugget)
@@ -528,8 +528,8 @@ start<-list(scale=scale,sill=sill)
 
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel, maxdist=5,
-                    varest=TRUE,start=start,fixed=fixed)
+fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel, maxdist=5,
+                    likelihood="Marginal",type="Pairwise",start=start,fixed=fixed)
 
 # Results:
 print(fit)
@@ -544,7 +544,7 @@ print(fit)
 ###############################################################
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood="Full",
+fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel,likelihood="Full",
                     type="Standard",varest=TRUE,start=start,fixed=fixed)
 # Results:
 print(fit)
@@ -559,7 +559,7 @@ print(fit)
 ###############################################################
 
 # Maximum tapered likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel,likelihood="Full",
+fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel,likelihood="Full",
                     type="Tapering",taper="Wendland1",maxdist=4,
                     varest=TRUE,start=start,fixed=fixed)
 
@@ -605,12 +605,12 @@ x <- runif(200, 0, 10)
 y <- runif(200, 0, 10)
 
 # Simulation of the spatial Binary-Gaussian random field:
-data <- RFsim(x, y, corrmodel=corrmodel, model="BinaryGauss",
+data <- RFsim(coordx=coords, corrmodel=corrmodel, model="BinaryGauss",
               threshold=0, param=list(mean=mean,sill=.8,
               nugget=nugget,scale=scale))$data
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, x, y, corrmodel=corrmodel, threshold=0,
+fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel, threshold=0,
                     model="BinaryGauss", fixed=list(nugget=nugget,
                     mean=0),start=list(scale=.1,sill=.1))
 
@@ -662,7 +662,7 @@ start<-list(scale_s=scale_s,scale_t=scale_t,sill=sill)
 
 # Maximum composite-likelihood fitting of the random field:
 fit <- FitComposite(data=data,coordx=coords,coordt=time,corrmodel="exp_exp",
-                    maxtime=2,maxdist=1,likelihood="Conditional",type="Pairwise",
+                    maxtime=2,maxdist=1,likelihood="Marginal",type="Pairwise",
                     start=start,fixed=fixed)
 
 # Results:

@@ -152,11 +152,12 @@ coords<-cbind(x,y)
 set.seed(3132)
 data <- RFsim(coordx=coords, corrmodel=corrmodel,
               param=param)$data
-
+start=list(scale=scale,sill=sill)
+fixed=list(mean=mean,nugget=nugget)
 # Maximum likelihood fitting :
 fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel,
                     likelihood='Full', type='Standard',
-                    fixed=list(mean=mean,nugget=nugget))
+                    start=start,fixed=fixed)
 
 # locations to predict
 xx<-seq(0,1,0.02)
