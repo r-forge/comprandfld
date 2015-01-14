@@ -152,8 +152,8 @@ coords<-cbind(x,y)
 set.seed(3132)
 data <- RFsim(coordx=coords, corrmodel=corrmodel,
               param=param)$data
-start=list(scale=scale,sill=sill)
-fixed=list(mean=mean,nugget=nugget)
+start<-list(scale=scale,sill=sill)
+fixed<-list(mean=mean,nugget=nugget)
 # Maximum likelihood fitting :
 fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel,
                     likelihood='Full', type='Standard',
@@ -180,7 +180,7 @@ pr<-Kri(loc=loc_to_pred,coordx=coords,corrmodel=corrmodel,
 ###
 ###############################################################
 
-pr_tap=Kri(loc=loc_to_pred,coordx=coords,corrmodel=corrmodel,data=data,
+pr_tap<-Kri(loc=loc_to_pred,coordx=coords,corrmodel=corrmodel,data=data,
        param= as.list(c(fit$param,fit$fixed)),type="Tapering",
        maxdist=0.15,taper="Wendland1")
 
@@ -209,28 +209,28 @@ image.plot(xx, xx, matrix(pr_tap$varpred,ncol=length(xx)),col=colour,
 ################################################################
 
 # Define the spatial-coordinates of the points:
-x <- runif(15, 0, 1)
-y <- runif(15, 0, 1)
-coords<-cbind(x,y)
-times<-1:7
+#x <- runif(15, 0, 1)
+#y <- runif(15, 0, 1)
+#coords<-cbind(x,y)
+#times<-1:7
 
 #  Define the times to predict
-times_to_pred<-8:10
+#times_to_pred<-8:10
 
 # Define model correlation and associated parameters
-corrmodel<-"exp_exp"
-param<-list(nugget=0,mean=1,scale_s=1,scale_t=2,sill=2)
+#corrmodel<-"exp_exp"
+#param<-list(nugget=0,mean=1,scale_s=1,scale_t=2,sill=2)
 
 # Simulation of the space time Gaussian random field:
-set.seed(31)
-data<-RFsim(coordx=coords,coordt=times,corrmodel=corrmodel,
-           param=param)$data
+#set.seed(31)
+#data<-RFsim(coordx=coords,coordt=times,corrmodel=corrmodel,
+#           param=param)$data
 
 # Maximum likelihood fitting of the space time random field:
-fit <- FitComposite(data, coordx=coords, coordt=times,
-                    corrmodel=corrmodel, likelihood='Full',
-                    type='Standard',fixed=list(mean=1,
-                    nugget=0))
+#fit <- FitComposite(data, coordx=coords, coordt=times,
+#                    corrmodel=corrmodel, likelihood='Full',
+#                    type='Standard',fixed=list(mean=1,
+#                    nugget=0))
 
 ################################################################
 ###
@@ -240,12 +240,12 @@ fit <- FitComposite(data, coordx=coords, coordt=times,
 ###
 ################################################################
 
-param<-as.list(c(fit$param,fit$fixed))
-pr<-Kri(loc=c(.5,.5),time=times_to_pred,coordx=coords,coordt=times,
-        corrmodel=corrmodel,param=param,data=data,type_krig="ordinary")
+#param<-as.list(c(fit$param,fit$fixed))
+#pr<-Kri(loc=c(.5,.5),time=times_to_pred,coordx=coords,coordt=times,
+#        corrmodel=corrmodel,param=param,data=data,type_krig="ordinary")
 
-pr$pred       #  prediction
-pr$varpred    #  prediction variance
+#pr$pred       #  prediction
+#pr$varpred    #  prediction variance
 
 
 ################################################################
@@ -256,17 +256,17 @@ pr$varpred    #  prediction variance
 ###
 ###############################################################
 
-pr<-Kri(loc=loc_to_pred,time=times_to_pred,coordx=coords,coordt=times,
-       corrmodel=corrmodel, param=param,data=data)
+#pr<-Kri(loc=loc_to_pred,time=times_to_pred,coordx=coords,coordt=times,
+#       corrmodel=corrmodel, param=param,data=data)
 
-par(mfrow=c(3,2))
+#par(mfrow=c(3,2))
 
-for(i in 1:3){
-image.plot(xx, xx, matrix(pr$pred[i,],ncol=length(xx)),col=colour,
-           main = paste("Kriging Time=" , i),ylab="")
-image.plot(xx, xx, matrix(pr$varpred[i,],ncol=length(xx)),col=colour,
-           main = paste("Std error Time=" , i),ylab="")
-}
+#for(i in 1:3){
+#image.plot(xx, xx, matrix(pr$pred[i,],ncol=length(xx)),col=colour,
+#           main = paste("Kriging Time=" , i),ylab="")
+#image.plot(xx, xx, matrix(pr$varpred[i,],ncol=length(xx)),col=colour,
+#           main = paste("Std error Time=" , i),ylab="")
+#}
 
 
 

@@ -599,23 +599,23 @@ print(fit)
 ###
 ###############################################################
 
-set.seed(3128)
+#set.seed(3128)
 
-x <- runif(200, 0, 10)
-y <- runif(200, 0, 10)
+#x <- runif(200, 0, 10)
+#y <- runif(200, 0, 10)
 
 # Simulation of the spatial Binary-Gaussian random field:
-data <- RFsim(coordx=coords, corrmodel=corrmodel, model="BinaryGauss",
-              threshold=0, param=list(mean=mean,sill=.8,
-              nugget=nugget,scale=scale))$data
+#data <- RFsim(coordx=coords, corrmodel=corrmodel, model="BinaryGauss",
+#              threshold=0, param=list(mean=mean,sill=.8,
+#              nugget=nugget,scale=scale))$data
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel, threshold=0,
-                    model="BinaryGauss", fixed=list(nugget=nugget,
-                    mean=0),start=list(scale=.1,sill=.1))
+#fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel, threshold=0,
+#                    model="BinaryGauss", fixed=list(nugget=nugget,
+#                    mean=0),start=list(scale=.1,sill=.1))
 
 # Results:
-print(fit)
+#print(fit)
 
 
 ###############################################################
@@ -623,32 +623,32 @@ print(fit)
 ###############################################################
 
 # Define the temporal sequence:
-time <- seq(1, 80, 1)
+#time <- seq(1, 80, 1)
 
 # Define the spatial-coordinates of the points:
-x <- runif(10, 0, 10)
-y <- runif(10, 0, 10)
-coords=cbind(x,y)
+#x <- runif(10, 0, 10)
+#y <- runif(10, 0, 10)
+#coords=cbind(x,y)
 
 # Set the covariance model's parameters:
-corrmodel="exp_exp"
-scale_s=0.5
-scale_t=1
-sill=1
-nugget=0
-mean=0
+#corrmodel="exp_exp"
+#scale_s=0.5
+#scale_t=1
+#sill=1
+#nugget=0
+#mean=0
 
-param<-list(mean=0,scale_s=1,scale_t=1,sill=sill,nugget=nugget)
+#param<-list(mean=0,scale_s=1,scale_t=1,sill=sill,nugget=nugget)
 
 # Simulation of the spatial-temporal Gaussian random field:
-data <- RFsim(coordx=coords,coordt=time,corrmodel=corrmodel,
-              param=param)$data
+#data <- RFsim(coordx=coords,coordt=time,corrmodel=corrmodel,
+#              param=param)$data
 
 # Fixed parameters
-fixed<-list(mean=mean,nugget=nugget)
+#fixed<-list(mean=mean,nugget=nugget)
 
 # Starting value for the estimated parameters
-start<-list(scale_s=scale_s,scale_t=scale_t,sill=sill)
+#start<-list(scale_s=scale_s,scale_t=scale_t,sill=sill)
 
 ################################################################
 ###
@@ -661,12 +661,12 @@ start<-list(scale_s=scale_s,scale_t=scale_t,sill=sill)
 ###############################################################
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data=data,coordx=coords,coordt=time,corrmodel="exp_exp",
-                    maxtime=2,maxdist=1,likelihood="Marginal",type="Pairwise",
-                    start=start,fixed=fixed)
+#fit <- FitComposite(data=data,coordx=coords,coordt=time,corrmodel="exp_exp",
+#                    maxtime=2,maxdist=1,likelihood="Marginal",type="Pairwise",
+#                    start=start,fixed=fixed)
 
 # Results:
-print(fit)
+#print(fit)
 
 }
 \keyword{Composite}

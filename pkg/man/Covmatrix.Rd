@@ -346,19 +346,19 @@ matrix2$nozero
 ###############################################################
 
 # Define the temporal-coordinates:
-times <- seq(1, 5, 1)
+#times <- seq(1, 5, 1)
 
 # Define correlation model
-corrmodel="exp_exp"
+#corrmodel="exp_exp"
 
 # Define covariance parameters
-param=list(scale_s=0.3,scale_t=0.5,sill=1)
+#param=list(scale_s=0.3,scale_t=0.5,sill=1)
 
 # Simulation of a spatial Gaussian random field:
-matrix3 <- Covmatrix(x, y, times, corrmodel=corrmodel,
-                     param=param)
+#matrix3 <- Covmatrix(x, y, times, corrmodel=corrmodel,
+#                     param=param)
 
-dim(matrix3$covmatrix)
+#dim(matrix3$covmatrix)
 
 ################################################################
 ###
@@ -368,12 +368,11 @@ dim(matrix3$covmatrix)
 ###############################################################
 
 # Simulation of a spatial Gaussian random field:
-matrix4 <- Covmatrix(x, y, times, corrmodel=corrmodel, param=param, maxdist=0.3,
-                     maxtime=2,taper="Wendland2_Wendland2",type="Tapering")
+#matrix4 <- Covmatrix(x, y, times, corrmodel=corrmodel, param=param, maxdist=0.3,
+#                     maxtime=2,taper="Wendland2_Wendland2",type="Tapering")
 
 # Tapered space time covariance matrix
-as.matrix(matrix4$covmatrix)[1:10,1:10]
-
+#as.matrix(matrix4$covmatrix)[1:10,1:10]
 
 }
 \keyword{Simulation}
