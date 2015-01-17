@@ -112,6 +112,9 @@ WLeastSquare(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 
 \references{
 
+Padoan, S. A. and Bevilacqua, M. (2015). Analysis of Random Fields Using CompRandFld.
+  \emph{Journal of Statistical Software}, \bold{63}(9), 1--27.
+
   Barry, J. T., Crowder, M. J. and Diggle, P. J. (1997)
   \emph{Parametric estimation of the variogram}. Tech. Report, Dept Maths &
   Stats, Lancaster University.

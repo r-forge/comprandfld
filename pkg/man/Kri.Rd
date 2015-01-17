@@ -108,6 +108,9 @@ In this case, space or space-time tapered function and spatial or spatio- tempor
 
 
 \references{
+Padoan, S. A. and Bevilacqua, M. (2015). Analysis of Random Fields Using CompRandFld.
+  \emph{Journal of Statistical Software}, \bold{63}(9), 1--27.
+  
   Gaetan, C. and Guyon, X. (2010) \emph{Spatial Statistics and Modelling}.
   Spring Verlang, New York.
   Furrer R.,  Genton, M.G. and  Nychka D. (2006). \emph{Covariance

@@ -365,6 +365,9 @@ FitComposite(data, coordx, coordy=NULL, coordt=NULL, corrmodel,
 
 \references{
 
+Padoan, S. A. and Bevilacqua, M. (2015). Analysis of Random Fields Using CompRandFld.
+  \emph{Journal of Statistical Software}, \bold{63}(9), 1--27.
+
   Maximum Restricted Likelihood Estimator:
 
   Harville, D. A. (1977)

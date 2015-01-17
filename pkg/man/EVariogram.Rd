@@ -130,6 +130,9 @@ EVariogram(data, coordx, coordy, coordt=NULL, cloud=FALSE,
 }
 
 \references{
+  Padoan, S. A. and Bevilacqua, M. (2015). Analysis of Random Fields Using CompRandFld.
+  \emph{Journal of Statistical Software}, \bold{63}(9), 1--27.
+
   Cooley, D., Naveau, P. and Poncet, P. (2006) \emph{Variograms for spatial
   max-stable random fields}. Dependence in Probability and
 Statistics, p. 373--390.
