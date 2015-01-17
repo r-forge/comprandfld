@@ -1,0 +1,20 @@
+citHeader("To cite CompRandFld in publications use:")
+
+citEntry(entry = "Article",
+  title        = "Analysis of Random Fields Using {CompRandFld}",
+  author       = personList(as.person("Simone A. Padoan"),
+                   as.person("Moreno Bevilacqua")),
+  journal      = "Journal of Statistical Software",
+  year         = "2015",
+  volume       = "63",
+  number       = "9",
+  pages        = "1--27",
+  url          = "http://www.jstatsoft.org/v63/i09/",
+
+  textVersion  =
+  paste("Simone A. Padoan, Moreno Bevilacqua (2015).",
+        "Analysis of Random Fields Using CompRandFld.",
+        "Journal of Statistical Software, 63(9), 1-27.",
+        "URL http://www.jstatsoft.org/v63/i09/.")
+)
+
