@@ -168,8 +168,8 @@ scale <- 2
 data <- RFsim(x, y, corrmodel=corrmodel, param=list(mean=mean,
               sill=sill, nugget=nugget, scale=scale))$data
 
-fix=list(nugget=0)
-ini=list(scale=scale,sill=sill)
+fix<-list(nugget=0)
+ini<-list(scale=scale,sill=sill)
 # Least square fitting of the random field:
 fit <- WLeastSquare(data, x, y, corrmodel=corrmodel,fixed=fix,start=ini)
 

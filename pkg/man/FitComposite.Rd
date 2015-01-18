@@ -508,7 +508,7 @@ sill <- 1
 nugget <- 0
 scale <- 1.5
 param<-list(mean=mean,sill=sill,nugget=nugget,scale=scale)
-coords=cbind(x,y)
+coords<-cbind(x,y)
 # Simulation of the spatial Gaussian random field:
 data <- RFsim(coordx=coords, corrmodel=corrmodel, param=param)$data
 

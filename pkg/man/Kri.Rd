@@ -116,8 +116,6 @@ Padoan, S. A. and Bevilacqua, M. (2015). Analysis of Random Fields Using CompRan
   Furrer R.,  Genton, M.G. and  Nychka D. (2006). \emph{Covariance
   Tapering for Interpolation of Large Spatial Datasets}.
   Journal of Computational and Graphical Statistics, \bold{15-3}, 502--523.
-
-
 }
 
 \seealso{\code{\link{Covmatrix}}}
