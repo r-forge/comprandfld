@@ -597,12 +597,12 @@ void Seq(double *x, int len, double *res)
 
   return;
 }
-// define a sequence of 'len' points of of 'delta' steps from the starting point x[0]
+// define a sequence of 'len' points of 'delta' steps from the starting point x[0]
 void SeqStep(double *x, int len, double step, double *res)
 {
   int i=0;
   res[0]=x[0];
-  for(i=0;i<len;i++) res[i+1]=res[i]+step;
+  for(i=0;i<len;i++) res[i]=res[i-1]+step;
   return;
 }
 // Determine (for the sub-sampling procedure) the sub-coordinates and
