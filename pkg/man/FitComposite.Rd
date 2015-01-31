@@ -426,10 +426,10 @@ Stat.}, \bold{21-2}, 433--452.
   \emph{Journal of the American Statistical Association, Theory &
     Methods}, \bold{107}, 268--280.
 
-  Bevilacqua, M. Gaetan, C. (2013)
-  On composite likelihood inference based on pairs for
-spatial Gaussian random fields
-  \emph{Techical Report, Department of Statistics, de Valparaiso University}.
+  Bevilacqua, M. Gaetan, C. (2014)
+  Comparing composite likelihood methods based on pairs for 
+  spatial Gaussian random fields
+  \emph{Statistics and Computing}.DOI:10.1111/2041-210X.12167
 
   Spatial Extremes:
 
@@ -485,7 +485,7 @@ spatial Gaussian random fields
 \author{Simone Padoan, \email{simone.padoan@unibocconi.it},
   \url{http://faculty.unibocconi.it/simonepadoan};
   Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
-  \url{http://staff.deuv.cl/bevilacqua/}.}
+  \url{https://sites.google.com/a/uv.cl/moreno-bevilacqua/home}.}
 
 \examples{
 library(CompRandFld)
@@ -531,8 +531,9 @@ start<-list(scale=scale,sill=sill)
 
 
 # Maximum composite-likelihood fitting of the random field:
-fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel, maxdist=5,
-                    likelihood="Marginal",type="Pairwise",start=start,fixed=fixed)
+fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel, maxdist=2,
+                    likelihood="Marginal",type="Pairwise",varest=TRUE,
+                    start=start,fixed=fixed)
 
 # Results:
 print(fit)
@@ -563,7 +564,7 @@ print(fit)
 
 # Maximum tapered likelihood fitting of the random field:
 fit <- FitComposite(data, coordx=coords, corrmodel=corrmodel,likelihood="Full",
-                    type="Tapering",taper="Wendland1",maxdist=4,
+                    type="Tapering",taper="Wendland1",maxdist=1.5,
                     varest=TRUE,start=start,fixed=fixed)
 
 # Results:

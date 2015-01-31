@@ -90,8 +90,7 @@ Padoan, S. A. and Bevilacqua, M. (2015). Analysis of Random Fields Using CompRan
 \author{Simone Padoan, \email{simone.padoan@unibocconi.it},
   \url{http://faculty.unibocconi.it/simonepadoan};
   Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
-  \url{http://staff.deuv.cl/bevilacqua/}.}
-
+  \url{https://sites.google.com/a/uv.cl/moreno-bevilacqua/home}.}
 
 \examples{
 library(CompRandFld)

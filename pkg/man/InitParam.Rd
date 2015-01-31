@@ -89,5 +89,8 @@ InitParam(coordx, coordy, coordt, corrmodel, data, distance, fcall,
   Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
   \url{http://staff.deuv.cl/bevilacqua/}.}
 
+\section{Acknowledgements}{
+We thank the CRAN team for having helped us in finding a bug in the code. 
+}
 
 \keyword{Composite}

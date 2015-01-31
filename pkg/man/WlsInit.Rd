@@ -85,7 +85,7 @@ WlsInit(coordx, coordy, coordt, corrmodel, data, distance, fcall, fixed,
 \author{Simone Padoan, \email{simone.padoan@unibocconi.it},
   \url{http://faculty.unibocconi.it/simonepadoan};
   Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
-  \url{http://staff.deuv.cl/bevilacqua/}.}
+  \url{https://sites.google.com/a/uv.cl/moreno-bevilacqua/home}.}
 
 
 \keyword{LeastSquare}

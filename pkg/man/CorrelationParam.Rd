@@ -19,7 +19,7 @@ CorrelationParam(corrmodel)
 \author{Simone Padoan, \email{simone.padoan@unibocconi.it},
   \url{http://faculty.unibocconi.it/simonepadoan};
   Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
-  \url{http://staff.deuv.cl/bevilacqua/}.}
+  \url{https://sites.google.com/a/uv.cl/moreno-bevilacqua/home}.}
 
 \examples{
 require(CompRandFld)
@@ -33,7 +33,7 @@ CorrelationParam("matern")
 
 ################################################################
 ###
-### Example 1. Parameters of the  Gneiting correlation model
+### Example 2. Parameters of the  Gneiting correlation model
 ###
 ###############################################################
 
