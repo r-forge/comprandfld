@@ -136,11 +136,14 @@ void Space_Dist(double *coordx,double *coordy,int grid,int *ia,int *idx,
 /******************************************************************************/
 /******************************************************************************/
     double *tlags;   //saving  distance for tapering
-    *npairs=h;
-    tlags=(double *) malloc(*npairs*sizeof(double));
-    for(i=0;i<*npairs;i++)
-      tlags[i]=lags[i];
-    lags=tlags;    // lags is the vector of spatial distances
+    npairs[0]=h;
+    tlags=(double *)  Calloc(h,double);
+    for(i=0;i<h;i++) tlags[i]=lags[i];
+    Free(lags);
+    lags=(double *)  Calloc(h,double);
+    //lags=tlags;    // lags is the vector of spatial distances
+    for(i=0;i<h;i++) lags[i]=tlags[i];
+    Free(tlags);
     }  //end tapering
 
   else{  //no tapering: classical case
@@ -282,9 +285,7 @@ void SpaceTime_Dist(double *coordx,double *coordy,double *coordt,int *grid,int *
     break;
     case 2:  // geod distance
     break;
-    }
-
-     }
+    }}
      else{
   switch(type){
   case 0:  // euclidean distance
@@ -363,12 +364,16 @@ void SpaceTime_Dist(double *coordx,double *coordy,double *coordt,int *grid,int *
                 k=k+1;}}
           break;
          }}
-  *npairs=count;
+  npairs[0]=count;
   double *tlags, *tlagt;
-  tlags=(double *) malloc(*npairs*sizeof(double));
-  tlagt=(double *) malloc(*npairs*sizeof(double));
-  for(i=0;i<*npairs;i++) { tlags[i]=lags[i];tlagt[i]=lagt[i];}
-  lags=tlags;lagt=tlagt;
+  tlags=(double *) Calloc(count,double);
+  tlagt=(double *) Calloc(count,double);
+  for(i=0;i<count;i++) { tlags[i]=lags[i];tlagt[i]=lagt[i];}
+  Free(lags);Free(lagt);
+  lags=(double *)  Calloc(count,double);
+  lagt=(double *)  Calloc(count,double);
+  for(i=0;i<count;i++) {lags[i]=tlags[i];lagt[i]=tlagt[i];}
+  Free(tlags);Free(tlagt);
   }
 
   else {   // no tapering
@@ -602,7 +607,7 @@ void SeqStep(double *x, int len, double step, double *res)
 {
   int i=0;
   res[0]=x[0];
-  for(i=0;i<len;i++) res[i]=res[i-1]+step;
+  for(i=1;i<len;i++) res[i]=res[i-1]+step;
   return;
 }
 // Determine (for the sub-sampling procedure) the sub-coordinates and
@@ -642,96 +647,94 @@ void SetGlobalVar(double *coordx,double *coordy,double *coordt,int *grid,int *ia
 		  int *tap,int *tapmodel,int *type,int *weighted)
 {
   //Spatial settings: //Spatial settings:
-  maxdist=(double *) malloc(1*sizeof(double));//spatial threshould
+  maxdist=(double *) Calloc(1,double);//spatial threshold
   if(maxdist==NULL) {*ismal=0; return;}
-  maximdista=(double *) malloc(1*sizeof(double)); //maximum spatial distance
+  maximdista=(double *) Calloc(1,double);//spatial threshold
   if(maximdista==NULL) {*ismal=0; return;}
   *maximdista=0;
-  minimdista=(double *) malloc(1*sizeof(double)); //minimum spatial distance
+  minimdista=(double *) Calloc(1,double); //minimum spatial distance
   if(minimdista==NULL) {*ismal=0; return;}
   *minimdista=-LOW;
-  ncoord=(int *) malloc(1*sizeof(int));//number of total spatial coordinates
+  ncoord=(int *) Calloc(1,int);//number of total spatial coordinates
   if(ncoord==NULL) {*ismal=0; return;}
   *ncoord=*nsite;
-  ncoordx=(int *) malloc(1*sizeof(int));//number of the first spatial coordinates
+  ncoordx=(int *) Calloc(1,int);//number of the first spatial coordinates
   if(ncoordx==NULL) {*ismal=0; return;}
   *ncoordx=*nsitex;
-  ncoordy=(int *) malloc(1*sizeof(int));//number of the second spatial coordinates
+  ncoordy=(int *) Calloc(1,int);//number of the second spatial coordinates
   if(ncoordy==NULL) {*ismal=0; return;}
   *ncoordy=*nsitey;
-  npairs=(int *) malloc(1*sizeof(int));//effective number of pairs
+  npairs=(int *) Calloc(1,int);//effective number of pairs
   if(npairs==NULL) {*ismal=0; return;}
-  isst=(int *) malloc(1*sizeof(int));//is a spatio-temporal random field?
+  isst=(int *) Calloc(1,int);//is a spatio-temporal random field?
   if(isst==NULL) {*ismal=0; return;}
   if(*times>1) *isst=1; else *isst=0;//set the spatio-temporal flag
-  istap=(int *) malloc(1*sizeof(int));//is tapering?
+  istap=(int *) Calloc(1,int);//is tapering?
   if(istap==NULL) {*ismal=0; return;}
   *istap=*tap;//set the tapering flag
   //set the total number of pairs
   //Random field replications:
-  nrep=(int *) malloc(1 * sizeof(int));//number of iid replicates of the random field
+  nrep=(int *) Calloc(1,int);//number of iid replicates of the random field
   if(nrep==NULL) {*ismal=0; return;}
   *nrep=*replic;
+  tapsep=(double *) Calloc(1,double);//temporal threshold
+  if(tapsep==NULL) {*ismal=0; return;}
+  *tapsep=sep[0];
 
   // Computes the spatial or spatial-temporal distances
   // and the minima and maxima of these distances:
    if(!*isst) {// spatial case
         if(*istap) {// tapering case
            npairs[0]=ncoord[0]*ncoord[0];
-           lags=(double *) malloc(*npairs*sizeof(double));
+           lags=(double *) Calloc(*npairs,double);
            if(lags==NULL){*ismal=0; return;}}
       else {
            int i=0;
            npairs[0]=ncoord[0]*(ncoord[0]-1)*0.5;
-           mlags=malloc(*ncoord*sizeof(double *));
+           mlags= (double **) Calloc(ncoord[0],double *);
            if(mlags==NULL) {*ismal=0; return;}
-           for(i=0;i<*ncoord;i++){
-           mlags[i]=malloc(*ncoord*sizeof(double));
-           if(mlags[i]==NULL) {*ismal=0; return;}
-           mlags[i][i]=0;}  // mlags[i][j] matrix of spatial distances
+           for(i=0;i<ncoord[0];i++){
+              mlags[i]=(double *) Calloc(ncoord[0],double);
+              if(mlags[i]==NULL) {*ismal=0; return;}}  // mlags[i][j] matrix of spatial distances
            }
       Space_Dist(coordx,coordy,grid[0],ia,idx,ismal,ja,srange[1],type[0]);
       if(!ismal[0]) return;
       }
      else { //spatio temporal case
-    maxtime=(double *) malloc(1*sizeof(double));//temporal threshold
+    maxtime=(double *) Calloc(1,double); //temporal threshold
     if(maxtime==NULL) {*ismal=0; return;}
-    maximtime=(double *) malloc(1*sizeof(double));//maximum temporal distance
+    maximtime=(double *) Calloc(1,double);//maximum temporal distance
     if(maximtime==NULL) {*ismal=0; return;}
-    minimtime=(double *) malloc(1*sizeof(double));//minimum temporal distance
+    minimtime=(double *) Calloc(1,double);//minimum temporal distance
     if(minimtime==NULL) {*ismal=0; return;}
-    ntime=(int *) malloc(1*sizeof(int));//number of times
+    ntime=(int *) Calloc(1,int);//number of times
     if(ntime==NULL) {*ismal=0; return;}
     *ntime=*times;
     *maximtime=0;// set the initial maximum time
     *minimtime=-LOW;// set the initial minimum time
     if(*istap) {// tapering case
            npairs[0]=pow(ncoord[0]*ntime[0],2);
-           lags=(double *) malloc(*npairs*sizeof(double));
+           lags=(double *) Calloc(*npairs,double);
            if(lags==NULL){*ismal=0; return;}
-           lagt=(double *) malloc(*npairs*sizeof(double));
+           lagt=(double *) Calloc(*npairs,double);
            if(lagt==NULL){*ismal=0; return;}
-           tapsep=(double *) malloc(1*sizeof(double));//temporal threshold
-           if(tapsep==NULL) {*ismal=0; return;}
-           *tapsep=*sep;
            }
       else {
              int i=0;
              npairs[0]=(ncoord[0]*ntime[0])*(ncoord[0]*ntime[0]-1)*0.5;
           // allocates the matrix of temporal distances:
-             mlagt=malloc(*ntime*sizeof(double *));
-             if(mlagt==NULL) {*ismal=0; return;}
-             for(i=0;i<*ntime;i++){
-             mlagt[i]=malloc(*ntime*sizeof(double));
-             if(mlagt[i]==NULL) {*ismal=0; return;}
-             mlagt[i][i]=0;}
+          mlagt= (double **) Calloc(ntime[0],double *);
+          if(mlagt==NULL) {*ismal=0; return;}
+          for(i=0;i<*ntime;i++){
+              mlagt[i]=(double *) Calloc(ntime[0],double);
+              if(mlagt[i]==NULL) {*ismal=0; return;}}
              // allocates the matrix of spatial distances:
-             mlags=malloc(*ncoord*sizeof(double *));
-             if(mlags==NULL) {*ismal=0; return;}
-             for(i=0;i<*ncoord;i++){
-             mlags[i]=malloc(*ncoord*sizeof(double));
-             if(mlags[i]==NULL) {*ismal=0; return;}
-             mlags[i][i]=0;}
+          mlags= (double **) Calloc(ncoord[0],double *);
+          if(mlags==NULL) {*ismal=0; return;}
+          for(i=0;i<ncoord[0];i++){
+              //mlags[i]=malloc(ncoord[0]*sizeof(double));
+              mlags[i]=(double *) Calloc(ncoord[0],double);
+              if(mlags[i]==NULL) {*ismal=0; return;}}
     }
        SpaceTime_Dist(coordx,coordy,coordt,grid,ia,idx,ismal,ja,tapmodel,srange[1],trange[1],type[0]);
      //Set the range of the temporal intervals:
@@ -753,28 +756,41 @@ void SetGlobalVar(double *coordx,double *coordy,double *coordt,int *grid,int *ia
   return;
   }
 
+// Delete all the global variables
 void DeleteGlobalVar()
 {
-  // Delete all the global variables:
-  free(npairs); npairs=NULL;
-  free(nrep); nrep=NULL;
-  free(minimdista); minimdista=NULL;
-  free(maximdista); maximdista=NULL;
-  free(ncoord); ncoord=NULL;
-  free(ncoordx); ncoord=NULL;
-  free(ncoordy); ncoord=NULL;
-  free(maxdist); maxdist=NULL;
-  free(mlags); mlags=NULL;free(lags);  lags=NULL;
-  free(maximtime); maximtime=NULL;
-  free(minimtime); minimtime=NULL;
-  free(ntime); ntime=NULL;
-  free(maxtime); maxtime=NULL;
-  free(mlags); mlags=NULL;
-  free(mlagt); mlagt=NULL;
-  free(lags);  lags=NULL;
-  free(lagt);  lagt=NULL;
-  free(tapsep); tapsep=NULL;
-  free(istap); istap=NULL;
-  free(isst); isst=NULL;
-  return;
+    // Delete all the global variables:
+    int i=0;
+    if(!*isst) {// spatial case
+         if(*istap) { Free(lags);}         // tapering case
+         else {
+              for(i=0;i<ncoord[0];i++)  {Free(mlags[i]);}
+              Free(mlags);}}
+    else {// spatialtemporal  case
+          if(*istap) {Free(lags);Free(lagt);}  // tapering case
+          else  {
+            for(i=0;i<ncoord[0];i++) { Free(mlags[i]);}
+            Free(mlags);
+            for(i=0;i<ntime[0];i++) { Free(mlagt[i]);}
+            Free(mlagt);}
+    Free(maxtime);
+    Free(maximtime);
+    Free(minimtime);
+    Free(ntime);
+    }
+    
+    Free(tapsep);
+    Free(npairs);
+    Free(nrep);
+    
+    Free(maxdist);
+    Free(minimdista);
+    Free(maximdista);
+    Free(ncoord);
+    Free(ncoordx);
+    Free(ncoordy);
+    
+    Free(istap);
+    Free(isst);
+    return;
 }
