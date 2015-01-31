@@ -1,4 +1,4 @@
-####################################################
+    ####################################################
 ### Authors: Simone Padoan and Moreno Bevilacqua.
 ### Emails: simone.padoan@unibocconi.it,
 ### moreno.bevilacqua@uv.cl
@@ -75,7 +75,7 @@ Covmatrix <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Euc
     tapmod <- setup$tapmodel
     tp=.C(fname, tapcorr=double(initparam$numpairs),as.integer(tapmod),as.double(c(0,0,1)),
        as.double(1),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
-     setup$taps<-tp$tapcorr
+    setup$taps<-tp$tapcorr
     }
     covmatrix<- Cmatrix(initparam$corrmodel,dime,initparam$param[initparam$namesnuis],initparam$numpairs,numpairstot,
                         initparam$param[initparam$namescorr],setup,initparam$spacetime,initparam$type)
