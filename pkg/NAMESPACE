@@ -1,2 +1,6 @@
 exportPattern("^[^\\.]")
 useDynLib(CompRandFld)
+# S3 Methods
+
+S3method(print,FitComposite)
+S3method(print,WLS)
