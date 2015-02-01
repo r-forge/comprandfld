@@ -87,7 +87,7 @@ InitParam(coordx, coordy, coordt, corrmodel, data, distance, fcall,
 \author{Simone Padoan, \email{simone.padoan@unibocconi.it},
   \url{http://faculty.unibocconi.it/simonepadoan};
   Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
-  \url{http://staff.deuv.cl/bevilacqua/}.}
+  \url{https://sites.google.com/a/uv.cl/moreno-bevilacqua/home}.}
 
 \section{Acknowledgements}{
 We thank the CRAN team for having helped us in finding a bug in the code. 
