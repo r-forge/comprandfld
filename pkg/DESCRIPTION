@@ -1,7 +1,7 @@
 Package: CompRandFld
 Version: 1.0.3-4
 Date: 2015-01-31
-Title: Composite-likelihood Based Analysis of Random Fields
+Title: Composite-Likelihood Based Analysis of Random Fields
 Author: Simone Padoan[aut, cre] <simone.padoan@unibocconi.it>, Moreno Bevilacqua[aut] <moreno.bevilacqua@uv.cl>
 Maintainer: Simone Padoan <simone.padoan@unibocconi.it>
 Depends: R (>= 2.13)
