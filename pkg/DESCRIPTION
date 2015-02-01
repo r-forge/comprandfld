@@ -1,11 +1,11 @@
 Package: CompRandFld
 Version: 1.0.3-4
 Date: 2015-01-31
-Title: Composite-likelihood based Analysis of Random Fields
+Title: Composite-likelihood Based Analysis of Random Fields
 Author: Simone Padoan[aut, cre] <simone.padoan@unibocconi.it>, Moreno Bevilacqua[aut] <moreno.bevilacqua@uv.cl>
 Maintainer: Simone Padoan <simone.padoan@unibocconi.it>
 Depends: R (>= 2.13)
-Description: This package provides a set of procedures for the analysis of Random Fields using likelihood and non-standard likelihood methods. Spatial analysis often involves dealing with large dataset. Therefore even simple studies may be too computationally demanding. Composite likelihood inference is emerging as a useful tool for mitigating such computational problems. This methodology shows satisfactory results when compared with other techniques such as the tapering method. Moreover, composite likelihood (and related quantities) have some useful properties similar to those of the standard likelihood.
+Description: A set of procedures for the analysis of Random Fields using likelihood and non-standard likelihood methods is provided. Spatial analysis often involves dealing with large dataset. Therefore even simple studies may be too computationally demanding. Composite likelihood inference is emerging as a useful tool for mitigating such computational problems. This methodology shows satisfactory results when compared with other techniques such as the tapering method. Moreover, composite likelihood (and related quantities) have some useful properties similar to those of the standard likelihood.
 Suggests: RandomFields, spam, scatterplot3d, fields, mapproj
 License: GPL (>= 2)
 URL: http://faculty.unibocconi.it/simonepadoan
