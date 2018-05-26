@@ -4,3 +4,9 @@ useDynLib(CompRandFld)
 
 S3method(print,FitComposite)
 S3method(print,WLS)
+
+import(RandomFields)
+import(spam)
+import(scatterplot3d)
+import(fields)
+import(mapproj)
