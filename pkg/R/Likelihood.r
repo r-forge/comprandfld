@@ -52,7 +52,7 @@ Likelihood <- function(corrmodel,data,fixed,flagcor,flagnuis,grid,lower,model,na
                          rowpointers=setup$ia,dimension=as.integer(rep(dimat,2)))
         cholvctap <- try(spam::chol.spam(varcovtap),silent=TRUE)
         if(class(cholvctap)=="try-error") return(lliktap)
-        logdet <- c(determinant(cholvctap)$modulus)
+        logdet <- c(spam::determinant(cholvctap)$modulus)
         inv <- spam::solve.spam(cholvctap)
         slot(varcovtap,"entries") <- inv[setup$idx]*setup$taps
         lliktap= -0.5*(const+2*logdet+drop(t(stdata)%*%varcovtap%*%stdata))
