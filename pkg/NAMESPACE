@@ -1,5 +1,5 @@
 exportPattern("^[^\\.]")
-useDynLib(CompRandFld)
+useDynLib(CompRandFld, .registration = TRUE)
 # S3 Methods
 
 S3method(print,FitComposite)
@@ -15,5 +15,4 @@ import(maps)
 
 importFrom("grDevices", "dev.cur")
 importFrom("graphics", "abline", "par")
-importFrom("methods", "new", "slot<-")
 importFrom("stats", "optim", "pchisq", "pnorm", "qnorm", "rnorm","uniroot", "var", "window")
