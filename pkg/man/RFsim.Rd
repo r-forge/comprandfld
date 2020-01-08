@@ -78,17 +78,15 @@ RFsim(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl",
   \item{threshold}{The threshold for deriving the binary random field.}
 }
 
-\references{
-Padoan, S. A. and Bevilacqua, M. (2015). Analysis of Random Fields Using CompRandFld.
-  \emph{Journal of Statistical Software}, \bold{63}(9), 1--27.
-}
-
-\seealso{\code{\link{Covmatrix}}}
+\seealso{\code{\link{Covmatrix}},
+         \code{\link[RandomFields]{GaussRF}},
+         \code{\link[RandomFields]{MaxStableRF}}}
 
 \author{Simone Padoan, \email{simone.padoan@unibocconi.it},
   \url{http://faculty.unibocconi.it/simonepadoan};
   Moreno Bevilacqua, \email{moreno.bevilacqua@uv.cl},
-  \url{https://sites.google.com/a/uv.cl/moreno-bevilacqua/home}.}
+  \url{http://staff.deuv.cl/bevilacqua/}.}
+
 
 \examples{
 library(CompRandFld)
@@ -124,8 +122,8 @@ data <- RFsim(x, y, corrmodel="matern", param=list(smooth=0.5,
 ###############################################################
 
 # Define the spatial-coordinates of the points:
-x <- seq(0, 1, 0.05)
-y <- seq(0, 1, 0.05)
+x <- seq(0, 1, 0.02)
+y <- seq(0, 1, 0.02)
 
 set.seed(251)
 
@@ -134,7 +132,7 @@ sim <- RFsim(x, y, corrmodel="exponential", grid=TRUE,
              model="BinaryGauss", threshold=0,
              param=list(nugget=0,mean=0,scale=.1,sill=1))
 
-image(x,y,sim$data,col=terrain.colors(100))
+image.plot(x,y,sim$data,col=terrain.colors(100))
 
 ################################################################
 ###
@@ -146,8 +144,7 @@ image(x,y,sim$data,col=terrain.colors(100))
 ###############################################################
 
 set.seed(341)
-x <- seq(0, 1, 0.02)
-y <- seq(0, 1, 0.02)
+
 # Simulation of a spatial binary random field:
 sim <- RFsim(x, y, corrmodel="exponential", grid=TRUE, model="ExtT",
              numblock=500, param=list(nugget=0,mean=0,scale=.1,
@@ -166,17 +163,21 @@ image.plot(x,y,log(sim$data))
 ###############################################################
 
 # Define the spatial-coordinates of the points:
-x <- seq(0, 1, 0.1)
-y <- seq(0, 1, 0.1)
+#x <- seq(0, 1, 0.1)
+#y <- seq(0, 1, 0.1)
 # Define the temporal-coordinates:
-times <- seq(1, 3, 1)
+#times <- seq(1, 10, 1)
 #
 # Simulation of a spatial Gaussian random field:
-sim <- RFsim(x, y, times, corrmodel="exp_exp", grid=TRUE,
-             param=list(nugget=0,mean=0,scale_s=0.3,
-             scale_t=0.5,sill=1))$data
-# Spatial simulated data at first temporal instant
- sim[,,1]
+#sim <- RFsim(x, y, times, corrmodel="exp_exp", grid=TRUE,
+#             param=list(nugget=0,mean=0,scale_s=0.3,
+#             scale_t=0.5,sill=1))
+
+# For a simple animation movie
+# library(animation)
+# saveMovie(for (i in 1:length(times)) image(x,y,sim$data[,,i]),
+#           height=300,width=500,interval=1,
+#           outdir = "c:/",movie.name = "spacetime_animation.mpg")
 
 
 
@@ -190,16 +191,17 @@ sim <- RFsim(x, y, times, corrmodel="exp_exp", grid=TRUE,
 ###
 ###############################################################
 
-lon_region<-c(-40,40)
-lat_region<-c(-40,40)
+#lon_region<-c(-60,60)
+#lat_region<-c(-60,60)
 #
-lon<-seq(min(lon_region),max(lon_region),2)
-lat<-seq(min(lat_region),max(lat_region),2)
+#lon<-seq(min(lon_region),max(lon_region),2)
+#lat<-seq(min(lat_region),max(lat_region),2)
 #
-data<-RFsim(coordx=lon,coordy=lat,corrmodel="exponential",
-         distance="Geod",grid=TRUE,param=list(nugget=0,mean=0
-         ,scale=8000,sill=1))$data
-image.plot(lon,lat,data,xlab="Longitude",ylab="Latitude")
-map(database="world",xlim=lon_region,ylim=lat_region,add=TRUE)
+#data<-RFsim(coordx=lon,coordy=lat,corrmodel="exponential",
+#         distance="Geod",grid=TRUE,param=list(nugget=0,mean=0
+#         ,scale=8000,sill=1))$data
+#
+#image.plot(lon,lat,data,xlab="Longitude",ylab="Latitude")
+#map(database="world",xlim=lon_region,ylim=lat_region,add=TRUE)
 }
 \keyword{Simulation}
