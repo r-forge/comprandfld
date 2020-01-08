@@ -1,9 +1,11 @@
-exportPattern("^[^\\.]")
-useDynLib(CompRandFld, .registration = TRUE)
-# S3 Methods
-
+export(CheckCorrModel, CheckInput, CheckLikelihood, CheckModel, CheckType, CheckVarType,
+CompLikelihood, CorrelationParam, Covariogram, Covmatrix, Dist2Dist, EVariogram, 
+FitComposite, FitGev, GevLogLik, HypoTest, InitParam, Kri, Likelihood, MomEst, NuisanceParam, RFsim, WLeastSquare, WlsInit)
+ 
 S3method(print,FitComposite)
 S3method(print,WLS)
+
+useDynLib(CompRandFld, .registration = TRUE)
 
 import(RandomFields)
 import(spam)
