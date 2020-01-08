@@ -83,9 +83,7 @@ Padoan, S. A. and Bevilacqua, M. (2015). Analysis of Random Fields Using CompRan
   \emph{Journal of Statistical Software}, \bold{63}(9), 1--27.
 }
 
-\seealso{\code{\link{Covmatrix}},
-         \code{\link[RandomFields]{GaussRF}},
-         \code{\link[RandomFields]{MaxStableRF}}}
+\seealso{\code{\link{Covmatrix}}}
 
 \author{Simone Padoan, \email{simone.padoan@unibocconi.it},
   \url{http://faculty.unibocconi.it/simonepadoan};

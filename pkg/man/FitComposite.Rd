@@ -427,7 +427,7 @@ Stat.}, \bold{21-2}, 433--452.
     Methods}, \bold{107}, 268--280.
 
   Bevilacqua, M. Gaetan, C. (2014)
-  Comparing composite likelihood methods based on pairs for 
+  Comparing composite likelihood methods based on pairs for
   spatial Gaussian random fields
   \emph{Statistics and Computing}.DOI:10.1111/2041-210X.12167
 
@@ -476,10 +476,7 @@ Stat.}, \bold{21-2}, 433--452.
     Association}, \bold{102}, 736--744
 }
 
-\seealso{
-  \code{\link{Covmatrix}},
-  \code{\link[RandomFields]{GaussRF}},
-  \code{\link[RandomFields]{MaxStableRF}}, \code{\link{WLeastSquare}}, \code{\link{optim}}}
+\seealso{\code{\link{Covmatrix}}, \code{\link{WLeastSquare}}, \code{\link{optim}}}
 
 
 \author{Simone Padoan, \email{simone.padoan@unibocconi.it},
