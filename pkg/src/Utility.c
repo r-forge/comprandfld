@@ -12,7 +12,7 @@ void Space_Dist(double *coordx,double *coordy,int grid,int *ia,int *idx,
 		int *ismal,int *ja,double thres,int type)
 
 {
-  int i=0,h=0,j=0,k=0, m=0,n=0;
+  int i=0,h=0,j=0,k=0, m=0, n=0, z=0;
   double dij=0.0;
   if(*istap){   // tapering case
     switch(type){
@@ -159,8 +159,8 @@ void Space_Dist(double *coordx,double *coordy,int grid,int *ia,int *idx,
 	      for(m=i;m<*ncoordx;m++){
 		if(m==i) n=(j+1);
 		else n=0;
-		for(n=n;n<*ncoordy;n++){
-		  mlags[h][k]=hypot(coordx[m]-coordx[i], coordy[n]-coordy[j]);
+		for(z=n;z<*ncoordy;z++){
+		  mlags[h][k]=hypot(coordx[m]-coordx[i], coordy[z]-coordy[j]);
 		  //Rprintf("%f %d %d\n",mlags[h][k],h,k);
 		  *maximdista=fmax(*maximdista, mlags[h][k]);
 		  *minimdista=fmin(*minimdista, mlags[h][k]);
@@ -184,8 +184,8 @@ void Space_Dist(double *coordx,double *coordy,int grid,int *ia,int *idx,
 	      for(m=i;m<*ncoordx;m++){
 		if(m==i) n=(j+1);
 		else n=0;
-		for(n=n;n<*ncoordy;n++){
-            mlags[h][k]=Dist_chordal(coordx[m],coordy[n],coordx[i],coordy[j]);
+		for(z=n;z<*ncoordy;z++){
+            mlags[h][k]=Dist_chordal(coordx[m],coordy[z],coordx[i],coordy[j]);
 		*maximdista=fmax(*maximdista, mlags[h][k]);
 		  *minimdista=fmin(*minimdista, mlags[h][k]);
 		  k++;}};h++;}}
@@ -208,8 +208,8 @@ void Space_Dist(double *coordx,double *coordy,int grid,int *ia,int *idx,
 	      for(m=i;m<*ncoordx;m++){
 		if(m==i) n=(j+1);
 		else n=0;
-		for(n=n;n<*ncoordy;n++){
-            mlags[h][k]=Dist_geodesic(coordx[m],coordy[n],coordx[i],coordy[j]);
+		for(z=n;z<*ncoordy;z++){
+            mlags[h][k]=Dist_geodesic(coordx[m],coordy[z],coordx[i],coordy[j]);
              //Rprintf("%f %d %d\n",mlags[h][k],h,k);
 		  *maximdista=fmax(*maximdista, mlags[h][k]);
 		  *minimdista=fmin(*minimdista, mlags[h][k]);
@@ -237,7 +237,7 @@ void Space_Dist(double *coordx,double *coordy,int grid,int *ia,int *idx,
 void SpaceTime_Dist(double *coordx,double *coordy,double *coordt,int *grid,int *ia,int *idx,int *ismal,int *ja,
                     int *tapmodel,double thres,double thret,int type)
 {
-  int i=0,cc=0,j=0,h=0,k=0,m=0,n=0,t=0,v=0;
+  int i=0,cc=0,j=0,h=0,k=0,m=0,n=0,t=0,v=0, z=0;
 
   if (*istap) {       // tapering case
   double *thre,*c_supp;
@@ -389,8 +389,8 @@ void SpaceTime_Dist(double *coordx,double *coordy,double *coordt,int *grid,int *
 	      for(m=i;m<*ncoordx;m++){
 		if(m==i) n=(j+1);
 		else n=0;
-		for(n=n;n<*ncoordy;n++){
-		  mlags[h][k]=hypot(coordx[m]-coordx[i], coordy[n]-coordy[j]);
+		for(z=n;z<*ncoordy;z++){
+		  mlags[h][k]=hypot(coordx[m]-coordx[i], coordy[z]-coordy[j]);
 		  //Rprintf("fgdfg  %d %d %f \n",h,k,mlags[h][k]);
 		  *maximdista=fmax(*maximdista, mlags[h][k]);
 		  *minimdista=fmin(*minimdista, mlags[h][k]);
@@ -414,8 +414,8 @@ void SpaceTime_Dist(double *coordx,double *coordy,double *coordt,int *grid,int *
 	      for(m=i;m<*ncoordx;m++){
 		if(m==i) n=(j+1);
 		else n=0;
-		for(n=n;n<*ncoordy;n++){
-            mlags[h][k]=Dist_chordal(coordx[m],coordy[n],coordx[i],coordy[j]);
+		for(z=n;z<*ncoordy;z++){
+            mlags[h][k]=Dist_chordal(coordx[m],coordy[z],coordx[i],coordy[j]);
 		*maximdista=fmax(*maximdista, mlags[h][k]);
 		  *minimdista=fmin(*minimdista, mlags[h][k]);
 		  k++;}};h++;}}
@@ -439,8 +439,8 @@ void SpaceTime_Dist(double *coordx,double *coordy,double *coordt,int *grid,int *
 	      for(m=i;m<*ncoordx;m++){
 		if(m==i) n=(j+1);
 		else n=0;
-		for(n=n;n<*ncoordy;n++){
-            mlags[h][k]=Dist_geodesic(coordx[m],coordy[n],coordx[i],coordy[j]);
+		for(z=n;z<*ncoordy;n++){
+            mlags[h][k]=Dist_geodesic(coordx[m],coordy[z],coordx[i],coordy[j]);
 		  *maximdista=fmax(*maximdista, mlags[h][k]);
 		  *minimdista=fmin(*minimdista, mlags[h][k]);
 		  k++;}};h++;}}
@@ -778,18 +778,18 @@ void DeleteGlobalVar()
     Free(minimtime);
     Free(ntime);
     }
-    
+
     Free(tapsep);
     Free(npairs);
     Free(nrep);
-    
+
     Free(maxdist);
     Free(minimdista);
     Free(maximdista);
     Free(ncoord);
     Free(ncoordx);
     Free(ncoordy);
-    
+
     Free(istap);
     Free(isst);
     return;
