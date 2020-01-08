@@ -26,8 +26,8 @@ Covmatrix <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Euc
        
         if(!spacetime) fname <- "CorrelationMat_tap" else fname <- "CorrelationMat_st_tap"
         p=.C(fname, corr=double(numpairs), as.integer(corrmodel), as.double(nuisance), as.double(paramcorr),
-           PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
-        corr<-p$corr
+           DUP=TRUE, NAOK=TRUE)$corr
+        corr<-p
         vcov <- corr*nuisance['sill']
         vcov[vcov==(nuisance['sill'])] <- nuisance['sill']+nuisance['nugget']
         varcov <- new("spam",entries=vcov*setup$taps,colindices=setup$ja,
@@ -37,8 +37,8 @@ Covmatrix <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Euc
         corr <- double(numpairstot)
         if(!spacetime) fname <- "CorrelationMat" else fname <- "CorrelationMat_st"
         p=.C(fname, corr=double(numpairs), as.integer(corrmodel), as.double(nuisance), as.double(paramcorr),
-           PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
-        corr<-p$corr
+           DUP=TRUE, NAOK=TRUE)$corr
+        corr<-p
         # Builds the covariance matrix:
         varcov <- (nuisance['nugget'] + nuisance['sill']) * diag(dime)
         corr <- corr * nuisance['sill']
@@ -74,15 +74,15 @@ Covmatrix <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Euc
     corr <- double(initparam$numpairs)
     tapmod <- setup$tapmodel
     tp=.C(fname, tapcorr=double(initparam$numpairs),as.integer(tapmod),as.double(c(0,0,1)),
-       as.double(1),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
-    setup$taps<-tp$tapcorr
+       as.double(1),DUP=TRUE,NAOK=TRUE)$tapcorr
+    setup$taps<-tp
     }
     covmatrix<- Cmatrix(initparam$corrmodel,dime,initparam$param[initparam$namesnuis],initparam$numpairs,numpairstot,
                         initparam$param[initparam$namescorr],setup,initparam$spacetime,initparam$type)
     initparam$param=initparam$param[names(initparam$param)!='mean']
 
     # Delete the global variables:
-    if(!iskrig)  .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+    if(!iskrig)  .C('DeleteGlobalVar', DUP=TRUE, NAOK=TRUE)
 
     # Return the objects list:
     CovMat <- list(coordx = initparam$coordx,

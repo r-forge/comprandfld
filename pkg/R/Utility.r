@@ -1091,7 +1091,7 @@ InitParam <- function(coordx, coordy, coordt, corrmodel, data, distance, fcall, 
     SG=.C('SetGlobalVar',as.double(coordx),as.double(coordy),as.double(coordt),as.integer(grid),ia=ia,idx=idx,
        isinit=isinit,ja=ja,as.integer(numcoord),as.integer(numcoordx),as.integer(numcoordy),numpairs=numpairs,as.integer(replicates),
        srange=srange, as.double(tapsep), as.integer(numtime),trange=trange,as.integer(tapering),as.integer(tapmodel),
-       as.integer(distance),as.integer(weighted),PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+       as.integer(distance),as.integer(weighted),DUP=TRUE, NAOK=TRUE)
      srange<-SG$srange
      trange<-SG$trange
      ja<-SG$ja;ia<-SG$ia;idx<-SG$idx

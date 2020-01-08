@@ -57,8 +57,8 @@ Kri<- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl
     cc=.C('Corr_c',corri=double(covmatrix$numcoord*covmatrix$numtime*numloc*tloc), as.double(covmatrix$coordx),as.double(covmatrix$coordy),
     as.double(covmatrix$coordt),as.integer(corrmodel),as.integer(covmatrix$grid),as.double(locx),as.double(locy),as.integer(covmatrix$numcoord),
     as.integer(numloc),as.integer(tloc),as.integer(covmatrix$numtime),as.double(corrparam),as.integer(covmatrix$spacetime),
-    as.double(time),as.integer(distance),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
-    corri<-cc$corri
+    as.double(time),as.integer(distance),DUP=TRUE,NAOK=TRUE)$corri
+    corri<-cc
     ## cholesky decomposition
     cholvarcov <- try(chol(covmatrix$covmatrix),silent=TRUE)
     if(!is.matrix(cholvarcov)) return("Covariance matrix is not positive definite")
@@ -89,7 +89,7 @@ Kri<- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl
     ct=.C('Corr_c_tap',corri=double(covmatrix$numcoord*covmatrix$numtime*numloc*tloc), corri_tap=double(covmatrix$numcoord*covmatrix$numtime*numloc*tloc), as.double(covmatrix$coordx),as.double(covmatrix$coordy),as.double(covmatrix$coordt),
     as.integer(corrmodel),as.integer(tapmod),as.integer(covmatrix$grid),as.double(locx),as.double(locy),
     as.integer(covmatrix$numcoord),as.integer(numloc),as.integer(tloc),as.integer(covmatrix$numtime),as.double(corrparam),
-    as.integer(covmatrix$spacetime),as.double(time),as.integer(distance),PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+    as.integer(covmatrix$spacetime),as.double(time),as.integer(distance),DUP=TRUE,NAOK=TRUE)
     corri_tap<-ct$corri_tap
     corri<-ct$corri
     cholvarcov <- try(spam::chol.spam(covmatrix$covmatrix),silent=TRUE)
@@ -118,7 +118,7 @@ Kri<- function(data, coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl
       }
     }
      # Delete the global variables:
-    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+    .C('DeleteGlobalVar', DUP=TRUE, NAOK=TRUE)
 
    if(tloc==1)  {c(pred);c(varpred)}
     # Return the objects list:

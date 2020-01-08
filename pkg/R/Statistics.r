@@ -93,7 +93,7 @@ HypoTest <- function(object1, object2, ..., statistic)
              score=score,sensmat=sensmat,as.integer(spacetime),as.double(model2$threshold),
              as.integer(initparam$type),varimat=varimat,as.integer(initparam$vartype),
              as.double(initparam$winconst),as.double(initparam$winstp),
-             PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+             DUP=TRUE,NAOK=TRUE)
              
              sensmat<-GD$sensmat; varimat<-GD$varimat;score<-GD$score
           # define the sensitivity and variability matrices:
@@ -118,7 +118,7 @@ HypoTest <- function(object1, object2, ..., statistic)
               H[1,1] <- sensmat
               J[1,1] <- varimat}
           # Delete global variables:
-          .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+          .C('DeleteGlobalVar', DUP=TRUE, NAOK=TRUE)
           return(list(score=score, sensmat=H, varimat=J))
       }
       # compute the statistic:

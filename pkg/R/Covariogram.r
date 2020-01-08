@@ -33,9 +33,9 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
         rho=double(numlags*numlagt)
         p=.C("vpbnorm",  as.integer(corrmodel), as.double(lags), as.double(lagt),
            as.integer(numlags), as.integer(numlagt), as.double(nuisance),
-           as.double(param), rho=double(numlags*numlagt), as.double(threshold), PACKAGE='CompRandFld',
-           DUP=TRUE, NAOK=TRUE)
-        return(p$rho)
+           as.double(param), rho=double(numlags*numlagt), as.double(threshold),
+           DUP=TRUE, NAOK=TRUE)$rho
+        return(p)
     }
     # define the correlation function:
     CorrelationFct <- function(corrmodel, lags, lagt, numlags, numlagt, param)
@@ -43,8 +43,8 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
         corr=double(numlags*numlagt)
         p=.C('VectCorrelation', corr=double(numlags*numlagt), as.integer(corrmodel), as.double(lags),
            as.integer(numlags), as.integer(numlagt), as.double(param),
-           as.double(lagt), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
-        return(p$corr)
+           as.double(lagt), DUP=TRUE, NAOK=TRUE)$corr
+        return(p)
     }
     # define the extremal coefficient function:
     ExtremalCoeff <- function(corrmodel, lags, model, nuisance, numlags, param)
@@ -53,8 +53,8 @@ Covariogram <- function(fitted, lags=NULL, lagt=NULL, answer.cov=FALSE, answer.v
 
         p=.C('ExtCoeff', as.integer(corrmodel), extc=double(numlags), as.double(lags),
            as.integer(model), as.integer(numlags), as.double(nuisance),
-           as.double(param), PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
-        return(p$extc)
+           as.double(param), DUP=TRUE, NAOK=TRUE)$extc
+        return(p)
      }
     # Pratical range in the Gaussian case:
     PracRangeNorm <- function(corrmodel, lags, lagt, nuisance, numlags, numlagt, param, pract.range)

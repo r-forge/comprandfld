@@ -32,7 +32,7 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, distance, flagcorr, 
         nuisance <- param[namesnuis]
         result <- .C(fun, as.integer(corrmodel), as.double(data), as.double(nuisance),
                      as.double(paramcorr), as.double(threshold), res=double(1),
-                     PACKAGE='CompRandFld', DUP=TRUE , NAOK=TRUE)$res
+                     DUP=TRUE , NAOK=TRUE)$res
         return(result)
       }
     fname <- NULL
@@ -96,7 +96,7 @@ CompLikelihood <- function(coordx, coordy, corrmodel, data, distance, flagcorr, 
                as.integer(numparam),as.integer(numparamcorr),as.double(paramcorr),as.double(nuisance),
                score=score,sensmat=sensmat,as.integer(spacetime),as.double(threshold),as.integer(type),
                varimat=varimat,as.integer(vartype),as.double(winconst),as.double(winstp),
-               PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+               DUP=TRUE, NAOK=TRUE)
             score<-GOD$score
             sensmat<-GOD$sensmat
             varimat<-GOD$varimat

@@ -108,7 +108,7 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, dist
       # Compute the spatial-temporal moments:
       EV=.C(fname, bins=bins, bint=bint, as.double(initparam$data),
             lenbins=lenbins, lenbinst=lenbinst, lenbint=lenbint,moments=moments, momentst=momentst,momentt=momentt,
-            as.integer(numbins), as.integer(numbint),PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+            as.integer(numbins), as.integer(numbint), DUP=TRUE, NAOK=TRUE)
       bins<-EV$bins;bint<-EV$bint;
       moments<-EV$moments;  momentst<-EV$momentst;  momentt<-EV$momentt;
       lenbins<-EV$lenbins;lenbint<-EV$lenbint;lenbinst<-EV$lenbinst;
@@ -155,7 +155,7 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, dist
       variogramst <- momentst/lenbinst}
     else{# Computes the spatial moments
       EV=.C(fname, bins=bins, as.double(initparam$data), lenbins=lenbins, moments=moments, as.integer(numbins),
-         PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+         DUP=TRUE, NAOK=TRUE)
        bins<-EV$bins
        moments<-EV$moments
        lenbins<-EV$lenbins
@@ -180,7 +180,7 @@ EVariogram <- function(data, coordx, coordy=NULL, coordt=NULL, cloud=FALSE, dist
       extcoeff <- (1 + 2 * variograms) / (1 - 2 * variograms)
       extcoeff[extcoeff>2] <- NA}
 
-    .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+    .C('DeleteGlobalVar', DUP=TRUE, NAOK=TRUE)
 
     EVariogram <- list(bins=bins,
                        bint=bint,

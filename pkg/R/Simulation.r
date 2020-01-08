@@ -29,9 +29,9 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl", 
         # Compute the correlation function:
         if(!spacetime) fname <- "CorrelationMat" else fname <- "CorrelationMat_st"
         CV=.C(fname, cr=double(.5*(numcoord*numtime)*(numcoord*numtime-1)), as.integer(corrmodel), as.double(nuisance), as.double(paramcorr),
-           PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+           DUP=TRUE, NAOK=TRUE)$cr
         # Builds the covariance matrix:
-        corr<-CV$cr
+        corr<-CV
         varcov <- (nuisance['nugget'] + nuisance['sill']) * diag(numcoord*numtime)
         corr <- corr * nuisance['sill']
         varcov[lower.tri(varcov)] <- corr
@@ -120,9 +120,9 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl", 
               mx=.C("ComputeMaxima",as.double(initparam$param["df"]),mx=maxima,
                  as.integer(initparam$model),as.integer(initparam$numblock),
                  as.integer(initparam$numcoord),onesim,
-                 PACKAGE='CompRandFld',DUP=TRUE,NAOK=TRUE)
+                 DUP=TRUE,NAOK=TRUE)$mx
             # Update:
-            sim <- c(sim,mx$mx)}
+            sim <- c(sim,mx)}
         # Formatting of output:
         if(grid){
             if(replicates==1) sim <- array(sim, c(initparam$numcoordx, initparam$numcoordy))
@@ -131,7 +131,7 @@ RFsim <- function(coordx, coordy=NULL, coordt=NULL, corrmodel, distance="Eucl", 
             if(replicates==1) sim <- c(sim)
             else sim <- matrix(sim, nrow=replicates,ncol=initparam$numcoord, byrow=TRUE)}}
     # Delete the global variables:
-     .C('DeleteGlobalVar', PACKAGE='CompRandFld', DUP=TRUE, NAOK=TRUE)
+     .C('DeleteGlobalVar', DUP=TRUE, NAOK=TRUE)
     # Return the objects list:
     RFsim <- list(coordx = initparam$coordx,
                   coordy = initparam$coordy,
